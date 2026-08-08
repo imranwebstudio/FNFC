@@ -1,0 +1,221 @@
+// Office Catering Platform — Prisma schema (PostgreSQL / Neon)
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum PaymentMode {
+  CASH
+  WALLET
+}
+
+enum MealSlot {
+  LUNCH
+  DINNER
+}
+
+enum OrderStatus {
+  PLACED
+  CANCELLED
+  DELIVERED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  WALLET_CHARGED
+}
+
+enum WalletTxType {
+  DEPOSIT
+  CHARGE
+  DUE_PAYMENT
+  ADJUSTMENT
+}
+
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String? @db.Text
+  access_token             String? @db.Text
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String? @db.Text
+  session_state            String?
+  refresh_token_expires_in Int?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model User {
+  id              String      @id @default(cuid())
+  name            String?
+  email           String?     @unique
+  emailVerified   DateTime?
+  image           String?
+  role            Role        @default(USER)
+  employeeId      String?
+  deskNumber      String?
+  buildingNumber  String?
+  floorNumber     String?
+  locationId      String?
+  paymentMode     PaymentMode @default(CASH)
+  /// Balance in integer taka; may be negative (due)
+  balance         Int         @default(0)
+  profileComplete Boolean     @default(false)
+  isBanned        Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  location            Location?           @relation(fields: [locationId], references: [id])
+  accounts            Account[]
+  sessions            Session[]
+  adminLocations      AdminLocation[]
+  orders              Order[]
+  walletTransactions  WalletTransaction[] @relation("WalletOwner")
+  createdTransactions WalletTransaction[] @relation("WalletCreator")
+
+  @@index([locationId])
+  @@index([role])
+}
+
+model Location {
+  id                String   @id @default(cuid())
+  name              String
+  address           String?
+  /// Default cutoff as "HH:mm" in Asia/Dhaka (e.g. "11:00")
+  defaultCutoffTime String   @default("11:00")
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  users          User[]
+  adminLocations AdminLocation[]
+  dailyMenus     DailyMenu[]
+  orders         Order[]
+}
+
+model AdminLocation {
+  id         String @id @default(cuid())
+  userId     String
+  locationId String
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, locationId])
+}
+
+model MealCatalog {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  imageUrl     String?
+  defaultPrice Int
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  dailyMenus DailyMenu[]
+}
+
+model DailyMenu {
+  id            String    @id @default(cuid())
+  locationId    String
+  date          DateTime  @db.Date
+  slot          MealSlot
+  title         String
+  description   String?
+  price         Int
+  imageUrl      String?
+  catalogItemId String?
+  /// Absolute cutoff datetime (Asia/Dhaka resolved); null = use location default for that day
+  cutoffAt      DateTime?
+  isPublished   Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  location    Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  catalogItem MealCatalog? @relation(fields: [catalogItemId], references: [id], onDelete: SetNull)
+  orders      Order[]
+
+  @@unique([locationId, date, slot])
+  @@index([date, isPublished])
+}
+
+model Order {
+  id            String        @id @default(cuid())
+  userId        String
+  dailyMenuId   String
+  locationId    String
+  amount        Int
+  note          String?
+  status        OrderStatus   @default(PLACED)
+  paymentStatus PaymentStatus @default(UNPAID)
+  deliveredAt   DateTime?
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyMenu DailyMenu           @relation(fields: [dailyMenuId], references: [id], onDelete: Cascade)
+  location  Location            @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  walletTxs WalletTransaction[]
+
+  @@index([dailyMenuId, status])
+  @@index([locationId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model WalletTransaction {
+  id           String       @id @default(cuid())
+  userId       String
+  type         WalletTxType
+  /// Signed amount applied to balance (positive deposit, negative charge)
+  amount       Int
+  balanceAfter Int
+  orderId      String?
+  createdById  String?
+  note         String?
+  createdAt    DateTime     @default(now())
+
+  user      User   @relation("WalletOwner", fields: [userId], references: [id], onDelete: Cascade)
+  order     Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  createdBy User?  @relation("WalletCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+}

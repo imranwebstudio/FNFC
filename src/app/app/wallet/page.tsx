@@ -1,0 +1,81 @@
+"use client";
+
+import { motion } from "framer-motion";
+
+import { Badge, PageTitle, Panel } from "~/components/ui";
+import { formatTaka } from "~/lib/datetime";
+import { api } from "~/trpc/react";
+
+export default function WalletPage() {
+  const summary = api.wallet.summary.useQuery();
+  const txs = api.wallet.listMine.useQuery();
+
+  return (
+    <div>
+      <PageTitle
+        title="Wallet"
+        subtitle="Deposits are recorded by admin. Balance can go negative as due."
+      />
+
+      <div className="mb-6 grid gap-3 sm:grid-cols-3">
+        <Panel>
+          <p className="text-xs uppercase tracking-wide text-ink-muted">Balance</p>
+          <p className="font-display mt-1 text-3xl font-semibold">
+            {formatTaka(summary.data?.balance ?? 0)}
+          </p>
+        </Panel>
+        <Panel>
+          <p className="text-xs uppercase tracking-wide text-ink-muted">Due</p>
+          <p className="font-display mt-1 text-3xl font-semibold text-spice-deep">
+            {formatTaka(summary.data?.due ?? 0)}
+          </p>
+        </Panel>
+        <Panel>
+          <p className="text-xs uppercase tracking-wide text-ink-muted">Mode</p>
+          <p className="mt-2">
+            <Badge tone={summary.data?.paymentMode === "WALLET" ? "good" : "neutral"}>
+              {summary.data?.paymentMode ?? "—"}
+            </Badge>
+          </p>
+        </Panel>
+      </div>
+
+      <h2 className="mb-3 font-display text-xl font-semibold">History</h2>
+      <ul className="space-y-2">
+        {txs.data?.map((t, i) => (
+          <motion.li
+            key={t.id}
+            initial={{ opacity: 0, x: -6 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.03 }}
+          >
+            <Panel className="flex items-center justify-between gap-3 py-3">
+              <div>
+                <p className="text-sm font-semibold">{t.type}</p>
+                <p className="text-xs text-ink-muted">
+                  {t.note ?? "—"} ·{" "}
+                  {new Date(t.createdAt).toLocaleString("en-BD", {
+                    timeZone: "Asia/Dhaka",
+                  })}
+                </p>
+              </div>
+              <div className="text-right">
+                <p
+                  className={`text-sm font-semibold ${
+                    t.amount >= 0 ? "text-leaf-deep" : "text-spice-deep"
+                  }`}
+                >
+                  {t.amount >= 0 ? "+" : ""}
+                  {formatTaka(t.amount)}
+                </p>
+                <p className="text-xs text-ink-muted">
+                  after {formatTaka(t.balanceAfter)}
+                </p>
+              </div>
+            </Panel>
+          </motion.li>
+        ))}
+      </ul>
+    </div>
+  );
+}
