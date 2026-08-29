@@ -16,7 +16,6 @@ import { cloudinaryDisplayUrl } from "~/lib/cloudinary-url";
 import {
   formatMenuDateLabel,
   formatTaka,
-  ORDER_ROLLOVER_TIME,
 } from "~/lib/datetime";
 import { api } from "~/trpc/react";
 
@@ -45,6 +44,7 @@ export function TodayMenu() {
 
   const menus = today.data?.menus ?? [];
   const window = today.data?.window;
+  const cutoffLabel = window?.cutoffTime ?? "—";
   const showLocation =
     today.data?.scope === "all" || today.data?.scope === "admin";
 
@@ -66,7 +66,7 @@ export function TodayMenu() {
             <>
               <Badge tone="warn">
                 <Moon className="h-3 w-3" />
-                After {ORDER_ROLLOVER_TIME}
+                After {cutoffLabel}
               </Badge>
               <p className="text-sm text-ink-muted">
                 Today&apos;s lunch is closed. Ordering for{" "}
@@ -80,14 +80,14 @@ export function TodayMenu() {
             <>
               <Badge tone="good">
                 <Clock3 className="h-3 w-3" />
-                Open until {ORDER_ROLLOVER_TIME}
+                Open until {cutoffLabel}
               </Badge>
               <p className="text-sm text-ink-muted">
                 Ordering for{" "}
                 <span className="font-semibold text-ink">
                   {formatMenuDateLabel(window.orderDate)}
                 </span>
-                . After {ORDER_ROLLOVER_TIME}, only tomorrow opens.
+                . After {cutoffLabel}, only tomorrow opens.
               </p>
             </>
           )}
@@ -179,7 +179,7 @@ export function TodayMenu() {
                   ) : null}
                   <p className="inline-flex items-center gap-1.5 text-xs text-ink-muted">
                     <Clock3 className="h-3.5 w-3.5 text-leaf" strokeWidth={2.25} />
-                    Closes {ORDER_ROLLOVER_TIME}
+                    Closes {menu.cutoffTime ?? cutoffLabel}
                     {menu.isPastCutoff ? " · closed" : ""}
                   </p>
 

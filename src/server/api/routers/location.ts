@@ -1,6 +1,13 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { formatInTimeZone } from "date-fns-tz";
 
+import {
+  dayArchiveAt,
+  dhakaDateOnly,
+  normalizeCutoffTime,
+  todayDateString,
+} from "~/lib/datetime";
 import {
   adminProcedure,
   createTRPCRouter,
@@ -27,7 +34,7 @@ export const locationRouter = createTRPCRouter({
       z.object({
         name: z.string().min(1).max(120),
         address: z.string().max(240).optional(),
-        defaultCutoffTime: z.string().regex(cutoffRegex).default("11:00"),
+        defaultCutoffTime: z.string().regex(cutoffRegex).default("14:00"),
       }),
     )
     .mutation(({ ctx, input }) =>
@@ -35,7 +42,7 @@ export const locationRouter = createTRPCRouter({
         data: {
           name: input.name,
           address: input.address,
-          defaultCutoffTime: input.defaultCutoffTime,
+          defaultCutoffTime: normalizeCutoffTime(input.defaultCutoffTime),
         },
       }),
     ),
@@ -78,9 +85,33 @@ export const locationRouter = createTRPCRouter({
         });
         if (!link) throw new TRPCError({ code: "FORBIDDEN" });
       }
-      return ctx.db.location.update({
-        where: { id: input.locationId },
-        data: { defaultCutoffTime: input.defaultCutoffTime },
+
+      const cutoffTime = normalizeCutoffTime(input.defaultCutoffTime);
+      const today = todayDateString();
+
+      return ctx.db.$transaction(async (tx) => {
+        const location = await tx.location.update({
+          where: { id: input.locationId },
+          data: { defaultCutoffTime: cutoffTime },
+        });
+
+        // Keep today's and future menu cutoffs in sync with the office setting
+        const menus = await tx.dailyMenu.findMany({
+          where: {
+            locationId: input.locationId,
+            date: { gte: dhakaDateOnly(today) },
+          },
+          select: { id: true, date: true },
+        });
+        for (const m of menus) {
+          const dateStr = formatInTimeZone(m.date, "UTC", "yyyy-MM-dd");
+          await tx.dailyMenu.update({
+            where: { id: m.id },
+            data: { cutoffAt: dayArchiveAt(dateStr, cutoffTime) },
+          });
+        }
+
+        return location;
       });
     }),
 });

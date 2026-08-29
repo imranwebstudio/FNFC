@@ -2,9 +2,24 @@ import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { addDays, differenceInCalendarDays, parseISO } from "date-fns";
 import { APP_TIMEZONE } from "~/lib/constants";
 
-/** After this hour (Asia/Dhaka), today's lunch is archived; orders target the next day */
+/** Fallback when a location has no cutoff set */
+export const DEFAULT_CUTOFF_TIME = "14:00";
+/** @deprecated use DEFAULT_CUTOFF_TIME */
+export const ORDER_ROLLOVER_TIME = DEFAULT_CUTOFF_TIME;
 export const ORDER_ROLLOVER_HOUR = 14;
-export const ORDER_ROLLOVER_TIME = `${String(ORDER_ROLLOVER_HOUR).padStart(2, "0")}:00`;
+
+const CUTOFF_HM = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+export function normalizeCutoffTime(hhmm: string | null | undefined): string {
+  if (hhmm && CUTOFF_HM.test(hhmm)) return hhmm;
+  return DEFAULT_CUTOFF_TIME;
+}
+
+function cutoffHourMinute(hhmm: string): { hour: number; minute: number } {
+  const normalized = normalizeCutoffTime(hhmm);
+  const [h, m] = normalized.split(":").map(Number);
+  return { hour: h ?? ORDER_ROLLOVER_HOUR, minute: m ?? 0 };
+}
 
 /** BD week order for admin UI */
 export const WEEKDAYS = [
@@ -63,28 +78,41 @@ export function addDaysToDateString(dateStr: string, days: number): string {
 }
 
 /**
- * Date employees order for: today before 14:00 Dhaka, tomorrow after.
+ * Date employees order for: today before location cutoff (Dhaka), tomorrow after.
  */
-export function orderableDateString(now = new Date()): string {
+export function orderableDateString(
+  now = new Date(),
+  cutoffHm: string = DEFAULT_CUTOFF_TIME,
+): string {
+  const { hour: cutoffH, minute: cutoffM } = cutoffHourMinute(cutoffHm);
   const hour = Number(formatInTimeZone(now, APP_TIMEZONE, "H"));
+  const minute = Number(formatInTimeZone(now, APP_TIMEZONE, "m"));
   const today = todayDateString(now);
-  if (hour >= ORDER_ROLLOVER_HOUR) {
+  const pastCutoff =
+    hour > cutoffH || (hour === cutoffH && minute >= cutoffM);
+  if (pastCutoff) {
     return addDaysToDateString(today, 1);
   }
   return today;
 }
 
-export function getOrderWindow(now = new Date()) {
+export function getOrderWindow(
+  now = new Date(),
+  cutoffHm: string = DEFAULT_CUTOFF_TIME,
+) {
+  const cutoffTime = normalizeCutoffTime(cutoffHm);
   const calendarToday = todayDateString(now);
-  const orderDate = orderableDateString(now);
+  const orderDate = orderableDateString(now, cutoffTime);
   const rolledOver = orderDate !== calendarToday;
-  const cutoffAt = cutoffFromTime(calendarToday, ORDER_ROLLOVER_TIME);
+  const cutoffAt = cutoffFromTime(calendarToday, cutoffTime);
+  const { hour } = cutoffHourMinute(cutoffTime);
   return {
     calendarToday,
     orderDate,
     rolledOver,
     cutoffAt,
-    rolloverHour: ORDER_ROLLOVER_HOUR,
+    cutoffTime,
+    rolloverHour: hour,
   };
 }
 
@@ -114,16 +142,20 @@ export function dhakaDateOnly(dateStr: string): Date {
  * Build cutoff DateTime from a calendar date (YYYY-MM-DD) and "HH:mm" in Dhaka.
  */
 export function cutoffFromTime(dateStr: string, hhmm: string): Date {
-  const [h, m] = hhmm.split(":").map((n) => Number(n));
+  const cutoffTime = normalizeCutoffTime(hhmm);
+  const [h, m] = cutoffTime.split(":").map((n) => Number(n));
   const hours = Number.isFinite(h) ? h! : ORDER_ROLLOVER_HOUR;
   const mins = Number.isFinite(m) ? m! : 0;
   const padded = `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
   return fromZonedTime(`${dateStr}T${padded}:00`, APP_TIMEZONE);
 }
 
-/** Hard archive time for a menu day (14:00 Dhaka that day) */
-export function dayArchiveAt(dateStr: string): Date {
-  return cutoffFromTime(dateStr, ORDER_ROLLOVER_TIME);
+/** Archive / order-close time for a menu day at the given location cutoff */
+export function dayArchiveAt(
+  dateStr: string,
+  cutoffHm: string = DEFAULT_CUTOFF_TIME,
+): Date {
+  return cutoffFromTime(dateStr, cutoffHm);
 }
 
 export function formatTaka(amount: number): string {

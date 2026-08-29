@@ -128,8 +128,8 @@ model Location {
   id               String   @id @default(cuid())
   name             String
   address          String?
-  /// Default cutoff as "HH:mm" in Asia/Dhaka (e.g. "11:00")
-  defaultCutoffTime String  @default("11:00")
+  /// Order cutoff as "HH:mm" in Asia/Dhaka (e.g. "14:00")
+  defaultCutoffTime String  @default("14:00")
   isActive         Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

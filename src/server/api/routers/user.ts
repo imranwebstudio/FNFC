@@ -82,7 +82,7 @@ export const userRouter = createTRPCRouter({
         location = await ctx.db.location.create({
           data: {
             name: locationName,
-            defaultCutoffTime: "11:00",
+            defaultCutoffTime: "14:00",
           },
         });
       }

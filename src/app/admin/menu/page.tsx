@@ -17,7 +17,6 @@ import {
 import {
   formatCutoffHm,
   formatTaka,
-  ORDER_ROLLOVER_TIME,
   todayDateString,
   WEEKDAY_LABELS,
   WEEKDAYS,
@@ -54,6 +53,7 @@ export default function AdminMenuPage() {
   const [msg, setMsg] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [showArchived, setShowArchived] = useState(false);
+  const [cutoffDraft, setCutoffDraft] = useState("");
 
   const [weekEdit, setWeekEdit] = useState<{
     weekday: WeekdayCode;
@@ -78,6 +78,21 @@ export default function AdminMenuPage() {
   }, [locations.data, locationId]);
 
   const selectedLoc = locations.data?.find((l) => l.id === locationId);
+
+  useEffect(() => {
+    if (selectedLoc) {
+      setCutoffDraft(selectedLoc.defaultCutoffTime);
+    }
+  }, [selectedLoc?.id, selectedLoc?.defaultCutoffTime]);
+
+  const setCutoff = api.location.setCutoff.useMutation({
+    onSuccess: async () => {
+      await utils.location.list.invalidate();
+      await utils.menu.listDaily.invalidate();
+      await utils.menu.todayForUser.invalidate();
+      setMsg("Order cutoff updated");
+    },
+  });
 
   const savedMeals = useMemo(() => {
     const all = catalog.data ?? [];
@@ -283,7 +298,7 @@ export default function AdminMenuPage() {
       <PageTitle
         icon={<BookOpen className="h-5 w-5" strokeWidth={2.25} />}
         title="Menu"
-        subtitle={`Set weekday templates (every Sunday, etc.) or publish specific dates. Closes at ${ORDER_ROLLOVER_TIME} Asia/Dhaka each day.`}
+        subtitle="Set weekday templates (every Sunday, etc.) or publish specific dates. Order cutoff is per office (Asia/Dhaka)."
       />
 
       {msg ? (
@@ -292,22 +307,61 @@ export default function AdminMenuPage() {
         </p>
       ) : null}
 
-      <div className="mb-6 max-w-xs">
-        <Label>Office</Label>
-        <Select
-          value={locationId}
-          onChange={(e) => {
-            setLocationId(e.target.value);
-            resetForm();
-            setWeekEdit(null);
-          }}
-        >
-          {locations.data?.map((l) => (
-            <option key={l.id} value={l.id}>
-              {l.name}
-            </option>
-          ))}
-        </Select>
+      <div className="mb-6 flex flex-wrap items-end gap-4">
+        <div className="max-w-xs flex-1">
+          <Label>Office</Label>
+          <Select
+            value={locationId}
+            onChange={(e) => {
+              setLocationId(e.target.value);
+              resetForm();
+              setWeekEdit(null);
+            }}
+          >
+            {locations.data?.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+        {locationId ? (
+          <form
+            className="flex flex-wrap items-end gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(cutoffDraft)) {
+                setMsg("Cutoff must be HH:mm (24h)");
+                return;
+              }
+              setCutoff.mutate({
+                locationId,
+                defaultCutoffTime: cutoffDraft,
+              });
+            }}
+          >
+            <div>
+              <Label>Order cutoff (Asia/Dhaka)</Label>
+              <Input
+                type="time"
+                required
+                value={cutoffDraft}
+                onChange={(e) => setCutoffDraft(e.target.value)}
+                className="w-[9.5rem]"
+              />
+            </div>
+            <Button
+              type="submit"
+              variant="secondary"
+              disabled={
+                setCutoff.isPending ||
+                cutoffDraft === selectedLoc?.defaultCutoffTime
+              }
+            >
+              {setCutoff.isPending ? "Saving…" : "Save cutoff"}
+            </Button>
+          </form>
+        ) : null}
       </div>
 
       {/* Weekly schedule */}
@@ -571,7 +625,8 @@ export default function AdminMenuPage() {
                 onClear={() => setForm((f) => ({ ...f, imageUrl: "" }))}
               />
               <p className="text-[11px] text-ink-muted">
-                Daily close: {ORDER_ROLLOVER_TIME} Asia/Dhaka (fixed)
+                Daily close: {selectedLoc?.defaultCutoffTime ?? "—"} Asia/Dhaka
+                (edit above)
               </p>
               <label className="flex items-center gap-2 text-sm">
                 <input
@@ -648,7 +703,9 @@ export default function AdminMenuPage() {
                   <p className="text-xs text-ink-muted">
                     {formatTaka(m.price)} · {m.isPublished ? "Live" : "Draft"} ·{" "}
                     {m._count.orders} orders · closes{" "}
-                    {formatCutoffHm(m.cutoffAt) || ORDER_ROLLOVER_TIME}
+                    {formatCutoffHm(m.cutoffAt) ||
+                      selectedLoc?.defaultCutoffTime ||
+                      "—"}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <Button

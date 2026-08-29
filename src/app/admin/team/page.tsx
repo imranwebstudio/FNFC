@@ -24,8 +24,9 @@ export default function AdminTeamPage() {
   const [locForm, setLocForm] = useState({
     name: "",
     address: "",
-    defaultCutoffTime: "11:00",
+    defaultCutoffTime: "14:00",
   });
+  const [cutoffEdits, setCutoffEdits] = useState<Record<string, string>>({});
 
   if (me.data && me.data.role !== "SUPER_ADMIN") {
     redirect("/admin");
@@ -33,7 +34,17 @@ export default function AdminTeamPage() {
 
   const createLoc = api.location.create.useMutation({
     onSuccess: async () => {
-      setLocForm({ name: "", address: "", defaultCutoffTime: "11:00" });
+      setLocForm({ name: "", address: "", defaultCutoffTime: "14:00" });
+      await utils.location.list.invalidate();
+    },
+  });
+  const setCutoff = api.location.setCutoff.useMutation({
+    onSuccess: async (_, vars) => {
+      setCutoffEdits((e) => {
+        const next = { ...e };
+        delete next[vars.locationId];
+        return next;
+      });
       await utils.location.list.invalidate();
     },
   });
@@ -104,10 +115,10 @@ export default function AdminTeamPage() {
               />
             </div>
             <div>
-              <Label>Default cutoff</Label>
+              <Label>Order cutoff (Asia/Dhaka)</Label>
               <Input
+                type="time"
                 required
-                pattern="([01]\d|2[0-3]):([0-5]\d)"
                 value={locForm.defaultCutoffTime}
                 onChange={(e) =>
                   setLocForm((f) => ({
@@ -126,35 +137,63 @@ export default function AdminTeamPage() {
             Locations
           </h3>
           <ul className="space-y-2">
-            {locations.data?.map((l) => (
-              <li
-                key={l.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-sand/40 px-3 py-2 text-sm"
-              >
-                <span>
-                  {l.name}{" "}
-                  <span className="text-ink-muted">
-                    cutoff {l.defaultCutoffTime}
-                  </span>
-                </span>
-                <div className="flex items-center gap-2">
-                  <Badge tone={l.isActive ? "good" : "bad"}>
-                    {l.isActive ? "Active" : "Off"}
-                  </Badge>
-                  <Button
-                    type="button"
-                    variant={l.isActive ? "danger" : "secondary"}
-                    className="px-2.5 py-1.5 text-xs"
-                    disabled={setLocActive.isPending}
-                    onClick={() =>
-                      setLocActive.mutate({ id: l.id, isActive: !l.isActive })
-                    }
-                  >
-                    {l.isActive ? "Deactivate" : "Reactivate"}
-                  </Button>
-                </div>
-              </li>
-            ))}
+            {locations.data?.map((l) => {
+              const draft = cutoffEdits[l.id] ?? l.defaultCutoffTime;
+              const dirty = draft !== l.defaultCutoffTime;
+              return (
+                <li
+                  key={l.id}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-sand/40 px-3 py-2 text-sm"
+                >
+                  <div className="min-w-0 flex-1">
+                    <span className="font-medium">{l.name}</span>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <Input
+                        type="time"
+                        className="w-[9.5rem] py-1 text-xs"
+                        value={draft}
+                        onChange={(e) =>
+                          setCutoffEdits((m) => ({
+                            ...m,
+                            [l.id]: e.target.value,
+                          }))
+                        }
+                      />
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="px-2.5 py-1.5 text-xs"
+                        disabled={!dirty || setCutoff.isPending}
+                        onClick={() =>
+                          setCutoff.mutate({
+                            locationId: l.id,
+                            defaultCutoffTime: draft,
+                          })
+                        }
+                      >
+                        Save cutoff
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge tone={l.isActive ? "good" : "bad"}>
+                      {l.isActive ? "Active" : "Off"}
+                    </Badge>
+                    <Button
+                      type="button"
+                      variant={l.isActive ? "danger" : "secondary"}
+                      className="px-2.5 py-1.5 text-xs"
+                      disabled={setLocActive.isPending}
+                      onClick={() =>
+                        setLocActive.mutate({ id: l.id, isActive: !l.isActive })
+                      }
+                    >
+                      {l.isActive ? "Deactivate" : "Reactivate"}
+                    </Button>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </Panel>
 

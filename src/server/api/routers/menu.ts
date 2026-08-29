@@ -8,7 +8,7 @@ import {
   dhakaDateOnly,
   enumerateDateRange,
   getOrderWindow,
-  ORDER_ROLLOVER_TIME,
+  normalizeCutoffTime,
   todayDateString,
   weekdayFromDateString,
   WEEKDAYS,
@@ -37,10 +37,19 @@ async function upsertOneDaily(
     imageUrl?: string | null;
     catalogItemId?: string | null;
     isPublished: boolean;
+    cutoffTime?: string;
   },
 ) {
   const date = dhakaDateOnly(input.date);
-  const cutoffAt = dayArchiveAt(input.date);
+  const cutoffHm =
+    input.cutoffTime ??
+    (
+      await db.location.findUnique({
+        where: { id: input.locationId },
+        select: { defaultCutoffTime: true },
+      })
+    )?.defaultCutoffTime;
+  const cutoffAt = dayArchiveAt(input.date, normalizeCutoffTime(cutoffHm));
 
   return db.dailyMenu.upsert({
     where: {
@@ -90,13 +99,19 @@ async function ensureMenusForDate(
     locationIds === "all"
       ? await db.location.findMany({
           where: { isActive: true },
-          select: { id: true },
+          select: { id: true, defaultCutoffTime: true },
         })
-      : locationIds.map((id) => ({ id }));
+      : await db.location.findMany({
+          where: { id: { in: locationIds } },
+          select: { id: true, defaultCutoffTime: true },
+        });
 
   if (locations.length === 0) return;
 
   const ids = locations.map((l) => l.id);
+  const cutoffByLoc = new Map(
+    locations.map((l) => [l.id, normalizeCutoffTime(l.defaultCutoffTime)]),
+  );
 
   const [existing, templates] = await Promise.all([
     db.dailyMenu.findMany({
@@ -129,6 +144,7 @@ async function ensureMenusForDate(
       imageUrl: t.imageUrl,
       catalogItemId: t.catalogItemId,
       isPublished: true,
+      cutoffTime: cutoffByLoc.get(t.locationId),
     });
   }
 }
@@ -271,34 +287,45 @@ export const menuRouter = createTRPCRouter({
       return { ok: true as const };
     }),
 
-  orderWindow: protectedProcedure.query(() => getOrderWindow()),
+  orderWindow: protectedProcedure.query(async ({ ctx }) => {
+    const user = await ctx.db.user.findUnique({
+      where: { id: ctx.session.user.id },
+      include: { location: { select: { defaultCutoffTime: true } } },
+    });
+    return getOrderWindow(
+      new Date(),
+      normalizeCutoffTime(user?.location?.defaultCutoffTime),
+    );
+  }),
 
   todayForUser: protectedProcedure.query(async ({ ctx }) => {
     const user = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
       include: {
-        location: { select: { id: true, name: true } },
+        location: {
+          select: { id: true, name: true, defaultCutoffTime: true },
+        },
         adminLocations: { select: { locationId: true } },
       },
     });
+
+    const ownCutoff = normalizeCutoffTime(user?.location?.defaultCutoffTime);
+    const ownWindow = getOrderWindow(new Date(), ownCutoff);
+
     if (!user?.profileComplete) {
       return {
         menus: [],
         locationName: null as string | null,
         locationId: null as string | null,
         scope: "none" as const,
-        window: getOrderWindow(),
+        window: ownWindow,
       };
     }
 
-    const window = getOrderWindow();
-    const date = dhakaDateOnly(window.orderDate);
     let locationIds: string[] | "all" = [];
-    let locationFilter: { locationId?: string | { in: string[] } } = {};
     let scope: "own" | "admin" | "all" = "own";
 
     if (user.role === "SUPER_ADMIN") {
-      locationFilter = {};
       locationIds = "all";
       scope = "all";
     } else if (user.role === "ADMIN") {
@@ -306,12 +333,9 @@ export const menuRouter = createTRPCRouter({
         user.adminLocations.map((a) => a.locationId),
       );
       if (user.locationId) ids.add(user.locationId);
-      const list = Array.from(ids);
-      locationFilter = { locationId: { in: list } };
-      locationIds = list;
+      locationIds = Array.from(ids);
       scope = "admin";
     } else if (user.locationId) {
-      locationFilter = { locationId: user.locationId };
       locationIds = [user.locationId];
       scope = "own";
     } else {
@@ -320,29 +344,55 @@ export const menuRouter = createTRPCRouter({
         locationName: null,
         locationId: null,
         scope: "none" as const,
-        window,
+        window: ownWindow,
       };
     }
 
-    await ensureMenusForDate(ctx.db, locationIds, window.orderDate);
+    const locations =
+      locationIds === "all"
+        ? await ctx.db.location.findMany({
+            where: { isActive: true },
+            select: { id: true, defaultCutoffTime: true },
+          })
+        : await ctx.db.location.findMany({
+            where: { id: { in: locationIds } },
+            select: { id: true, defaultCutoffTime: true },
+          });
 
-    const menus = await ctx.db.dailyMenu.findMany({
-      where: {
-        ...locationFilter,
-        date,
-        isPublished: true,
-      },
-      include: {
-        location: true,
-        orders: {
-          where: {
-            userId: user.id,
-            status: { not: "CANCELLED" },
-          },
-          take: 1,
+    // Each office may roll over at a different time — materialize the
+    // orderable date for that office, then fetch only matching menus.
+    const menusByLoc = [];
+
+    for (const loc of locations) {
+      const cutoffHm = normalizeCutoffTime(loc.defaultCutoffTime);
+      const window = getOrderWindow(new Date(), cutoffHm);
+      await ensureMenusForDate(ctx.db, [loc.id], window.orderDate);
+      const date = dhakaDateOnly(window.orderDate);
+      const rows = await ctx.db.dailyMenu.findMany({
+        where: {
+          locationId: loc.id,
+          date,
+          isPublished: true,
         },
-      },
-      orderBy: [{ location: { name: "asc" } }, { slot: "asc" }],
+        include: {
+          location: true,
+          orders: {
+            where: {
+              userId: user.id,
+              status: { not: "CANCELLED" },
+            },
+            take: 1,
+          },
+        },
+        orderBy: { slot: "asc" },
+      });
+      menusByLoc.push(...rows);
+    }
+
+    menusByLoc.sort((a, b) => {
+      const byName = a.location.name.localeCompare(b.location.name);
+      if (byName !== 0) return byName;
+      return a.slot.localeCompare(b.slot);
     });
 
     const now = new Date();
@@ -350,14 +400,17 @@ export const menuRouter = createTRPCRouter({
       locationName: user.location?.name ?? null,
       locationId: user.locationId,
       scope,
-      window,
-      menus: menus.map((m) => {
+      window: ownWindow,
+      menus: menusByLoc.map((m) => {
         const menuDateStr = formatInTimeZone(m.date, "UTC", "yyyy-MM-dd");
-        const cutoff = m.cutoffAt ?? dayArchiveAt(menuDateStr);
+        const locCutoff = normalizeCutoffTime(m.location.defaultCutoffTime);
+        const cutoff =
+          m.cutoffAt ?? dayArchiveAt(menuDateStr, locCutoff);
         return {
           ...m,
           menuDate: menuDateStr,
           effectiveCutoffAt: cutoff,
+          cutoffTime: locCutoff,
           isPastCutoff: now > cutoff,
           myOrder: m.orders[0] ?? null,
           orders: undefined,
@@ -442,6 +495,12 @@ export const menuRouter = createTRPCRouter({
         });
       }
 
+      const loc = await ctx.db.location.findUnique({
+        where: { id: input.locationId },
+        select: { defaultCutoffTime: true },
+      });
+      const cutoffTime = normalizeCutoffTime(loc?.defaultCutoffTime);
+
       const results = [];
       for (const d of dates) {
         results.push(
@@ -455,6 +514,7 @@ export const menuRouter = createTRPCRouter({
             imageUrl: input.imageUrl,
             catalogItemId: input.catalogItemId,
             isPublished: input.isPublished,
+            cutoffTime,
           }),
         );
       }
@@ -463,7 +523,7 @@ export const menuRouter = createTRPCRouter({
         count: results.length,
         startDate: dates[0],
         endDate: dates[dates.length - 1],
-        rolloverNote: `Orders close at ${ORDER_ROLLOVER_TIME} Asia/Dhaka each day; after that, employees order for the next day.`,
+        rolloverNote: `Orders close at ${cutoffTime} Asia/Dhaka each day; after that, employees order for the next day.`,
         menus: results,
       };
     }),

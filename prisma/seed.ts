@@ -7,12 +7,12 @@ async function main() {
     {
       name: "Gulshan Office",
       address: "Gulshan, Dhaka",
-      defaultCutoffTime: "11:00",
+      defaultCutoffTime: "14:00",
     },
     {
       name: "Banani Office",
       address: "Banani, Dhaka",
-      defaultCutoffTime: "11:30",
+      defaultCutoffTime: "14:00",
     },
   ];
 
