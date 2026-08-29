@@ -116,7 +116,8 @@ model User {
   accounts            Account[]
   sessions            Session[]
   adminLocations      AdminLocation[]
-  orders              Order[]
+  orders              Order[]             @relation("OrdersOwned")
+  ordersPlaced        Order[]             @relation("OrdersPlacedBy")
   walletTransactions  WalletTransaction[] @relation("WalletOwner")
   createdTransactions WalletTransaction[] @relation("WalletCreator")
 
@@ -230,10 +231,13 @@ model Order {
   paymentStatus PaymentStatus @default(UNPAID)
   deliveredAt   DateTime?
   paidAt        DateTime?
+  /// Admin who placed this order on behalf of the user (null = self-order)
+  placedById    String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User                @relation("OrdersOwned", fields: [userId], references: [id], onDelete: Cascade)
+  placedBy   User?               @relation("OrdersPlacedBy", fields: [placedById], references: [id], onDelete: SetNull)
   dailyMenu  DailyMenu           @relation(fields: [dailyMenuId], references: [id], onDelete: Cascade)
   location   Location            @relation(fields: [locationId], references: [id], onDelete: Cascade)
   walletTxs  WalletTransaction[]
@@ -241,6 +245,7 @@ model Order {
   @@index([dailyMenuId, status])
   @@index([locationId, createdAt])
   @@index([userId, createdAt])
+  @@index([placedById])
 }
 
 model WalletTransaction {

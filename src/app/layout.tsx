@@ -29,8 +29,12 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} dark`}>
-      <body className="bg-grain font-sans antialiased">
+    <html
+      lang="en"
+      className={`${display.variable} ${body.variable} dark`}
+      suppressHydrationWarning
+    >
+      <body className="bg-grain font-sans antialiased" suppressHydrationWarning>
         <GradientBlobs />
         <div className="app-shell">
           <TRPCReactProvider>{children}</TRPCReactProvider>

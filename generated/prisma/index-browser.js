@@ -175,6 +175,7 @@ exports.Prisma.LocationScalarFieldEnum = {
   name: 'name',
   address: 'address',
   defaultCutoffTime: 'defaultCutoffTime',
+  dinnerEnabled: 'dinnerEnabled',
   isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -240,6 +241,7 @@ exports.Prisma.OrderScalarFieldEnum = {
   paymentStatus: 'paymentStatus',
   deliveredAt: 'deliveredAt',
   paidAt: 'paidAt',
+  placedById: 'placedById',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

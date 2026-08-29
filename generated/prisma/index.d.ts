@@ -1874,6 +1874,7 @@ export namespace Prisma {
     sessions: number
     adminLocations: number
     orders: number
+    ordersPlaced: number
     walletTransactions: number
     createdTransactions: number
   }
@@ -1883,6 +1884,7 @@ export namespace Prisma {
     sessions?: boolean | UserCountOutputTypeCountSessionsArgs
     adminLocations?: boolean | UserCountOutputTypeCountAdminLocationsArgs
     orders?: boolean | UserCountOutputTypeCountOrdersArgs
+    ordersPlaced?: boolean | UserCountOutputTypeCountOrdersPlacedArgs
     walletTransactions?: boolean | UserCountOutputTypeCountWalletTransactionsArgs
     createdTransactions?: boolean | UserCountOutputTypeCountCreatedTransactionsArgs
   }
@@ -1923,6 +1925,13 @@ export namespace Prisma {
    * UserCountOutputType without action
    */
   export type UserCountOutputTypeCountOrdersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OrderWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountOrdersPlacedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: OrderWhereInput
   }
 
@@ -5658,6 +5667,7 @@ export namespace Prisma {
     sessions?: boolean | User$sessionsArgs<ExtArgs>
     adminLocations?: boolean | User$adminLocationsArgs<ExtArgs>
     orders?: boolean | User$ordersArgs<ExtArgs>
+    ordersPlaced?: boolean | User$ordersPlacedArgs<ExtArgs>
     walletTransactions?: boolean | User$walletTransactionsArgs<ExtArgs>
     createdTransactions?: boolean | User$createdTransactionsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -5732,6 +5742,7 @@ export namespace Prisma {
     sessions?: boolean | User$sessionsArgs<ExtArgs>
     adminLocations?: boolean | User$adminLocationsArgs<ExtArgs>
     orders?: boolean | User$ordersArgs<ExtArgs>
+    ordersPlaced?: boolean | User$ordersPlacedArgs<ExtArgs>
     walletTransactions?: boolean | User$walletTransactionsArgs<ExtArgs>
     createdTransactions?: boolean | User$createdTransactionsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -5751,6 +5762,7 @@ export namespace Prisma {
       sessions: Prisma.$SessionPayload<ExtArgs>[]
       adminLocations: Prisma.$AdminLocationPayload<ExtArgs>[]
       orders: Prisma.$OrderPayload<ExtArgs>[]
+      ordersPlaced: Prisma.$OrderPayload<ExtArgs>[]
       walletTransactions: Prisma.$WalletTransactionPayload<ExtArgs>[]
       createdTransactions: Prisma.$WalletTransactionPayload<ExtArgs>[]
     }
@@ -6174,6 +6186,7 @@ export namespace Prisma {
     sessions<T extends User$sessionsArgs<ExtArgs> = {}>(args?: Subset<T, User$sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     adminLocations<T extends User$adminLocationsArgs<ExtArgs> = {}>(args?: Subset<T, User$adminLocationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdminLocationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     orders<T extends User$ordersArgs<ExtArgs> = {}>(args?: Subset<T, User$ordersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    ordersPlaced<T extends User$ordersPlacedArgs<ExtArgs> = {}>(args?: Subset<T, User$ordersPlacedArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     walletTransactions<T extends User$walletTransactionsArgs<ExtArgs> = {}>(args?: Subset<T, User$walletTransactionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WalletTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     createdTransactions<T extends User$createdTransactionsArgs<ExtArgs> = {}>(args?: Subset<T, User$createdTransactionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WalletTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
@@ -6733,6 +6746,30 @@ export namespace Prisma {
   }
 
   /**
+   * User.ordersPlaced
+   */
+  export type User$ordersPlacedArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Order
+     */
+    select?: OrderSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Order
+     */
+    omit?: OrderOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OrderInclude<ExtArgs> | null
+    where?: OrderWhereInput
+    orderBy?: OrderOrderByWithRelationInput | OrderOrderByWithRelationInput[]
+    cursor?: OrderWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: OrderScalarFieldEnum | OrderScalarFieldEnum[]
+  }
+
+  /**
    * User.walletTransactions
    */
   export type User$walletTransactionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6814,6 +6851,7 @@ export namespace Prisma {
     name: string | null
     address: string | null
     defaultCutoffTime: string | null
+    dinnerEnabled: boolean | null
     isActive: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -6824,6 +6862,7 @@ export namespace Prisma {
     name: string | null
     address: string | null
     defaultCutoffTime: string | null
+    dinnerEnabled: boolean | null
     isActive: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -6834,6 +6873,7 @@ export namespace Prisma {
     name: number
     address: number
     defaultCutoffTime: number
+    dinnerEnabled: number
     isActive: number
     createdAt: number
     updatedAt: number
@@ -6846,6 +6886,7 @@ export namespace Prisma {
     name?: true
     address?: true
     defaultCutoffTime?: true
+    dinnerEnabled?: true
     isActive?: true
     createdAt?: true
     updatedAt?: true
@@ -6856,6 +6897,7 @@ export namespace Prisma {
     name?: true
     address?: true
     defaultCutoffTime?: true
+    dinnerEnabled?: true
     isActive?: true
     createdAt?: true
     updatedAt?: true
@@ -6866,6 +6908,7 @@ export namespace Prisma {
     name?: true
     address?: true
     defaultCutoffTime?: true
+    dinnerEnabled?: true
     isActive?: true
     createdAt?: true
     updatedAt?: true
@@ -6949,6 +6992,7 @@ export namespace Prisma {
     name: string
     address: string | null
     defaultCutoffTime: string
+    dinnerEnabled: boolean
     isActive: boolean
     createdAt: Date
     updatedAt: Date
@@ -6976,6 +7020,7 @@ export namespace Prisma {
     name?: boolean
     address?: boolean
     defaultCutoffTime?: boolean
+    dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -6992,6 +7037,7 @@ export namespace Prisma {
     name?: boolean
     address?: boolean
     defaultCutoffTime?: boolean
+    dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -7002,6 +7048,7 @@ export namespace Prisma {
     name?: boolean
     address?: boolean
     defaultCutoffTime?: boolean
+    dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -7012,12 +7059,13 @@ export namespace Prisma {
     name?: boolean
     address?: boolean
     defaultCutoffTime?: boolean
+    dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type LocationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "address" | "defaultCutoffTime" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["location"]>
+  export type LocationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "address" | "defaultCutoffTime" | "dinnerEnabled" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["location"]>
   export type LocationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     users?: boolean | Location$usersArgs<ExtArgs>
     adminLocations?: boolean | Location$adminLocationsArgs<ExtArgs>
@@ -7046,6 +7094,10 @@ export namespace Prisma {
        * Order cutoff as "HH:mm" in Asia/Dhaka (e.g. "14:00")
        */
       defaultCutoffTime: string
+      /**
+       * When false, dinner menus are hidden from employees and admin meal UI
+       */
+      dinnerEnabled: boolean
       isActive: boolean
       createdAt: Date
       updatedAt: Date
@@ -7481,6 +7533,7 @@ export namespace Prisma {
     readonly name: FieldRef<"Location", 'String'>
     readonly address: FieldRef<"Location", 'String'>
     readonly defaultCutoffTime: FieldRef<"Location", 'String'>
+    readonly dinnerEnabled: FieldRef<"Location", 'Boolean'>
     readonly isActive: FieldRef<"Location", 'Boolean'>
     readonly createdAt: FieldRef<"Location", 'DateTime'>
     readonly updatedAt: FieldRef<"Location", 'DateTime'>
@@ -12791,6 +12844,7 @@ export namespace Prisma {
     paymentStatus: $Enums.PaymentStatus | null
     deliveredAt: Date | null
     paidAt: Date | null
+    placedById: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -12806,6 +12860,7 @@ export namespace Prisma {
     paymentStatus: $Enums.PaymentStatus | null
     deliveredAt: Date | null
     paidAt: Date | null
+    placedById: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -12821,6 +12876,7 @@ export namespace Prisma {
     paymentStatus: number
     deliveredAt: number
     paidAt: number
+    placedById: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -12846,6 +12902,7 @@ export namespace Prisma {
     paymentStatus?: true
     deliveredAt?: true
     paidAt?: true
+    placedById?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -12861,6 +12918,7 @@ export namespace Prisma {
     paymentStatus?: true
     deliveredAt?: true
     paidAt?: true
+    placedById?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -12876,6 +12934,7 @@ export namespace Prisma {
     paymentStatus?: true
     deliveredAt?: true
     paidAt?: true
+    placedById?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -12978,6 +13037,7 @@ export namespace Prisma {
     paymentStatus: $Enums.PaymentStatus
     deliveredAt: Date | null
     paidAt: Date | null
+    placedById: string | null
     createdAt: Date
     updatedAt: Date
     _count: OrderCountAggregateOutputType | null
@@ -13012,9 +13072,11 @@ export namespace Prisma {
     paymentStatus?: boolean
     deliveredAt?: boolean
     paidAt?: boolean
+    placedById?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
+    placedBy?: boolean | Order$placedByArgs<ExtArgs>
     dailyMenu?: boolean | DailyMenuDefaultArgs<ExtArgs>
     location?: boolean | LocationDefaultArgs<ExtArgs>
     walletTxs?: boolean | Order$walletTxsArgs<ExtArgs>
@@ -13032,9 +13094,11 @@ export namespace Prisma {
     paymentStatus?: boolean
     deliveredAt?: boolean
     paidAt?: boolean
+    placedById?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
+    placedBy?: boolean | Order$placedByArgs<ExtArgs>
     dailyMenu?: boolean | DailyMenuDefaultArgs<ExtArgs>
     location?: boolean | LocationDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["order"]>
@@ -13050,9 +13114,11 @@ export namespace Prisma {
     paymentStatus?: boolean
     deliveredAt?: boolean
     paidAt?: boolean
+    placedById?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
+    placedBy?: boolean | Order$placedByArgs<ExtArgs>
     dailyMenu?: boolean | DailyMenuDefaultArgs<ExtArgs>
     location?: boolean | LocationDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["order"]>
@@ -13068,13 +13134,15 @@ export namespace Prisma {
     paymentStatus?: boolean
     deliveredAt?: boolean
     paidAt?: boolean
+    placedById?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "dailyMenuId" | "locationId" | "amount" | "note" | "status" | "paymentStatus" | "deliveredAt" | "paidAt" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
+  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "dailyMenuId" | "locationId" | "amount" | "note" | "status" | "paymentStatus" | "deliveredAt" | "paidAt" | "placedById" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
   export type OrderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
+    placedBy?: boolean | Order$placedByArgs<ExtArgs>
     dailyMenu?: boolean | DailyMenuDefaultArgs<ExtArgs>
     location?: boolean | LocationDefaultArgs<ExtArgs>
     walletTxs?: boolean | Order$walletTxsArgs<ExtArgs>
@@ -13082,11 +13150,13 @@ export namespace Prisma {
   }
   export type OrderIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
+    placedBy?: boolean | Order$placedByArgs<ExtArgs>
     dailyMenu?: boolean | DailyMenuDefaultArgs<ExtArgs>
     location?: boolean | LocationDefaultArgs<ExtArgs>
   }
   export type OrderIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
+    placedBy?: boolean | Order$placedByArgs<ExtArgs>
     dailyMenu?: boolean | DailyMenuDefaultArgs<ExtArgs>
     location?: boolean | LocationDefaultArgs<ExtArgs>
   }
@@ -13095,6 +13165,7 @@ export namespace Prisma {
     name: "Order"
     objects: {
       user: Prisma.$UserPayload<ExtArgs>
+      placedBy: Prisma.$UserPayload<ExtArgs> | null
       dailyMenu: Prisma.$DailyMenuPayload<ExtArgs>
       location: Prisma.$LocationPayload<ExtArgs>
       walletTxs: Prisma.$WalletTransactionPayload<ExtArgs>[]
@@ -13110,6 +13181,10 @@ export namespace Prisma {
       paymentStatus: $Enums.PaymentStatus
       deliveredAt: Date | null
       paidAt: Date | null
+      /**
+       * Admin who placed this order on behalf of the user (null = self-order)
+       */
+      placedById: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["order"]>
@@ -13507,6 +13582,7 @@ export namespace Prisma {
   export interface Prisma__OrderClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    placedBy<T extends Order$placedByArgs<ExtArgs> = {}>(args?: Subset<T, Order$placedByArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     dailyMenu<T extends DailyMenuDefaultArgs<ExtArgs> = {}>(args?: Subset<T, DailyMenuDefaultArgs<ExtArgs>>): Prisma__DailyMenuClient<$Result.GetResult<Prisma.$DailyMenuPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     location<T extends LocationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, LocationDefaultArgs<ExtArgs>>): Prisma__LocationClient<$Result.GetResult<Prisma.$LocationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     walletTxs<T extends Order$walletTxsArgs<ExtArgs> = {}>(args?: Subset<T, Order$walletTxsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WalletTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -13549,6 +13625,7 @@ export namespace Prisma {
     readonly paymentStatus: FieldRef<"Order", 'PaymentStatus'>
     readonly deliveredAt: FieldRef<"Order", 'DateTime'>
     readonly paidAt: FieldRef<"Order", 'DateTime'>
+    readonly placedById: FieldRef<"Order", 'String'>
     readonly createdAt: FieldRef<"Order", 'DateTime'>
     readonly updatedAt: FieldRef<"Order", 'DateTime'>
   }
@@ -13944,6 +14021,25 @@ export namespace Prisma {
      * Limit how many Orders to delete.
      */
     limit?: number
+  }
+
+  /**
+   * Order.placedBy
+   */
+  export type Order$placedByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
   }
 
   /**
@@ -15274,6 +15370,7 @@ export namespace Prisma {
     name: 'name',
     address: 'address',
     defaultCutoffTime: 'defaultCutoffTime',
+    dinnerEnabled: 'dinnerEnabled',
     isActive: 'isActive',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -15354,6 +15451,7 @@ export namespace Prisma {
     paymentStatus: 'paymentStatus',
     deliveredAt: 'deliveredAt',
     paidAt: 'paidAt',
+    placedById: 'placedById',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -15786,6 +15884,7 @@ export namespace Prisma {
     sessions?: SessionListRelationFilter
     adminLocations?: AdminLocationListRelationFilter
     orders?: OrderListRelationFilter
+    ordersPlaced?: OrderListRelationFilter
     walletTransactions?: WalletTransactionListRelationFilter
     createdTransactions?: WalletTransactionListRelationFilter
   }
@@ -15813,6 +15912,7 @@ export namespace Prisma {
     sessions?: SessionOrderByRelationAggregateInput
     adminLocations?: AdminLocationOrderByRelationAggregateInput
     orders?: OrderOrderByRelationAggregateInput
+    ordersPlaced?: OrderOrderByRelationAggregateInput
     walletTransactions?: WalletTransactionOrderByRelationAggregateInput
     createdTransactions?: WalletTransactionOrderByRelationAggregateInput
   }
@@ -15843,6 +15943,7 @@ export namespace Prisma {
     sessions?: SessionListRelationFilter
     adminLocations?: AdminLocationListRelationFilter
     orders?: OrderListRelationFilter
+    ordersPlaced?: OrderListRelationFilter
     walletTransactions?: WalletTransactionListRelationFilter
     createdTransactions?: WalletTransactionListRelationFilter
   }, "id" | "email">
@@ -15903,6 +16004,7 @@ export namespace Prisma {
     name?: StringFilter<"Location"> | string
     address?: StringNullableFilter<"Location"> | string | null
     defaultCutoffTime?: StringFilter<"Location"> | string
+    dinnerEnabled?: BoolFilter<"Location"> | boolean
     isActive?: BoolFilter<"Location"> | boolean
     createdAt?: DateTimeFilter<"Location"> | Date | string
     updatedAt?: DateTimeFilter<"Location"> | Date | string
@@ -15918,6 +16020,7 @@ export namespace Prisma {
     name?: SortOrder
     address?: SortOrderInput | SortOrder
     defaultCutoffTime?: SortOrder
+    dinnerEnabled?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -15936,6 +16039,7 @@ export namespace Prisma {
     name?: StringFilter<"Location"> | string
     address?: StringNullableFilter<"Location"> | string | null
     defaultCutoffTime?: StringFilter<"Location"> | string
+    dinnerEnabled?: BoolFilter<"Location"> | boolean
     isActive?: BoolFilter<"Location"> | boolean
     createdAt?: DateTimeFilter<"Location"> | Date | string
     updatedAt?: DateTimeFilter<"Location"> | Date | string
@@ -15951,6 +16055,7 @@ export namespace Prisma {
     name?: SortOrder
     address?: SortOrderInput | SortOrder
     defaultCutoffTime?: SortOrder
+    dinnerEnabled?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -15967,6 +16072,7 @@ export namespace Prisma {
     name?: StringWithAggregatesFilter<"Location"> | string
     address?: StringNullableWithAggregatesFilter<"Location"> | string | null
     defaultCutoffTime?: StringWithAggregatesFilter<"Location"> | string
+    dinnerEnabled?: BoolWithAggregatesFilter<"Location"> | boolean
     isActive?: BoolWithAggregatesFilter<"Location"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"Location"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Location"> | Date | string
@@ -16320,9 +16426,11 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFilter<"Order"> | $Enums.PaymentStatus
     deliveredAt?: DateTimeNullableFilter<"Order"> | Date | string | null
     paidAt?: DateTimeNullableFilter<"Order"> | Date | string | null
+    placedById?: StringNullableFilter<"Order"> | string | null
     createdAt?: DateTimeFilter<"Order"> | Date | string
     updatedAt?: DateTimeFilter<"Order"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    placedBy?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     dailyMenu?: XOR<DailyMenuScalarRelationFilter, DailyMenuWhereInput>
     location?: XOR<LocationScalarRelationFilter, LocationWhereInput>
     walletTxs?: WalletTransactionListRelationFilter
@@ -16339,9 +16447,11 @@ export namespace Prisma {
     paymentStatus?: SortOrder
     deliveredAt?: SortOrderInput | SortOrder
     paidAt?: SortOrderInput | SortOrder
+    placedById?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     user?: UserOrderByWithRelationInput
+    placedBy?: UserOrderByWithRelationInput
     dailyMenu?: DailyMenuOrderByWithRelationInput
     location?: LocationOrderByWithRelationInput
     walletTxs?: WalletTransactionOrderByRelationAggregateInput
@@ -16361,9 +16471,11 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFilter<"Order"> | $Enums.PaymentStatus
     deliveredAt?: DateTimeNullableFilter<"Order"> | Date | string | null
     paidAt?: DateTimeNullableFilter<"Order"> | Date | string | null
+    placedById?: StringNullableFilter<"Order"> | string | null
     createdAt?: DateTimeFilter<"Order"> | Date | string
     updatedAt?: DateTimeFilter<"Order"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    placedBy?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     dailyMenu?: XOR<DailyMenuScalarRelationFilter, DailyMenuWhereInput>
     location?: XOR<LocationScalarRelationFilter, LocationWhereInput>
     walletTxs?: WalletTransactionListRelationFilter
@@ -16380,6 +16492,7 @@ export namespace Prisma {
     paymentStatus?: SortOrder
     deliveredAt?: SortOrderInput | SortOrder
     paidAt?: SortOrderInput | SortOrder
+    placedById?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: OrderCountOrderByAggregateInput
@@ -16403,6 +16516,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusWithAggregatesFilter<"Order"> | $Enums.PaymentStatus
     deliveredAt?: DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
     paidAt?: DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
+    placedById?: StringNullableWithAggregatesFilter<"Order"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Order"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Order"> | Date | string
   }
@@ -16713,6 +16827,7 @@ export namespace Prisma {
     sessions?: SessionCreateNestedManyWithoutUserInput
     adminLocations?: AdminLocationCreateNestedManyWithoutUserInput
     orders?: OrderCreateNestedManyWithoutUserInput
+    ordersPlaced?: OrderCreateNestedManyWithoutPlacedByInput
     walletTransactions?: WalletTransactionCreateNestedManyWithoutUserInput
     createdTransactions?: WalletTransactionCreateNestedManyWithoutCreatedByInput
   }
@@ -16739,6 +16854,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     adminLocations?: AdminLocationUncheckedCreateNestedManyWithoutUserInput
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
+    ordersPlaced?: OrderUncheckedCreateNestedManyWithoutPlacedByInput
     walletTransactions?: WalletTransactionUncheckedCreateNestedManyWithoutUserInput
     createdTransactions?: WalletTransactionUncheckedCreateNestedManyWithoutCreatedByInput
   }
@@ -16765,6 +16881,7 @@ export namespace Prisma {
     sessions?: SessionUpdateManyWithoutUserNestedInput
     adminLocations?: AdminLocationUpdateManyWithoutUserNestedInput
     orders?: OrderUpdateManyWithoutUserNestedInput
+    ordersPlaced?: OrderUpdateManyWithoutPlacedByNestedInput
     walletTransactions?: WalletTransactionUpdateManyWithoutUserNestedInput
     createdTransactions?: WalletTransactionUpdateManyWithoutCreatedByNestedInput
   }
@@ -16791,6 +16908,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     adminLocations?: AdminLocationUncheckedUpdateManyWithoutUserNestedInput
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    ordersPlaced?: OrderUncheckedUpdateManyWithoutPlacedByNestedInput
     walletTransactions?: WalletTransactionUncheckedUpdateManyWithoutUserNestedInput
     createdTransactions?: WalletTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
   }
@@ -16859,6 +16977,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -16874,6 +16993,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -16889,6 +17009,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16904,6 +17025,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16919,6 +17041,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -16929,6 +17052,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16939,6 +17063,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -17307,6 +17432,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutOrdersInput
+    placedBy?: UserCreateNestedOneWithoutOrdersPlacedInput
     dailyMenu: DailyMenuCreateNestedOneWithoutOrdersInput
     location: LocationCreateNestedOneWithoutOrdersInput
     walletTxs?: WalletTransactionCreateNestedManyWithoutOrderInput
@@ -17323,6 +17449,7 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     deliveredAt?: Date | string | null
     paidAt?: Date | string | null
+    placedById?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     walletTxs?: WalletTransactionUncheckedCreateNestedManyWithoutOrderInput
@@ -17339,6 +17466,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
+    placedBy?: UserUpdateOneWithoutOrdersPlacedNestedInput
     dailyMenu?: DailyMenuUpdateOneRequiredWithoutOrdersNestedInput
     location?: LocationUpdateOneRequiredWithoutOrdersNestedInput
     walletTxs?: WalletTransactionUpdateManyWithoutOrderNestedInput
@@ -17355,6 +17483,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    placedById?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     walletTxs?: WalletTransactionUncheckedUpdateManyWithoutOrderNestedInput
@@ -17371,6 +17500,7 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     deliveredAt?: Date | string | null
     paidAt?: Date | string | null
+    placedById?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -17398,6 +17528,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    placedById?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -17975,6 +18106,7 @@ export namespace Prisma {
     name?: SortOrder
     address?: SortOrder
     defaultCutoffTime?: SortOrder
+    dinnerEnabled?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -17985,6 +18117,7 @@ export namespace Prisma {
     name?: SortOrder
     address?: SortOrder
     defaultCutoffTime?: SortOrder
+    dinnerEnabled?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -17995,6 +18128,7 @@ export namespace Prisma {
     name?: SortOrder
     address?: SortOrder
     defaultCutoffTime?: SortOrder
+    dinnerEnabled?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -18244,6 +18378,11 @@ export namespace Prisma {
     not?: NestedEnumPaymentStatusFilter<$PrismaModel> | $Enums.PaymentStatus
   }
 
+  export type UserNullableScalarRelationFilter = {
+    is?: UserWhereInput | null
+    isNot?: UserWhereInput | null
+  }
+
   export type DailyMenuScalarRelationFilter = {
     is?: DailyMenuWhereInput
     isNot?: DailyMenuWhereInput
@@ -18260,6 +18399,7 @@ export namespace Prisma {
     paymentStatus?: SortOrder
     deliveredAt?: SortOrder
     paidAt?: SortOrder
+    placedById?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -18279,6 +18419,7 @@ export namespace Prisma {
     paymentStatus?: SortOrder
     deliveredAt?: SortOrder
     paidAt?: SortOrder
+    placedById?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -18294,6 +18435,7 @@ export namespace Prisma {
     paymentStatus?: SortOrder
     deliveredAt?: SortOrder
     paidAt?: SortOrder
+    placedById?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -18332,11 +18474,6 @@ export namespace Prisma {
   export type OrderNullableScalarRelationFilter = {
     is?: OrderWhereInput | null
     isNot?: OrderWhereInput | null
-  }
-
-  export type UserNullableScalarRelationFilter = {
-    is?: UserWhereInput | null
-    isNot?: UserWhereInput | null
   }
 
   export type WalletTransactionCountOrderByAggregateInput = {
@@ -18477,6 +18614,13 @@ export namespace Prisma {
     connect?: OrderWhereUniqueInput | OrderWhereUniqueInput[]
   }
 
+  export type OrderCreateNestedManyWithoutPlacedByInput = {
+    create?: XOR<OrderCreateWithoutPlacedByInput, OrderUncheckedCreateWithoutPlacedByInput> | OrderCreateWithoutPlacedByInput[] | OrderUncheckedCreateWithoutPlacedByInput[]
+    connectOrCreate?: OrderCreateOrConnectWithoutPlacedByInput | OrderCreateOrConnectWithoutPlacedByInput[]
+    createMany?: OrderCreateManyPlacedByInputEnvelope
+    connect?: OrderWhereUniqueInput | OrderWhereUniqueInput[]
+  }
+
   export type WalletTransactionCreateNestedManyWithoutUserInput = {
     create?: XOR<WalletTransactionCreateWithoutUserInput, WalletTransactionUncheckedCreateWithoutUserInput> | WalletTransactionCreateWithoutUserInput[] | WalletTransactionUncheckedCreateWithoutUserInput[]
     connectOrCreate?: WalletTransactionCreateOrConnectWithoutUserInput | WalletTransactionCreateOrConnectWithoutUserInput[]
@@ -18516,6 +18660,13 @@ export namespace Prisma {
     create?: XOR<OrderCreateWithoutUserInput, OrderUncheckedCreateWithoutUserInput> | OrderCreateWithoutUserInput[] | OrderUncheckedCreateWithoutUserInput[]
     connectOrCreate?: OrderCreateOrConnectWithoutUserInput | OrderCreateOrConnectWithoutUserInput[]
     createMany?: OrderCreateManyUserInputEnvelope
+    connect?: OrderWhereUniqueInput | OrderWhereUniqueInput[]
+  }
+
+  export type OrderUncheckedCreateNestedManyWithoutPlacedByInput = {
+    create?: XOR<OrderCreateWithoutPlacedByInput, OrderUncheckedCreateWithoutPlacedByInput> | OrderCreateWithoutPlacedByInput[] | OrderUncheckedCreateWithoutPlacedByInput[]
+    connectOrCreate?: OrderCreateOrConnectWithoutPlacedByInput | OrderCreateOrConnectWithoutPlacedByInput[]
+    createMany?: OrderCreateManyPlacedByInputEnvelope
     connect?: OrderWhereUniqueInput | OrderWhereUniqueInput[]
   }
 
@@ -18623,6 +18774,20 @@ export namespace Prisma {
     deleteMany?: OrderScalarWhereInput | OrderScalarWhereInput[]
   }
 
+  export type OrderUpdateManyWithoutPlacedByNestedInput = {
+    create?: XOR<OrderCreateWithoutPlacedByInput, OrderUncheckedCreateWithoutPlacedByInput> | OrderCreateWithoutPlacedByInput[] | OrderUncheckedCreateWithoutPlacedByInput[]
+    connectOrCreate?: OrderCreateOrConnectWithoutPlacedByInput | OrderCreateOrConnectWithoutPlacedByInput[]
+    upsert?: OrderUpsertWithWhereUniqueWithoutPlacedByInput | OrderUpsertWithWhereUniqueWithoutPlacedByInput[]
+    createMany?: OrderCreateManyPlacedByInputEnvelope
+    set?: OrderWhereUniqueInput | OrderWhereUniqueInput[]
+    disconnect?: OrderWhereUniqueInput | OrderWhereUniqueInput[]
+    delete?: OrderWhereUniqueInput | OrderWhereUniqueInput[]
+    connect?: OrderWhereUniqueInput | OrderWhereUniqueInput[]
+    update?: OrderUpdateWithWhereUniqueWithoutPlacedByInput | OrderUpdateWithWhereUniqueWithoutPlacedByInput[]
+    updateMany?: OrderUpdateManyWithWhereWithoutPlacedByInput | OrderUpdateManyWithWhereWithoutPlacedByInput[]
+    deleteMany?: OrderScalarWhereInput | OrderScalarWhereInput[]
+  }
+
   export type WalletTransactionUpdateManyWithoutUserNestedInput = {
     create?: XOR<WalletTransactionCreateWithoutUserInput, WalletTransactionUncheckedCreateWithoutUserInput> | WalletTransactionCreateWithoutUserInput[] | WalletTransactionUncheckedCreateWithoutUserInput[]
     connectOrCreate?: WalletTransactionCreateOrConnectWithoutUserInput | WalletTransactionCreateOrConnectWithoutUserInput[]
@@ -18704,6 +18869,20 @@ export namespace Prisma {
     connect?: OrderWhereUniqueInput | OrderWhereUniqueInput[]
     update?: OrderUpdateWithWhereUniqueWithoutUserInput | OrderUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: OrderUpdateManyWithWhereWithoutUserInput | OrderUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: OrderScalarWhereInput | OrderScalarWhereInput[]
+  }
+
+  export type OrderUncheckedUpdateManyWithoutPlacedByNestedInput = {
+    create?: XOR<OrderCreateWithoutPlacedByInput, OrderUncheckedCreateWithoutPlacedByInput> | OrderCreateWithoutPlacedByInput[] | OrderUncheckedCreateWithoutPlacedByInput[]
+    connectOrCreate?: OrderCreateOrConnectWithoutPlacedByInput | OrderCreateOrConnectWithoutPlacedByInput[]
+    upsert?: OrderUpsertWithWhereUniqueWithoutPlacedByInput | OrderUpsertWithWhereUniqueWithoutPlacedByInput[]
+    createMany?: OrderCreateManyPlacedByInputEnvelope
+    set?: OrderWhereUniqueInput | OrderWhereUniqueInput[]
+    disconnect?: OrderWhereUniqueInput | OrderWhereUniqueInput[]
+    delete?: OrderWhereUniqueInput | OrderWhereUniqueInput[]
+    connect?: OrderWhereUniqueInput | OrderWhereUniqueInput[]
+    update?: OrderUpdateWithWhereUniqueWithoutPlacedByInput | OrderUpdateWithWhereUniqueWithoutPlacedByInput[]
+    updateMany?: OrderUpdateManyWithWhereWithoutPlacedByInput | OrderUpdateManyWithWhereWithoutPlacedByInput[]
     deleteMany?: OrderScalarWhereInput | OrderScalarWhereInput[]
   }
 
@@ -19231,6 +19410,12 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput
   }
 
+  export type UserCreateNestedOneWithoutOrdersPlacedInput = {
+    create?: XOR<UserCreateWithoutOrdersPlacedInput, UserUncheckedCreateWithoutOrdersPlacedInput>
+    connectOrCreate?: UserCreateOrConnectWithoutOrdersPlacedInput
+    connect?: UserWhereUniqueInput
+  }
+
   export type DailyMenuCreateNestedOneWithoutOrdersInput = {
     create?: XOR<DailyMenuCreateWithoutOrdersInput, DailyMenuUncheckedCreateWithoutOrdersInput>
     connectOrCreate?: DailyMenuCreateOrConnectWithoutOrdersInput
@@ -19271,6 +19456,16 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutOrdersInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutOrdersInput, UserUpdateWithoutOrdersInput>, UserUncheckedUpdateWithoutOrdersInput>
+  }
+
+  export type UserUpdateOneWithoutOrdersPlacedNestedInput = {
+    create?: XOR<UserCreateWithoutOrdersPlacedInput, UserUncheckedCreateWithoutOrdersPlacedInput>
+    connectOrCreate?: UserCreateOrConnectWithoutOrdersPlacedInput
+    upsert?: UserUpsertWithoutOrdersPlacedInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutOrdersPlacedInput, UserUpdateWithoutOrdersPlacedInput>, UserUncheckedUpdateWithoutOrdersPlacedInput>
   }
 
   export type DailyMenuUpdateOneRequiredWithoutOrdersNestedInput = {
@@ -19708,6 +19903,7 @@ export namespace Prisma {
     sessions?: SessionCreateNestedManyWithoutUserInput
     adminLocations?: AdminLocationCreateNestedManyWithoutUserInput
     orders?: OrderCreateNestedManyWithoutUserInput
+    ordersPlaced?: OrderCreateNestedManyWithoutPlacedByInput
     walletTransactions?: WalletTransactionCreateNestedManyWithoutUserInput
     createdTransactions?: WalletTransactionCreateNestedManyWithoutCreatedByInput
   }
@@ -19733,6 +19929,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     adminLocations?: AdminLocationUncheckedCreateNestedManyWithoutUserInput
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
+    ordersPlaced?: OrderUncheckedCreateNestedManyWithoutPlacedByInput
     walletTransactions?: WalletTransactionUncheckedCreateNestedManyWithoutUserInput
     createdTransactions?: WalletTransactionUncheckedCreateNestedManyWithoutCreatedByInput
   }
@@ -19774,6 +19971,7 @@ export namespace Prisma {
     sessions?: SessionUpdateManyWithoutUserNestedInput
     adminLocations?: AdminLocationUpdateManyWithoutUserNestedInput
     orders?: OrderUpdateManyWithoutUserNestedInput
+    ordersPlaced?: OrderUpdateManyWithoutPlacedByNestedInput
     walletTransactions?: WalletTransactionUpdateManyWithoutUserNestedInput
     createdTransactions?: WalletTransactionUpdateManyWithoutCreatedByNestedInput
   }
@@ -19799,6 +19997,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     adminLocations?: AdminLocationUncheckedUpdateManyWithoutUserNestedInput
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    ordersPlaced?: OrderUncheckedUpdateManyWithoutPlacedByNestedInput
     walletTransactions?: WalletTransactionUncheckedUpdateManyWithoutUserNestedInput
     createdTransactions?: WalletTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
   }
@@ -19824,6 +20023,7 @@ export namespace Prisma {
     accounts?: AccountCreateNestedManyWithoutUserInput
     adminLocations?: AdminLocationCreateNestedManyWithoutUserInput
     orders?: OrderCreateNestedManyWithoutUserInput
+    ordersPlaced?: OrderCreateNestedManyWithoutPlacedByInput
     walletTransactions?: WalletTransactionCreateNestedManyWithoutUserInput
     createdTransactions?: WalletTransactionCreateNestedManyWithoutCreatedByInput
   }
@@ -19849,6 +20049,7 @@ export namespace Prisma {
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     adminLocations?: AdminLocationUncheckedCreateNestedManyWithoutUserInput
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
+    ordersPlaced?: OrderUncheckedCreateNestedManyWithoutPlacedByInput
     walletTransactions?: WalletTransactionUncheckedCreateNestedManyWithoutUserInput
     createdTransactions?: WalletTransactionUncheckedCreateNestedManyWithoutCreatedByInput
   }
@@ -19890,6 +20091,7 @@ export namespace Prisma {
     accounts?: AccountUpdateManyWithoutUserNestedInput
     adminLocations?: AdminLocationUpdateManyWithoutUserNestedInput
     orders?: OrderUpdateManyWithoutUserNestedInput
+    ordersPlaced?: OrderUpdateManyWithoutPlacedByNestedInput
     walletTransactions?: WalletTransactionUpdateManyWithoutUserNestedInput
     createdTransactions?: WalletTransactionUpdateManyWithoutCreatedByNestedInput
   }
@@ -19915,6 +20117,7 @@ export namespace Prisma {
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     adminLocations?: AdminLocationUncheckedUpdateManyWithoutUserNestedInput
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    ordersPlaced?: OrderUncheckedUpdateManyWithoutPlacedByNestedInput
     walletTransactions?: WalletTransactionUncheckedUpdateManyWithoutUserNestedInput
     createdTransactions?: WalletTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
   }
@@ -19924,6 +20127,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -19938,6 +20142,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -20044,6 +20249,7 @@ export namespace Prisma {
     paidAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    placedBy?: UserCreateNestedOneWithoutOrdersPlacedInput
     dailyMenu: DailyMenuCreateNestedOneWithoutOrdersInput
     location: LocationCreateNestedOneWithoutOrdersInput
     walletTxs?: WalletTransactionCreateNestedManyWithoutOrderInput
@@ -20059,6 +20265,7 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     deliveredAt?: Date | string | null
     paidAt?: Date | string | null
+    placedById?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     walletTxs?: WalletTransactionUncheckedCreateNestedManyWithoutOrderInput
@@ -20071,6 +20278,48 @@ export namespace Prisma {
 
   export type OrderCreateManyUserInputEnvelope = {
     data: OrderCreateManyUserInput | OrderCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type OrderCreateWithoutPlacedByInput = {
+    id?: string
+    amount: number
+    note?: string | null
+    status?: $Enums.OrderStatus
+    paymentStatus?: $Enums.PaymentStatus
+    deliveredAt?: Date | string | null
+    paidAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutOrdersInput
+    dailyMenu: DailyMenuCreateNestedOneWithoutOrdersInput
+    location: LocationCreateNestedOneWithoutOrdersInput
+    walletTxs?: WalletTransactionCreateNestedManyWithoutOrderInput
+  }
+
+  export type OrderUncheckedCreateWithoutPlacedByInput = {
+    id?: string
+    userId: string
+    dailyMenuId: string
+    locationId: string
+    amount: number
+    note?: string | null
+    status?: $Enums.OrderStatus
+    paymentStatus?: $Enums.PaymentStatus
+    deliveredAt?: Date | string | null
+    paidAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    walletTxs?: WalletTransactionUncheckedCreateNestedManyWithoutOrderInput
+  }
+
+  export type OrderCreateOrConnectWithoutPlacedByInput = {
+    where: OrderWhereUniqueInput
+    create: XOR<OrderCreateWithoutPlacedByInput, OrderUncheckedCreateWithoutPlacedByInput>
+  }
+
+  export type OrderCreateManyPlacedByInputEnvelope = {
+    data: OrderCreateManyPlacedByInput | OrderCreateManyPlacedByInput[]
     skipDuplicates?: boolean
   }
 
@@ -20154,6 +20403,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20168,6 +20418,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20293,8 +20544,25 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFilter<"Order"> | $Enums.PaymentStatus
     deliveredAt?: DateTimeNullableFilter<"Order"> | Date | string | null
     paidAt?: DateTimeNullableFilter<"Order"> | Date | string | null
+    placedById?: StringNullableFilter<"Order"> | string | null
     createdAt?: DateTimeFilter<"Order"> | Date | string
     updatedAt?: DateTimeFilter<"Order"> | Date | string
+  }
+
+  export type OrderUpsertWithWhereUniqueWithoutPlacedByInput = {
+    where: OrderWhereUniqueInput
+    update: XOR<OrderUpdateWithoutPlacedByInput, OrderUncheckedUpdateWithoutPlacedByInput>
+    create: XOR<OrderCreateWithoutPlacedByInput, OrderUncheckedCreateWithoutPlacedByInput>
+  }
+
+  export type OrderUpdateWithWhereUniqueWithoutPlacedByInput = {
+    where: OrderWhereUniqueInput
+    data: XOR<OrderUpdateWithoutPlacedByInput, OrderUncheckedUpdateWithoutPlacedByInput>
+  }
+
+  export type OrderUpdateManyWithWhereWithoutPlacedByInput = {
+    where: OrderScalarWhereInput
+    data: XOR<OrderUpdateManyMutationInput, OrderUncheckedUpdateManyWithoutPlacedByInput>
   }
 
   export type WalletTransactionUpsertWithWhereUniqueWithoutUserInput = {
@@ -20365,6 +20633,7 @@ export namespace Prisma {
     sessions?: SessionCreateNestedManyWithoutUserInput
     adminLocations?: AdminLocationCreateNestedManyWithoutUserInput
     orders?: OrderCreateNestedManyWithoutUserInput
+    ordersPlaced?: OrderCreateNestedManyWithoutPlacedByInput
     walletTransactions?: WalletTransactionCreateNestedManyWithoutUserInput
     createdTransactions?: WalletTransactionCreateNestedManyWithoutCreatedByInput
   }
@@ -20390,6 +20659,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     adminLocations?: AdminLocationUncheckedCreateNestedManyWithoutUserInput
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
+    ordersPlaced?: OrderUncheckedCreateNestedManyWithoutPlacedByInput
     walletTransactions?: WalletTransactionUncheckedCreateNestedManyWithoutUserInput
     createdTransactions?: WalletTransactionUncheckedCreateNestedManyWithoutCreatedByInput
   }
@@ -20519,6 +20789,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutOrdersInput
+    placedBy?: UserCreateNestedOneWithoutOrdersPlacedInput
     dailyMenu: DailyMenuCreateNestedOneWithoutOrdersInput
     walletTxs?: WalletTransactionCreateNestedManyWithoutOrderInput
   }
@@ -20533,6 +20804,7 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     deliveredAt?: Date | string | null
     paidAt?: Date | string | null
+    placedById?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     walletTxs?: WalletTransactionUncheckedCreateNestedManyWithoutOrderInput
@@ -20710,6 +20982,7 @@ export namespace Prisma {
     accounts?: AccountCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
     orders?: OrderCreateNestedManyWithoutUserInput
+    ordersPlaced?: OrderCreateNestedManyWithoutPlacedByInput
     walletTransactions?: WalletTransactionCreateNestedManyWithoutUserInput
     createdTransactions?: WalletTransactionCreateNestedManyWithoutCreatedByInput
   }
@@ -20735,6 +21008,7 @@ export namespace Prisma {
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
+    ordersPlaced?: OrderUncheckedCreateNestedManyWithoutPlacedByInput
     walletTransactions?: WalletTransactionUncheckedCreateNestedManyWithoutUserInput
     createdTransactions?: WalletTransactionUncheckedCreateNestedManyWithoutCreatedByInput
   }
@@ -20749,6 +21023,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -20763,6 +21038,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -20809,6 +21085,7 @@ export namespace Prisma {
     accounts?: AccountUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
     orders?: OrderUpdateManyWithoutUserNestedInput
+    ordersPlaced?: OrderUpdateManyWithoutPlacedByNestedInput
     walletTransactions?: WalletTransactionUpdateManyWithoutUserNestedInput
     createdTransactions?: WalletTransactionUpdateManyWithoutCreatedByNestedInput
   }
@@ -20834,6 +21111,7 @@ export namespace Prisma {
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    ordersPlaced?: OrderUncheckedUpdateManyWithoutPlacedByNestedInput
     walletTransactions?: WalletTransactionUncheckedUpdateManyWithoutUserNestedInput
     createdTransactions?: WalletTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
   }
@@ -20854,6 +21132,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20868,6 +21147,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20998,6 +21278,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -21012,6 +21293,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -21115,6 +21397,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21129,6 +21412,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21194,6 +21478,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -21208,6 +21493,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -21297,6 +21583,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutOrdersInput
+    placedBy?: UserCreateNestedOneWithoutOrdersPlacedInput
     location: LocationCreateNestedOneWithoutOrdersInput
     walletTxs?: WalletTransactionCreateNestedManyWithoutOrderInput
   }
@@ -21311,6 +21598,7 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     deliveredAt?: Date | string | null
     paidAt?: Date | string | null
+    placedById?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     walletTxs?: WalletTransactionUncheckedCreateNestedManyWithoutOrderInput
@@ -21342,6 +21630,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21356,6 +21645,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21478,6 +21768,7 @@ export namespace Prisma {
     accounts?: AccountCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
     adminLocations?: AdminLocationCreateNestedManyWithoutUserInput
+    ordersPlaced?: OrderCreateNestedManyWithoutPlacedByInput
     walletTransactions?: WalletTransactionCreateNestedManyWithoutUserInput
     createdTransactions?: WalletTransactionCreateNestedManyWithoutCreatedByInput
   }
@@ -21503,6 +21794,7 @@ export namespace Prisma {
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     adminLocations?: AdminLocationUncheckedCreateNestedManyWithoutUserInput
+    ordersPlaced?: OrderUncheckedCreateNestedManyWithoutPlacedByInput
     walletTransactions?: WalletTransactionUncheckedCreateNestedManyWithoutUserInput
     createdTransactions?: WalletTransactionUncheckedCreateNestedManyWithoutCreatedByInput
   }
@@ -21510,6 +21802,63 @@ export namespace Prisma {
   export type UserCreateOrConnectWithoutOrdersInput = {
     where: UserWhereUniqueInput
     create: XOR<UserCreateWithoutOrdersInput, UserUncheckedCreateWithoutOrdersInput>
+  }
+
+  export type UserCreateWithoutOrdersPlacedInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    emailVerified?: Date | string | null
+    image?: string | null
+    role?: $Enums.Role
+    employeeId?: string | null
+    deskNumber?: string | null
+    buildingNumber?: string | null
+    floorNumber?: string | null
+    paymentMode?: $Enums.PaymentMode
+    balance?: number
+    profileComplete?: boolean
+    isBanned?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    location?: LocationCreateNestedOneWithoutUsersInput
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    adminLocations?: AdminLocationCreateNestedManyWithoutUserInput
+    orders?: OrderCreateNestedManyWithoutUserInput
+    walletTransactions?: WalletTransactionCreateNestedManyWithoutUserInput
+    createdTransactions?: WalletTransactionCreateNestedManyWithoutCreatedByInput
+  }
+
+  export type UserUncheckedCreateWithoutOrdersPlacedInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    emailVerified?: Date | string | null
+    image?: string | null
+    role?: $Enums.Role
+    employeeId?: string | null
+    deskNumber?: string | null
+    buildingNumber?: string | null
+    floorNumber?: string | null
+    locationId?: string | null
+    paymentMode?: $Enums.PaymentMode
+    balance?: number
+    profileComplete?: boolean
+    isBanned?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    adminLocations?: AdminLocationUncheckedCreateNestedManyWithoutUserInput
+    orders?: OrderUncheckedCreateNestedManyWithoutUserInput
+    walletTransactions?: WalletTransactionUncheckedCreateNestedManyWithoutUserInput
+    createdTransactions?: WalletTransactionUncheckedCreateNestedManyWithoutCreatedByInput
+  }
+
+  export type UserCreateOrConnectWithoutOrdersPlacedInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutOrdersPlacedInput, UserUncheckedCreateWithoutOrdersPlacedInput>
   }
 
   export type DailyMenuCreateWithoutOrdersInput = {
@@ -21556,6 +21905,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -21570,6 +21920,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -21648,6 +21999,7 @@ export namespace Prisma {
     accounts?: AccountUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
     adminLocations?: AdminLocationUpdateManyWithoutUserNestedInput
+    ordersPlaced?: OrderUpdateManyWithoutPlacedByNestedInput
     walletTransactions?: WalletTransactionUpdateManyWithoutUserNestedInput
     createdTransactions?: WalletTransactionUpdateManyWithoutCreatedByNestedInput
   }
@@ -21673,6 +22025,70 @@ export namespace Prisma {
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     adminLocations?: AdminLocationUncheckedUpdateManyWithoutUserNestedInput
+    ordersPlaced?: OrderUncheckedUpdateManyWithoutPlacedByNestedInput
+    walletTransactions?: WalletTransactionUncheckedUpdateManyWithoutUserNestedInput
+    createdTransactions?: WalletTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
+  }
+
+  export type UserUpsertWithoutOrdersPlacedInput = {
+    update: XOR<UserUpdateWithoutOrdersPlacedInput, UserUncheckedUpdateWithoutOrdersPlacedInput>
+    create: XOR<UserCreateWithoutOrdersPlacedInput, UserUncheckedCreateWithoutOrdersPlacedInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutOrdersPlacedInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutOrdersPlacedInput, UserUncheckedUpdateWithoutOrdersPlacedInput>
+  }
+
+  export type UserUpdateWithoutOrdersPlacedInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    balance?: IntFieldUpdateOperationsInput | number
+    profileComplete?: BoolFieldUpdateOperationsInput | boolean
+    isBanned?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    location?: LocationUpdateOneWithoutUsersNestedInput
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    adminLocations?: AdminLocationUpdateManyWithoutUserNestedInput
+    orders?: OrderUpdateManyWithoutUserNestedInput
+    walletTransactions?: WalletTransactionUpdateManyWithoutUserNestedInput
+    createdTransactions?: WalletTransactionUpdateManyWithoutCreatedByNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutOrdersPlacedInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationId?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    balance?: IntFieldUpdateOperationsInput | number
+    profileComplete?: BoolFieldUpdateOperationsInput | boolean
+    isBanned?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    adminLocations?: AdminLocationUncheckedUpdateManyWithoutUserNestedInput
+    orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
     walletTransactions?: WalletTransactionUncheckedUpdateManyWithoutUserNestedInput
     createdTransactions?: WalletTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
   }
@@ -21738,6 +22154,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21752,6 +22169,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21799,6 +22217,7 @@ export namespace Prisma {
     sessions?: SessionCreateNestedManyWithoutUserInput
     adminLocations?: AdminLocationCreateNestedManyWithoutUserInput
     orders?: OrderCreateNestedManyWithoutUserInput
+    ordersPlaced?: OrderCreateNestedManyWithoutPlacedByInput
     createdTransactions?: WalletTransactionCreateNestedManyWithoutCreatedByInput
   }
 
@@ -21824,6 +22243,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     adminLocations?: AdminLocationUncheckedCreateNestedManyWithoutUserInput
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
+    ordersPlaced?: OrderUncheckedCreateNestedManyWithoutPlacedByInput
     createdTransactions?: WalletTransactionUncheckedCreateNestedManyWithoutCreatedByInput
   }
 
@@ -21843,6 +22263,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutOrdersInput
+    placedBy?: UserCreateNestedOneWithoutOrdersPlacedInput
     dailyMenu: DailyMenuCreateNestedOneWithoutOrdersInput
     location: LocationCreateNestedOneWithoutOrdersInput
   }
@@ -21858,6 +22279,7 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     deliveredAt?: Date | string | null
     paidAt?: Date | string | null
+    placedById?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -21889,6 +22311,7 @@ export namespace Prisma {
     sessions?: SessionCreateNestedManyWithoutUserInput
     adminLocations?: AdminLocationCreateNestedManyWithoutUserInput
     orders?: OrderCreateNestedManyWithoutUserInput
+    ordersPlaced?: OrderCreateNestedManyWithoutPlacedByInput
     walletTransactions?: WalletTransactionCreateNestedManyWithoutUserInput
   }
 
@@ -21914,6 +22337,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     adminLocations?: AdminLocationUncheckedCreateNestedManyWithoutUserInput
     orders?: OrderUncheckedCreateNestedManyWithoutUserInput
+    ordersPlaced?: OrderUncheckedCreateNestedManyWithoutPlacedByInput
     walletTransactions?: WalletTransactionUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -21955,6 +22379,7 @@ export namespace Prisma {
     sessions?: SessionUpdateManyWithoutUserNestedInput
     adminLocations?: AdminLocationUpdateManyWithoutUserNestedInput
     orders?: OrderUpdateManyWithoutUserNestedInput
+    ordersPlaced?: OrderUpdateManyWithoutPlacedByNestedInput
     createdTransactions?: WalletTransactionUpdateManyWithoutCreatedByNestedInput
   }
 
@@ -21980,6 +22405,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     adminLocations?: AdminLocationUncheckedUpdateManyWithoutUserNestedInput
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    ordersPlaced?: OrderUncheckedUpdateManyWithoutPlacedByNestedInput
     createdTransactions?: WalletTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
   }
 
@@ -22005,6 +22431,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
+    placedBy?: UserUpdateOneWithoutOrdersPlacedNestedInput
     dailyMenu?: DailyMenuUpdateOneRequiredWithoutOrdersNestedInput
     location?: LocationUpdateOneRequiredWithoutOrdersNestedInput
   }
@@ -22020,6 +22447,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    placedById?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -22057,6 +22485,7 @@ export namespace Prisma {
     sessions?: SessionUpdateManyWithoutUserNestedInput
     adminLocations?: AdminLocationUpdateManyWithoutUserNestedInput
     orders?: OrderUpdateManyWithoutUserNestedInput
+    ordersPlaced?: OrderUpdateManyWithoutPlacedByNestedInput
     walletTransactions?: WalletTransactionUpdateManyWithoutUserNestedInput
   }
 
@@ -22082,6 +22511,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     adminLocations?: AdminLocationUncheckedUpdateManyWithoutUserNestedInput
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    ordersPlaced?: OrderUncheckedUpdateManyWithoutPlacedByNestedInput
     walletTransactions?: WalletTransactionUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -22113,6 +22543,22 @@ export namespace Prisma {
 
   export type OrderCreateManyUserInput = {
     id?: string
+    dailyMenuId: string
+    locationId: string
+    amount: number
+    note?: string | null
+    status?: $Enums.OrderStatus
+    paymentStatus?: $Enums.PaymentStatus
+    deliveredAt?: Date | string | null
+    paidAt?: Date | string | null
+    placedById?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type OrderCreateManyPlacedByInput = {
+    id?: string
+    userId: string
     dailyMenuId: string
     locationId: string
     amount: number
@@ -22235,6 +22681,7 @@ export namespace Prisma {
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    placedBy?: UserUpdateOneWithoutOrdersPlacedNestedInput
     dailyMenu?: DailyMenuUpdateOneRequiredWithoutOrdersNestedInput
     location?: LocationUpdateOneRequiredWithoutOrdersNestedInput
     walletTxs?: WalletTransactionUpdateManyWithoutOrderNestedInput
@@ -22250,6 +22697,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    placedById?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     walletTxs?: WalletTransactionUncheckedUpdateManyWithoutOrderNestedInput
@@ -22257,6 +22705,54 @@ export namespace Prisma {
 
   export type OrderUncheckedUpdateManyWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
+    dailyMenuId?: StringFieldUpdateOperationsInput | string
+    locationId?: StringFieldUpdateOperationsInput | string
+    amount?: IntFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+    paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    placedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OrderUpdateWithoutPlacedByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    amount?: IntFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+    paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutOrdersNestedInput
+    dailyMenu?: DailyMenuUpdateOneRequiredWithoutOrdersNestedInput
+    location?: LocationUpdateOneRequiredWithoutOrdersNestedInput
+    walletTxs?: WalletTransactionUpdateManyWithoutOrderNestedInput
+  }
+
+  export type OrderUncheckedUpdateWithoutPlacedByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    dailyMenuId?: StringFieldUpdateOperationsInput | string
+    locationId?: StringFieldUpdateOperationsInput | string
+    amount?: IntFieldUpdateOperationsInput | number
+    note?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+    paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
+    deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    walletTxs?: WalletTransactionUncheckedUpdateManyWithoutOrderNestedInput
+  }
+
+  export type OrderUncheckedUpdateManyWithoutPlacedByInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
     dailyMenuId?: StringFieldUpdateOperationsInput | string
     locationId?: StringFieldUpdateOperationsInput | string
     amount?: IntFieldUpdateOperationsInput | number
@@ -22399,6 +22895,7 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     deliveredAt?: Date | string | null
     paidAt?: Date | string | null
+    placedById?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -22424,6 +22921,7 @@ export namespace Prisma {
     sessions?: SessionUpdateManyWithoutUserNestedInput
     adminLocations?: AdminLocationUpdateManyWithoutUserNestedInput
     orders?: OrderUpdateManyWithoutUserNestedInput
+    ordersPlaced?: OrderUpdateManyWithoutPlacedByNestedInput
     walletTransactions?: WalletTransactionUpdateManyWithoutUserNestedInput
     createdTransactions?: WalletTransactionUpdateManyWithoutCreatedByNestedInput
   }
@@ -22449,6 +22947,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     adminLocations?: AdminLocationUncheckedUpdateManyWithoutUserNestedInput
     orders?: OrderUncheckedUpdateManyWithoutUserNestedInput
+    ordersPlaced?: OrderUncheckedUpdateManyWithoutPlacedByNestedInput
     walletTransactions?: WalletTransactionUncheckedUpdateManyWithoutUserNestedInput
     createdTransactions?: WalletTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
   }
@@ -22592,6 +23091,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
+    placedBy?: UserUpdateOneWithoutOrdersPlacedNestedInput
     dailyMenu?: DailyMenuUpdateOneRequiredWithoutOrdersNestedInput
     walletTxs?: WalletTransactionUpdateManyWithoutOrderNestedInput
   }
@@ -22606,6 +23106,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    placedById?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     walletTxs?: WalletTransactionUncheckedUpdateManyWithoutOrderNestedInput
@@ -22621,6 +23122,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    placedById?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -22825,6 +23327,7 @@ export namespace Prisma {
     paymentStatus?: $Enums.PaymentStatus
     deliveredAt?: Date | string | null
     paidAt?: Date | string | null
+    placedById?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -22840,6 +23343,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutOrdersNestedInput
+    placedBy?: UserUpdateOneWithoutOrdersPlacedNestedInput
     location?: LocationUpdateOneRequiredWithoutOrdersNestedInput
     walletTxs?: WalletTransactionUpdateManyWithoutOrderNestedInput
   }
@@ -22854,6 +23358,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    placedById?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     walletTxs?: WalletTransactionUncheckedUpdateManyWithoutOrderNestedInput
@@ -22869,6 +23374,7 @@ export namespace Prisma {
     paymentStatus?: EnumPaymentStatusFieldUpdateOperationsInput | $Enums.PaymentStatus
     deliveredAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     paidAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    placedById?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

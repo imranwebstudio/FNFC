@@ -95,6 +95,32 @@ export default function AdminMenuPage() {
     },
   });
 
+  const setDinner = api.location.setDinnerEnabled.useMutation({
+    onSuccess: async (loc) => {
+      await utils.location.list.invalidate();
+      await utils.menu.listDaily.invalidate();
+      await utils.menu.weekdayList.invalidate();
+      await utils.menu.todayForUser.invalidate();
+      setMsg(
+        loc.dinnerEnabled
+          ? "Dinner enabled — you can add dinner options"
+          : "Dinner hidden for this office",
+      );
+      if (!loc.dinnerEnabled && weekEdit?.slot === "DINNER") {
+        setWeekEdit(null);
+        setWeekForm(emptyWeekForm);
+      }
+      if (!loc.dinnerEnabled && form.slot === "DINNER") {
+        setForm((f) => ({ ...f, slot: "LUNCH" }));
+      }
+    },
+  });
+
+  const dinnerEnabled = selectedLoc?.dinnerEnabled ?? false;
+  const mealSlots = (
+    dinnerEnabled ? (["LUNCH", "DINNER"] as const) : (["LUNCH"] as const)
+  );
+
   const savedMeals = useMemo(() => {
     const all = catalog.data ?? [];
     return all.filter((c) => (showArchived ? !c.isActive : c.isActive));
@@ -354,41 +380,63 @@ export default function AdminMenuPage() {
           </Select>
         </div>
         {locationId ? (
-          <form
-            className="flex flex-wrap items-end gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(cutoffDraft)) {
-                setMsg("Cutoff must be HH:mm (24h)");
-                return;
-              }
-              setCutoff.mutate({
-                locationId,
-                defaultCutoffTime: cutoffDraft,
-              });
-            }}
-          >
-            <div>
-              <Label>Order cutoff (Asia/Dhaka)</Label>
-              <Input
-                type="time"
-                required
-                value={cutoffDraft}
-                onChange={(e) => setCutoffDraft(e.target.value)}
-                className="w-[9.5rem]"
-              />
-            </div>
-            <Button
-              type="submit"
-              variant="secondary"
-              disabled={
-                setCutoff.isPending ||
-                cutoffDraft === selectedLoc?.defaultCutoffTime
-              }
+          <>
+            <form
+              className="flex flex-wrap items-end gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(cutoffDraft)) {
+                  setMsg("Cutoff must be HH:mm (24h)");
+                  return;
+                }
+                setCutoff.mutate({
+                  locationId,
+                  defaultCutoffTime: cutoffDraft,
+                });
+              }}
             >
-              {setCutoff.isPending ? "Saving…" : "Save cutoff"}
-            </Button>
-          </form>
+              <div>
+                <Label>Order cutoff (Asia/Dhaka)</Label>
+                <Input
+                  type="time"
+                  required
+                  value={cutoffDraft}
+                  onChange={(e) => setCutoffDraft(e.target.value)}
+                  className="w-[9.5rem]"
+                />
+              </div>
+              <Button
+                type="submit"
+                variant="secondary"
+                disabled={
+                  setCutoff.isPending ||
+                  cutoffDraft === selectedLoc?.defaultCutoffTime
+                }
+              >
+                {setCutoff.isPending ? "Saving…" : "Save cutoff"}
+              </Button>
+            </form>
+            <label className="mb-0.5 flex cursor-pointer items-center gap-2.5 rounded-2xl bg-sand/60 px-3.5 py-2.5 text-sm">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-leaf"
+                checked={dinnerEnabled}
+                disabled={setDinner.isPending}
+                onChange={(e) =>
+                  setDinner.mutate({
+                    locationId,
+                    dinnerEnabled: e.target.checked,
+                  })
+                }
+              />
+              <span>
+                <span className="font-semibold text-ink">Offer dinner</span>
+                <span className="mt-0.5 block text-xs text-ink-muted">
+                  Off by default — turn on when dinner is available
+                </span>
+              </span>
+            </label>
+          </>
         ) : null}
       </div>
 
@@ -411,7 +459,7 @@ export default function AdminMenuPage() {
                   {WEEKDAY_LABELS[day].slice(0, 3)}
                 </p>
                 <div className="space-y-2">
-                  {(["LUNCH", "DINNER"] as const).map((slot) => {
+                  {mealSlots.map((slot) => {
                     const meals = weekBySlot.get(`${day}:${slot}`) ?? [];
                     const isEditingSlot =
                       weekEdit?.weekday === day && weekEdit.slot === slot;
@@ -629,7 +677,9 @@ export default function AdminMenuPage() {
                   }
                 >
                   <option value="LUNCH">Lunch</option>
-                  <option value="DINNER">Dinner</option>
+                  {dinnerEnabled ? (
+                    <option value="DINNER">Dinner</option>
+                  ) : null}
                 </Select>
               </div>
               <div>
@@ -739,7 +789,9 @@ export default function AdminMenuPage() {
               </Panel>
             ) : null}
             <ul className="space-y-2">
-              {daily.data?.map((m) => (
+              {daily.data
+                ?.filter((m) => dinnerEnabled || m.slot !== "DINNER")
+                .map((m) => (
                 <Panel
                   key={m.id}
                   className={`py-3 ${editingId === m.id ? "ring-2 ring-leaf/40" : ""}`}

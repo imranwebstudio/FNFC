@@ -7,6 +7,7 @@ import {
   dhakaDateOnly,
   getOrderWindow,
   normalizeCutoffTime,
+  todayDateString,
 } from "~/lib/datetime";
 import {
   adminProcedure,
@@ -136,6 +137,142 @@ export const orderRouter = createTRPCRouter({
             note: input.note,
             status: "PLACED",
             paymentStatus: "UNPAID",
+          },
+        });
+      });
+    }),
+
+  /** Admin places an order for a member (e.g. phone request). Bypasses cutoff. */
+  createForUser: adminProcedure
+    .input(
+      z.object({
+        userId: z.string().cuid(),
+        dailyMenuId: z.string().cuid(),
+        note: z.string().max(300).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const target = await ctx.db.user.findUnique({
+        where: { id: input.userId },
+      });
+      if (!target?.profileComplete || !target.locationId) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Member must complete their profile first",
+        });
+      }
+
+      await assertLocationAccess(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        target.locationId,
+      );
+
+      const menu = await ctx.db.dailyMenu.findUnique({
+        where: { id: input.dailyMenuId },
+        include: { location: true },
+      });
+      if (!menu?.isPublished) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Menu not found" });
+      }
+      if (menu.locationId !== target.locationId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Meal is not for this member's office",
+        });
+      }
+
+      await assertLocationAccess(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        menu.locationId,
+      );
+
+      if (menu.slot === "DINNER" && !menu.location.dinnerEnabled) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Dinner is not offered at this office right now",
+        });
+      }
+
+      const menuDate = formatInTimeZone(menu.date, "UTC", "yyyy-MM-dd");
+      if (menuDate < todayDateString()) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot place admin orders for past meal days",
+        });
+      }
+
+      const existing = await ctx.db.order.findFirst({
+        where: {
+          userId: target.id,
+          status: { not: "CANCELLED" },
+          dailyMenu: {
+            locationId: menu.locationId,
+            date: menu.date,
+            slot: menu.slot,
+          },
+        },
+      });
+      if (existing) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message:
+            existing.dailyMenuId === menu.id
+              ? "Member already ordered this meal"
+              : `Member already ordered a ${menu.slot.toLowerCase()} for this day`,
+        });
+      }
+
+      const placedById = ctx.session.user.id;
+      const note =
+        input.note?.trim() ||
+        undefined;
+
+      return ctx.db.$transaction(async (tx) => {
+        if (target.paymentMode === "WALLET") {
+          const updated = await tx.user.update({
+            where: { id: target.id },
+            data: { balance: { decrement: menu.price } },
+          });
+          const order = await tx.order.create({
+            data: {
+              userId: target.id,
+              dailyMenuId: menu.id,
+              locationId: menu.locationId,
+              amount: menu.price,
+              note,
+              status: "PLACED",
+              paymentStatus: "WALLET_CHARGED",
+              placedById,
+            },
+          });
+          await tx.walletTransaction.create({
+            data: {
+              userId: target.id,
+              type: "CHARGE",
+              amount: -menu.price,
+              balanceAfter: updated.balance,
+              orderId: order.id,
+              createdById: placedById,
+              note: `Admin order: ${menu.title}`,
+            },
+          });
+          return order;
+        }
+
+        return tx.order.create({
+          data: {
+            userId: target.id,
+            dailyMenuId: menu.id,
+            locationId: menu.locationId,
+            amount: menu.price,
+            note,
+            status: "PLACED",
+            paymentStatus: "UNPAID",
+            placedById,
           },
         });
       });
@@ -271,6 +408,9 @@ export const orderRouter = createTRPCRouter({
               paymentMode: true,
               balance: true,
             },
+          },
+          placedBy: {
+            select: { id: true, name: true, email: true },
           },
           dailyMenu: true,
           location: { select: { id: true, name: true } },

@@ -264,6 +264,20 @@ export const menuRouter = createTRPCRouter({
         input.locationId,
       );
 
+      if (input.slot === "DINNER") {
+        const loc = await ctx.db.location.findUnique({
+          where: { id: input.locationId },
+          select: { dinnerEnabled: true },
+        });
+        if (!loc?.dinnerEnabled) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message:
+              "Dinner is turned off for this office — enable Dinner on the Menu page first",
+          });
+        }
+      }
+
       if (input.id) {
         const existing = await ctx.db.weekdayMenu.findUnique({
           where: { id: input.id },
@@ -562,8 +576,16 @@ export const menuRouter = createTRPCRouter({
 
       const loc = await ctx.db.location.findUnique({
         where: { id: input.locationId },
-        select: { defaultCutoffTime: true },
+        select: { defaultCutoffTime: true, dinnerEnabled: true },
       });
+      if (input.slot === "DINNER" && !loc?.dinnerEnabled) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Dinner is turned off for this office — enable Dinner on the Menu page first",
+        });
+      }
+
       const cutoffTime = normalizeCutoffTime(
         input.cutoffTime ?? loc?.defaultCutoffTime,
       );
@@ -675,6 +697,68 @@ export const menuRouter = createTRPCRouter({
       }
       await ctx.db.dailyMenu.delete({ where: { id: input.id } });
       return { ok: true as const };
+    }),
+
+  /** Published meals for an office on a date (defaults to that office's orderable day). */
+  optionsForLocation: adminProcedure
+    .input(
+      z.object({
+        locationId: z.string().cuid(),
+        date: z.string().regex(dateRegex).optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      await assertLocationAccess(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        input.locationId,
+      );
+
+      const loc = await ctx.db.location.findUnique({
+        where: { id: input.locationId },
+        select: {
+          id: true,
+          name: true,
+          defaultCutoffTime: true,
+          dinnerEnabled: true,
+        },
+      });
+      if (!loc) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const cutoffHm = normalizeCutoffTime(loc.defaultCutoffTime);
+      const window = getOrderWindow(new Date(), cutoffHm);
+      const dateStr = input.date ?? window.orderDate;
+
+      if (dateStr < todayDateString()) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Meal date cannot be in the past",
+        });
+      }
+
+      await ensureMenusForDate(ctx.db, [input.locationId], dateStr);
+
+      const menus = await ctx.db.dailyMenu.findMany({
+        where: {
+          locationId: input.locationId,
+          date: dhakaDateOnly(dateStr),
+          isPublished: true,
+          ...(loc.dinnerEnabled ? {} : { slot: { not: "DINNER" as const } }),
+        },
+        orderBy: [{ slot: "asc" }, { createdAt: "asc" }],
+      });
+
+      return {
+        locationId: loc.id,
+        locationName: loc.name,
+        date: dateStr,
+        window,
+        menus: menus.map((m) => ({
+          ...m,
+          menuDate: formatInTimeZone(m.date, "UTC", "yyyy-MM-dd"),
+        })),
+      };
     }),
 
   cloudinarySignature: adminProcedure.query(() => {

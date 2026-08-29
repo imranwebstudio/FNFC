@@ -1,11 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Banknote, ClipboardList, PackageCheck } from "lucide-react";
+import {
+  Banknote,
+  ClipboardList,
+  PackageCheck,
+  Phone,
+} from "lucide-react";
 
-import { Badge, Button, Label, PageTitle, Panel, Select } from "~/components/ui";
-import { formatTaka, todayDateString } from "~/lib/datetime";
+import {
+  Badge,
+  Button,
+  Input,
+  Label,
+  PageTitle,
+  Panel,
+  Select,
+} from "~/components/ui";
+import {
+  addDaysToDateString,
+  formatMenuDateLabel,
+  formatTaka,
+  todayDateString,
+} from "~/lib/datetime";
 import { api } from "~/trpc/react";
 
 export default function AdminOrdersPage() {
@@ -15,10 +33,37 @@ export default function AdminOrdersPage() {
   const [date, setDate] = useState(todayDateString());
   const utils = api.useUtils();
 
+  const [behalfLocationId, setBehalfLocationId] = useState("");
+  const [behalfDate, setBehalfDate] = useState(todayDateString());
+  const [behalfUserId, setBehalfUserId] = useState("");
+  const [behalfMenuId, setBehalfMenuId] = useState("");
+  const [behalfNote, setBehalfNote] = useState("Phone order");
+  const [behalfMsg, setBehalfMsg] = useState<string | null>(null);
+  const [behalfOk, setBehalfOk] = useState(false);
+
+  const minMealDate = todayDateString();
+  const maxMealDate = addDaysToDateString(minMealDate, 42);
+
+  useEffect(() => {
+    if (!behalfLocationId && locations.data?.[0]) {
+      setBehalfLocationId(locations.data[0].id);
+    }
+  }, [locations.data, behalfLocationId]);
+
   const orders = api.order.listForAdmin.useQuery({
     locationId: locationId === "all" ? undefined : locationId,
     date,
   });
+
+  const members = api.admin.listUsers.useQuery(
+    { locationId: behalfLocationId },
+    { enabled: Boolean(behalfLocationId) },
+  );
+
+  const mealOptions = api.menu.optionsForLocation.useQuery(
+    { locationId: behalfLocationId, date: behalfDate },
+    { enabled: Boolean(behalfLocationId && behalfDate) },
+  );
 
   const deliver = api.order.markDelivered.useMutation({
     onSuccess: async () => utils.order.listForAdmin.invalidate(),
@@ -26,16 +71,183 @@ export default function AdminOrdersPage() {
   const confirmPay = api.order.confirmCashPayment.useMutation({
     onSuccess: async () => utils.order.listForAdmin.invalidate(),
   });
+  const createForUser = api.order.createForUser.useMutation({
+    onSuccess: async () => {
+      setBehalfOk(true);
+      setBehalfMsg(`Order placed for ${formatMenuDateLabel(behalfDate)}`);
+      setBehalfMenuId("");
+      setBehalfNote("Phone order");
+      await utils.order.listForAdmin.invalidate();
+      await utils.admin.listUsers.invalidate();
+    },
+    onError: (e) => {
+      setBehalfOk(false);
+      setBehalfMsg(e.message);
+    },
+  });
 
   const isSuper = me.data?.role === "SUPER_ADMIN";
+  const selectedMember = members.data?.find((u) => u.id === behalfUserId);
+
+  useEffect(() => {
+    setBehalfUserId("");
+    setBehalfMenuId("");
+  }, [behalfLocationId]);
+
+  useEffect(() => {
+    setBehalfMenuId("");
+  }, [behalfDate]);
 
   return (
     <div>
       <PageTitle
         icon={<ClipboardList className="h-5 w-5" strokeWidth={2.25} />}
         title="Distribution board"
-        subtitle="Mark delivered when food is handed over. Confirm cash paid separately when the customer pays."
+        subtitle="Mark delivered when food is handed over. Confirm cash paid separately when the customer pays. Place phone orders for members below — including future days from the weekly schedule."
       />
+
+      <Panel className="mb-6">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <Phone className="h-4 w-4 text-leaf" strokeWidth={2.25} />
+          <h2 className="font-display text-base font-semibold">
+            Order for member
+          </h2>
+        </div>
+        <p className="mb-4 text-xs text-ink-muted">
+          Record a meal under a member&apos;s account (e.g. after a phone call).
+          Pick any upcoming day — weekday templates load automatically. Uses
+          their cash/wallet mode. Cutoff is skipped for admins.
+        </p>
+
+        {behalfMsg ? (
+          <p
+            className={`mb-3 rounded-xl px-3 py-2 text-sm ${
+              behalfOk
+                ? "bg-leaf/10 text-leaf"
+                : "bg-red-500/10 text-red-400"
+            }`}
+          >
+            {behalfMsg}
+          </p>
+        ) : null}
+
+        <form
+          className="grid gap-3 sm:grid-cols-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setBehalfMsg(null);
+            setBehalfOk(false);
+            if (!behalfUserId || !behalfMenuId) {
+              setBehalfMsg("Select a member and a meal");
+              return;
+            }
+            createForUser.mutate({
+              userId: behalfUserId,
+              dailyMenuId: behalfMenuId,
+              note: behalfNote.trim() || undefined,
+            });
+          }}
+        >
+          <div>
+            <Label>Office</Label>
+            <Select
+              value={behalfLocationId}
+              onChange={(e) => setBehalfLocationId(e.target.value)}
+              required
+            >
+              {locations.data?.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <Label>Meal day</Label>
+            <Input
+              type="date"
+              required
+              min={minMealDate}
+              max={maxMealDate}
+              value={behalfDate}
+              onChange={(e) => setBehalfDate(e.target.value)}
+            />
+            <p className="mt-1 text-[11px] text-ink-muted">
+              Today through ~6 weeks ahead
+            </p>
+          </div>
+          <div>
+            <Label>Member</Label>
+            <Select
+              value={behalfUserId}
+              onChange={(e) => setBehalfUserId(e.target.value)}
+              required
+            >
+              <option value="">Select member…</option>
+              {members.data?.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name ?? u.email}
+                  {u.employeeId ? ` · ${u.employeeId}` : ""}
+                  {u.deskNumber ? ` · Desk ${u.deskNumber}` : ""}
+                </option>
+              ))}
+            </Select>
+            {selectedMember ? (
+              <p className="mt-1 text-[11px] text-ink-muted">
+                Pays with {selectedMember.paymentMode} · Bal{" "}
+                {formatTaka(selectedMember.balance)}
+              </p>
+            ) : null}
+          </div>
+          <div>
+            <Label>
+              Meal
+              {mealOptions.data?.date
+                ? ` · ${formatMenuDateLabel(mealOptions.data.date)}`
+                : ""}
+            </Label>
+            <Select
+              value={behalfMenuId}
+              onChange={(e) => setBehalfMenuId(e.target.value)}
+              required
+            >
+              <option value="">Select meal…</option>
+              {mealOptions.data?.menus.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.slot}: {m.title} · {formatTaka(m.price)}
+                </option>
+              ))}
+            </Select>
+            {mealOptions.isError ? (
+              <p className="mt-1 text-[11px] text-red-400">
+                {mealOptions.error.message}
+              </p>
+            ) : mealOptions.isLoading || mealOptions.isFetching ? (
+              <p className="mt-1 text-[11px] text-ink-muted">Loading meals…</p>
+            ) : mealOptions.data && mealOptions.data.menus.length === 0 ? (
+              <p className="mt-1 text-[11px] text-ink-muted">
+                No meals on {formatMenuDateLabel(behalfDate)}. Change Meal day
+                to the day that has the weekly meal (e.g. Sunday), or add meals
+                in Admin → Menu.
+              </p>
+            ) : null}
+          </div>
+          <div className="sm:col-span-2">
+            <Label>Note</Label>
+            <Input
+              value={behalfNote}
+              onChange={(e) => setBehalfNote(e.target.value)}
+              placeholder="Phone order"
+              maxLength={300}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Button type="submit" disabled={createForUser.isPending}>
+              {createForUser.isPending ? "Placing…" : "Place order for member"}
+            </Button>
+          </div>
+        </form>
+      </Panel>
 
       <div className="mb-5 grid max-w-lg gap-3 sm:grid-cols-2">
         <div>
@@ -87,6 +299,17 @@ export default function AdminOrdersPage() {
                   {o.user.floorNumber} · Desk {o.user.deskNumber} ·{" "}
                   {o.dailyMenu.slot} · {o.dailyMenu.title}
                 </p>
+                {o.placedBy ? (
+                  <p className="mt-1 text-[11px] text-ink-muted">
+                    Placed by{" "}
+                    <span className="font-medium text-ink">
+                      {o.placedBy.name ?? o.placedBy.email}
+                    </span>
+                    {o.note ? ` · ${o.note}` : null}
+                  </p>
+                ) : o.note ? (
+                  <p className="mt-1 text-[11px] text-ink-muted">{o.note}</p>
+                ) : null}
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   <Badge tone={o.status === "DELIVERED" ? "good" : "warn"}>
                     {o.status}
@@ -103,6 +326,7 @@ export default function AdminOrdersPage() {
                     {o.paymentStatus}
                   </Badge>
                   <Badge>{o.user.paymentMode}</Badge>
+                  {o.placedBy ? <Badge tone="neutral">Admin order</Badge> : null}
                   <span className="text-xs font-bold tabular-nums">
                     {formatTaka(o.amount)}
                   </span>
