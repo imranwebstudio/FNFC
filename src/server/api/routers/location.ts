@@ -114,4 +114,30 @@ export const locationRouter = createTRPCRouter({
         return location;
       });
     }),
+
+  setDinnerEnabled: adminProcedure
+    .input(
+      z.object({
+        locationId: z.string().cuid(),
+        dinnerEnabled: z.boolean(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.session.user.role !== "SUPER_ADMIN") {
+        const link = await ctx.db.adminLocation.findUnique({
+          where: {
+            userId_locationId: {
+              userId: ctx.session.user.id,
+              locationId: input.locationId,
+            },
+          },
+        });
+        if (!link) throw new TRPCError({ code: "FORBIDDEN" });
+      }
+
+      return ctx.db.location.update({
+        where: { id: input.locationId },
+        data: { dinnerEnabled: input.dinnerEnabled },
+      });
+    }),
 });

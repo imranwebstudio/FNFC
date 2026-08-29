@@ -58,6 +58,7 @@ export default function AdminMenuPage() {
   const [weekEdit, setWeekEdit] = useState<{
     weekday: WeekdayCode;
     slot: "LUNCH" | "DINNER";
+    id?: string;
   } | null>(null);
   const [weekForm, setWeekForm] = useState(emptyWeekForm);
 
@@ -99,10 +100,16 @@ export default function AdminMenuPage() {
     return all.filter((c) => (showArchived ? !c.isActive : c.isActive));
   }, [catalog.data, showArchived]);
 
-  const weekByKey = useMemo(() => {
-    const map = new Map<string, NonNullable<typeof weekdayMenus.data>[number]>();
+  const weekBySlot = useMemo(() => {
+    const map = new Map<
+      string,
+      NonNullable<typeof weekdayMenus.data>
+    >();
     for (const w of weekdayMenus.data ?? []) {
-      map.set(`${w.weekday}:${w.slot}`, w);
+      const key = `${w.weekday}:${w.slot}`;
+      const list = map.get(key) ?? [];
+      list.push(w);
+      map.set(key, list);
     }
     return map;
   }, [weekdayMenus.data]);
@@ -122,7 +129,9 @@ export default function AdminMenuPage() {
       await utils.menu.todayForUser.invalidate();
       setMsg(
         weekEdit
-          ? `Saved ${WEEKDAY_LABELS[weekEdit.weekday]} ${weekEdit.slot.toLowerCase()} — repeats every week`
+          ? weekEdit.id
+            ? `Updated ${WEEKDAY_LABELS[weekEdit.weekday]} ${weekEdit.slot.toLowerCase()} option`
+            : `Added option for every ${WEEKDAY_LABELS[weekEdit.weekday]} ${weekEdit.slot.toLowerCase()}`
           : "Weekday meal saved",
       );
       setWeekEdit(null);
@@ -136,9 +145,19 @@ export default function AdminMenuPage() {
       await utils.menu.weekdayList.invalidate();
       await utils.menu.listDaily.invalidate();
       await utils.menu.todayForUser.invalidate();
-      setMsg("Weekday meal cleared");
+      setMsg("Weekday meal removed");
       setWeekEdit(null);
       setWeekForm(emptyWeekForm);
+    },
+    onError: (e) => setMsg(e.message),
+  });
+
+  const deleteDaily = api.menu.deleteDaily.useMutation({
+    onSuccess: async () => {
+      await utils.menu.listDaily.invalidate();
+      await utils.menu.todayForUser.invalidate();
+      setMsg("Meal removed");
+      if (editingId) resetForm();
     },
     onError: (e) => setMsg(e.message),
   });
@@ -161,20 +180,27 @@ export default function AdminMenuPage() {
     onError: (e) => setMsg(e.message),
   });
 
-  function openWeekSlot(weekday: WeekdayCode, slot: "LUNCH" | "DINNER") {
-    const existing = weekByKey.get(`${weekday}:${slot}`);
+  function openWeekAdd(weekday: WeekdayCode, slot: "LUNCH" | "DINNER") {
     setWeekEdit({ weekday, slot });
-    setWeekForm(
-      existing
-        ? {
-            title: existing.title,
-            description: existing.description ?? "",
-            price: existing.price,
-            imageUrl: existing.imageUrl ?? "",
-            catalogItemId: existing.catalogItemId ?? "",
-          }
-        : emptyWeekForm,
-    );
+    setWeekForm(emptyWeekForm);
+    setEditingId(null);
+    setMsg("");
+  }
+
+  function openWeekEdit(
+    weekday: WeekdayCode,
+    slot: "LUNCH" | "DINNER",
+    meal: NonNullable<typeof weekdayMenus.data>[number],
+  ) {
+    setWeekEdit({ weekday, slot, id: meal.id });
+    setWeekForm({
+      title: meal.title,
+      description: meal.description ?? "",
+      price: meal.price,
+      imageUrl: meal.imageUrl ?? "",
+      catalogItemId: meal.catalogItemId ?? "",
+    });
+    setEditingId(null);
     setMsg("");
   }
 
@@ -264,6 +290,7 @@ export default function AdminMenuPage() {
     }
 
     upsert.mutate({
+      id: editingId ?? undefined,
       locationId,
       date,
       endDate: editingId ? date : endDate,
@@ -281,6 +308,7 @@ export default function AdminMenuPage() {
     e.preventDefault();
     if (!locationId || !weekEdit) return;
     weekdayUpsert.mutate({
+      id: weekEdit.id,
       locationId,
       weekday: weekEdit.weekday,
       slot: weekEdit.slot,
@@ -370,58 +398,71 @@ export default function AdminMenuPage() {
           Weekly schedule
         </h2>
         <p className="mb-4 text-xs text-ink-muted">
-          Assign meals to weekdays for{" "}
+          Add several lunch (or dinner) options per weekday for{" "}
           <strong className="text-ink">{selectedLoc?.name ?? "this office"}</strong>
-          . They repeat every matching day. A one-off dated publish overrides that
-          day.
+          . They repeat every matching day. Everyone picks one option.
         </p>
 
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
           {WEEKDAYS.map((day) => {
-            const lunch = weekByKey.get(`${day}:LUNCH`);
-            const dinner = weekByKey.get(`${day}:DINNER`);
-            const active =
-              weekEdit?.weekday === day
-                ? weekEdit.slot
-                : null;
             return (
               <Panel key={day} className="p-3">
                 <p className="mb-2 text-center text-xs font-bold uppercase tracking-wide text-leaf">
                   {WEEKDAY_LABELS[day].slice(0, 3)}
                 </p>
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   {(["LUNCH", "DINNER"] as const).map((slot) => {
-                    const meal = slot === "LUNCH" ? lunch : dinner;
-                    const isActive = active === slot;
+                    const meals = weekBySlot.get(`${day}:${slot}`) ?? [];
+                    const isEditingSlot =
+                      weekEdit?.weekday === day && weekEdit.slot === slot;
                     return (
-                      <button
+                      <div
                         key={slot}
-                        type="button"
-                        onClick={() => openWeekSlot(day, slot)}
-                        className={`w-full rounded-xl px-2 py-2 text-left transition ${
-                          isActive
+                        className={`rounded-xl px-2 py-2 ${
+                          isEditingSlot
                             ? "bg-leaf/20 ring-1 ring-leaf/40"
-                            : "bg-sand/60 hover:bg-sand"
+                            : "bg-sand/60"
                         }`}
                       >
                         <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted">
                           {slot}
+                          {meals.length > 0 ? (
+                            <span className="ml-1 font-normal">
+                              · {meals.length}
+                            </span>
+                          ) : null}
                         </p>
-                        {meal ? (
-                          <>
-                            <p className="mt-0.5 line-clamp-2 text-xs font-semibold text-ink">
-                              {meal.title}
-                            </p>
-                            <p className="text-[10px] text-ink-muted">
-                              {formatTaka(meal.price)}
-                            </p>
-                          </>
-                        ) : (
-                          <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-ink-muted">
-                            <Plus className="h-3 w-3" /> Add
-                          </p>
-                        )}
-                      </button>
+                        <ul className="mt-1 space-y-1">
+                          {meals.map((meal) => (
+                            <li key={meal.id}>
+                              <button
+                                type="button"
+                                onClick={() => openWeekEdit(day, slot, meal)}
+                                className={`w-full rounded-lg px-1.5 py-1 text-left transition hover:bg-sand ${
+                                  weekEdit?.id === meal.id
+                                    ? "bg-leaf/25"
+                                    : ""
+                                }`}
+                              >
+                                <p className="line-clamp-2 text-xs font-semibold text-ink">
+                                  {meal.title}
+                                </p>
+                                <p className="text-[10px] text-ink-muted">
+                                  {formatTaka(meal.price)}
+                                </p>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                        <button
+                          type="button"
+                          onClick={() => openWeekAdd(day, slot)}
+                          className="mt-1 inline-flex w-full items-center justify-center gap-1 rounded-lg py-1 text-[11px] font-medium text-leaf hover:bg-leaf/10"
+                        >
+                          <Plus className="h-3 w-3" />
+                          Add option
+                        </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -434,9 +475,12 @@ export default function AdminMenuPage() {
           <Panel className="mt-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h3 className="font-display text-base font-semibold">
+                {weekEdit.id ? "Edit" : "Add"} ·{" "}
                 {WEEKDAY_LABELS[weekEdit.weekday]} · {weekEdit.slot}
               </h3>
-              <Badge tone="good">Every {WEEKDAY_LABELS[weekEdit.weekday]}</Badge>
+              <Badge tone="good">
+                Every {WEEKDAY_LABELS[weekEdit.weekday]}
+              </Badge>
             </div>
             <form className="grid gap-3 sm:grid-cols-2" onSubmit={onWeekSubmit}>
               <div className="sm:col-span-2">
@@ -487,22 +531,25 @@ export default function AdminMenuPage() {
               </div>
               <div className="flex flex-wrap gap-2 sm:col-span-2">
                 <Button type="submit" disabled={weekdayUpsert.isPending}>
-                  {weekdayUpsert.isPending ? "Saving…" : "Save weekday meal"}
+                  {weekdayUpsert.isPending
+                    ? "Saving…"
+                    : weekEdit.id
+                      ? "Update option"
+                      : "Add option"}
                 </Button>
-                {weekByKey.has(`${weekEdit.weekday}:${weekEdit.slot}`) ? (
+                {weekEdit.id ? (
                   <Button
                     type="button"
                     variant="danger"
                     disabled={weekdayClear.isPending}
                     onClick={() =>
                       weekdayClear.mutate({
+                        id: weekEdit.id,
                         locationId,
-                        weekday: weekEdit.weekday,
-                        slot: weekEdit.slot,
                       })
                     }
                   >
-                    Clear
+                    Remove
                   </Button>
                 ) : null}
                 <Button
@@ -527,8 +574,8 @@ export default function AdminMenuPage() {
           One-off / date range
         </h2>
         <p className="mb-4 text-xs text-ink-muted">
-          Publish for specific dates. Overrides the weekday template for those
-          days only.
+          Publish extra meal options for specific dates (in addition to the
+          weekday schedule).
         </p>
 
         <div className="mb-4 grid gap-3 sm:grid-cols-2">
@@ -720,8 +767,8 @@ export default function AdminMenuPage() {
                       variant="ghost"
                       disabled={upsert.isPending}
                       onClick={() => {
-                        setEditingId(m.id);
                         upsert.mutate({
+                          id: m.id,
                           locationId,
                           date,
                           slot: m.slot,
@@ -735,6 +782,16 @@ export default function AdminMenuPage() {
                       }}
                     >
                       {m.isPublished ? "Unpublish" : "Publish"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="danger"
+                      disabled={deleteDaily.isPending}
+                      onClick={() =>
+                        deleteDaily.mutate({ id: m.id, locationId })
+                      }
+                    >
+                      Remove
                     </Button>
                   </div>
                 </Panel>

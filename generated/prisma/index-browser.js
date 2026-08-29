@@ -222,6 +222,7 @@ exports.Prisma.DailyMenuScalarFieldEnum = {
   price: 'price',
   imageUrl: 'imageUrl',
   catalogItemId: 'catalogItemId',
+  sourceWeekdayMenuId: 'sourceWeekdayMenuId',
   cutoffAt: 'cutoffAt',
   isPublished: 'isPublished',
   createdAt: 'createdAt',

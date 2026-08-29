@@ -48,6 +48,13 @@ export const orderRouter = createTRPCRouter({
         });
       }
 
+      if (menu.slot === "DINNER" && !menu.location.dinnerEnabled) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Dinner is not offered at your office right now",
+        });
+      }
+
       const cutoffTime = normalizeCutoffTime(menu.location.defaultCutoffTime);
       const window = getOrderWindow(new Date(), cutoffTime);
       const menuDate = formatInTimeZone(menu.date, "UTC", "yyyy-MM-dd");
@@ -72,14 +79,21 @@ export const orderRouter = createTRPCRouter({
       const existing = await ctx.db.order.findFirst({
         where: {
           userId: user.id,
-          dailyMenuId: menu.id,
           status: { not: "CANCELLED" },
+          dailyMenu: {
+            locationId: menu.locationId,
+            date: menu.date,
+            slot: menu.slot,
+          },
         },
       });
       if (existing) {
         throw new TRPCError({
           code: "CONFLICT",
-          message: "You already ordered this meal",
+          message:
+            existing.dailyMenuId === menu.id
+              ? "You already ordered this meal"
+              : `You already ordered a ${menu.slot.toLowerCase()} for this day — cancel it first to switch`,
         });
       }
 

@@ -203,6 +203,11 @@ export function TodayMenu() {
                         <Badge tone="neutral">{menu.myOrder.status}</Badge>
                       )}
                     </div>
+                  ) : menu.orderedOtherOptionId ? (
+                    <p className="text-xs text-ink-muted">
+                      You already ordered another {menu.slot.toLowerCase()}{" "}
+                      option. Cancel that order to switch.
+                    </p>
                   ) : menu.isPastCutoff ? (
                     <Badge tone="warn">Ordering closed</Badge>
                   ) : (

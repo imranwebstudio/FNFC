@@ -25,9 +25,28 @@ const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 const weekdayEnum = z.enum(WEEKDAYS);
 type Db = typeof DbClient;
 
-async function upsertOneDaily(
+async function resolveCutoff(
+  db: Db,
+  locationId: string,
+  dateStr: string,
+  cutoffTime?: string,
+) {
+  const cutoffHm =
+    cutoffTime ??
+    (
+      await db.location.findUnique({
+        where: { id: locationId },
+        select: { defaultCutoffTime: true },
+      })
+    )?.defaultCutoffTime;
+  return dayArchiveAt(dateStr, normalizeCutoffTime(cutoffHm));
+}
+
+/** Create a new daily meal option, or update an existing one by id. */
+async function saveDailyMenu(
   db: Db,
   input: {
+    id?: string;
     locationId: string;
     date: string;
     slot: "LUNCH" | "DINNER";
@@ -38,28 +57,35 @@ async function upsertOneDaily(
     catalogItemId?: string | null;
     isPublished: boolean;
     cutoffTime?: string;
+    sourceWeekdayMenuId?: string | null;
   },
 ) {
   const date = dhakaDateOnly(input.date);
-  const cutoffHm =
-    input.cutoffTime ??
-    (
-      await db.location.findUnique({
-        where: { id: input.locationId },
-        select: { defaultCutoffTime: true },
-      })
-    )?.defaultCutoffTime;
-  const cutoffAt = dayArchiveAt(input.date, normalizeCutoffTime(cutoffHm));
+  const cutoffAt = await resolveCutoff(
+    db,
+    input.locationId,
+    input.date,
+    input.cutoffTime,
+  );
 
-  return db.dailyMenu.upsert({
-    where: {
-      locationId_date_slot: {
-        locationId: input.locationId,
-        date,
+  if (input.id) {
+    return db.dailyMenu.update({
+      where: { id: input.id },
+      data: {
         slot: input.slot,
+        title: input.title,
+        description: input.description,
+        price: input.price,
+        imageUrl: input.imageUrl,
+        catalogItemId: input.catalogItemId,
+        cutoffAt,
+        isPublished: input.isPublished,
       },
-    },
-    create: {
+    });
+  }
+
+  return db.dailyMenu.create({
+    data: {
       locationId: input.locationId,
       date,
       slot: input.slot,
@@ -68,15 +94,7 @@ async function upsertOneDaily(
       price: input.price,
       imageUrl: input.imageUrl ?? undefined,
       catalogItemId: input.catalogItemId ?? undefined,
-      cutoffAt,
-      isPublished: input.isPublished,
-    },
-    update: {
-      title: input.title,
-      description: input.description,
-      price: input.price,
-      imageUrl: input.imageUrl,
-      catalogItemId: input.catalogItemId,
+      sourceWeekdayMenuId: input.sourceWeekdayMenuId ?? undefined,
       cutoffAt,
       isPublished: input.isPublished,
     },
@@ -84,8 +102,8 @@ async function upsertOneDaily(
 }
 
 /**
- * For each location: if a slot has no DailyMenu for dateStr, materialize from
- * active WeekdayMenu. Existing DailyMenus (explicit publish) are left alone.
+ * Materialize each active WeekdayMenu into a DailyMenu for dateStr when
+ * that template has not yet been copied for the day.
  */
 async function ensureMenusForDate(
   db: Db,
@@ -99,11 +117,11 @@ async function ensureMenusForDate(
     locationIds === "all"
       ? await db.location.findMany({
           where: { isActive: true },
-          select: { id: true, defaultCutoffTime: true },
+          select: { id: true, defaultCutoffTime: true, dinnerEnabled: true },
         })
       : await db.location.findMany({
           where: { id: { in: locationIds } },
-          select: { id: true, defaultCutoffTime: true },
+          select: { id: true, defaultCutoffTime: true, dinnerEnabled: true },
         });
 
   if (locations.length === 0) return;
@@ -112,11 +130,18 @@ async function ensureMenusForDate(
   const cutoffByLoc = new Map(
     locations.map((l) => [l.id, normalizeCutoffTime(l.defaultCutoffTime)]),
   );
+  const dinnerByLoc = new Map(
+    locations.map((l) => [l.id, l.dinnerEnabled]),
+  );
 
   const [existing, templates] = await Promise.all([
     db.dailyMenu.findMany({
-      where: { locationId: { in: ids }, date },
-      select: { locationId: true, slot: true },
+      where: {
+        locationId: { in: ids },
+        date,
+        sourceWeekdayMenuId: { not: null },
+      },
+      select: { sourceWeekdayMenuId: true },
     }),
     db.weekdayMenu.findMany({
       where: {
@@ -127,14 +152,16 @@ async function ensureMenusForDate(
     }),
   ]);
 
-  const existingKeys = new Set(
-    existing.map((m) => `${m.locationId}:${m.slot}`),
+  const already = new Set(
+    existing
+      .map((m) => m.sourceWeekdayMenuId)
+      .filter((id): id is string => Boolean(id)),
   );
 
   for (const t of templates) {
-    const key = `${t.locationId}:${t.slot}`;
-    if (existingKeys.has(key)) continue;
-    await upsertOneDaily(db, {
+    if (already.has(t.id)) continue;
+    if (t.slot === "DINNER" && !dinnerByLoc.get(t.locationId)) continue;
+    await saveDailyMenu(db, {
       locationId: t.locationId,
       date: dateStr,
       slot: t.slot,
@@ -145,6 +172,7 @@ async function ensureMenusForDate(
       catalogItemId: t.catalogItemId,
       isPublished: true,
       cutoffTime: cutoffByLoc.get(t.locationId),
+      sourceWeekdayMenuId: t.id,
     });
   }
 }
@@ -205,13 +233,18 @@ export const menuRouter = createTRPCRouter({
       );
       return ctx.db.weekdayMenu.findMany({
         where: { locationId: input.locationId },
-        orderBy: [{ weekday: "asc" }, { slot: "asc" }],
+        orderBy: [
+          { weekday: "asc" },
+          { slot: "asc" },
+          { createdAt: "asc" },
+        ],
       });
     }),
 
   weekdayUpsert: adminProcedure
     .input(
       z.object({
+        id: z.string().cuid().optional(),
         locationId: z.string().cuid(),
         weekday: weekdayEnum,
         slot: z.enum(["LUNCH", "DINNER"]),
@@ -231,15 +264,30 @@ export const menuRouter = createTRPCRouter({
         input.locationId,
       );
 
-      return ctx.db.weekdayMenu.upsert({
-        where: {
-          locationId_weekday_slot: {
-            locationId: input.locationId,
+      if (input.id) {
+        const existing = await ctx.db.weekdayMenu.findUnique({
+          where: { id: input.id },
+        });
+        if (!existing || existing.locationId !== input.locationId) {
+          throw new TRPCError({ code: "NOT_FOUND" });
+        }
+        return ctx.db.weekdayMenu.update({
+          where: { id: input.id },
+          data: {
             weekday: input.weekday,
             slot: input.slot,
+            title: input.title,
+            description: input.description,
+            price: input.price,
+            imageUrl: input.imageUrl,
+            catalogItemId: input.catalogItemId,
+            isActive: input.isActive,
           },
-        },
-        create: {
+        });
+      }
+
+      return ctx.db.weekdayMenu.create({
+        data: {
           locationId: input.locationId,
           weekday: input.weekday,
           slot: input.slot,
@@ -250,23 +298,16 @@ export const menuRouter = createTRPCRouter({
           catalogItemId: input.catalogItemId ?? undefined,
           isActive: input.isActive,
         },
-        update: {
-          title: input.title,
-          description: input.description,
-          price: input.price,
-          imageUrl: input.imageUrl,
-          catalogItemId: input.catalogItemId,
-          isActive: input.isActive,
-        },
       });
     }),
 
   weekdayClear: adminProcedure
     .input(
       z.object({
+        id: z.string().cuid().optional(),
         locationId: z.string().cuid(),
-        weekday: weekdayEnum,
-        slot: z.enum(["LUNCH", "DINNER"]),
+        weekday: weekdayEnum.optional(),
+        slot: z.enum(["LUNCH", "DINNER"]).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -276,6 +317,24 @@ export const menuRouter = createTRPCRouter({
         ctx.session.user.role,
         input.locationId,
       );
+
+      if (input.id) {
+        const existing = await ctx.db.weekdayMenu.findUnique({
+          where: { id: input.id },
+        });
+        if (!existing || existing.locationId !== input.locationId) {
+          throw new TRPCError({ code: "NOT_FOUND" });
+        }
+        await ctx.db.weekdayMenu.delete({ where: { id: input.id } });
+        return { ok: true as const };
+      }
+
+      if (!input.weekday || !input.slot) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "id or weekday+slot required",
+        });
+      }
 
       await ctx.db.weekdayMenu.deleteMany({
         where: {
@@ -352,11 +411,19 @@ export const menuRouter = createTRPCRouter({
       locationIds === "all"
         ? await ctx.db.location.findMany({
             where: { isActive: true },
-            select: { id: true, defaultCutoffTime: true },
+            select: {
+              id: true,
+              defaultCutoffTime: true,
+              dinnerEnabled: true,
+            },
           })
         : await ctx.db.location.findMany({
             where: { id: { in: locationIds } },
-            select: { id: true, defaultCutoffTime: true },
+            select: {
+              id: true,
+              defaultCutoffTime: true,
+              dinnerEnabled: true,
+            },
           });
 
     // Each office may roll over at a different time — materialize the
@@ -373,6 +440,7 @@ export const menuRouter = createTRPCRouter({
           locationId: loc.id,
           date,
           isPublished: true,
+          ...(loc.dinnerEnabled ? {} : { slot: { not: "DINNER" as const } }),
         },
         include: {
           location: true,
@@ -396,6 +464,15 @@ export const menuRouter = createTRPCRouter({
     });
 
     const now = new Date();
+    const orderedBySlot = new Map<string, string>();
+    for (const m of menusByLoc) {
+      const order = m.orders[0];
+      if (order) {
+        const menuDateStr = formatInTimeZone(m.date, "UTC", "yyyy-MM-dd");
+        orderedBySlot.set(`${m.locationId}:${menuDateStr}:${m.slot}`, m.id);
+      }
+    }
+
     return {
       locationName: user.location?.name ?? null,
       locationId: user.locationId,
@@ -406,6 +483,8 @@ export const menuRouter = createTRPCRouter({
         const locCutoff = normalizeCutoffTime(m.location.defaultCutoffTime);
         const cutoff =
           m.cutoffAt ?? dayArchiveAt(menuDateStr, locCutoff);
+        const slotKey = `${m.locationId}:${menuDateStr}:${m.slot}`;
+        const orderedMenuId = orderedBySlot.get(slotKey);
         return {
           ...m,
           menuDate: menuDateStr,
@@ -413,6 +492,8 @@ export const menuRouter = createTRPCRouter({
           cutoffTime: locCutoff,
           isPastCutoff: now > cutoff,
           myOrder: m.orders[0] ?? null,
+          orderedOtherOptionId:
+            orderedMenuId && orderedMenuId !== m.id ? orderedMenuId : null,
           orders: undefined,
         };
       }),
@@ -445,13 +526,14 @@ export const menuRouter = createTRPCRouter({
             select: { orders: { where: { status: { not: "CANCELLED" } } } },
           },
         },
-        orderBy: { slot: "asc" },
+        orderBy: [{ slot: "asc" }, { createdAt: "asc" }],
       });
     }),
 
   upsertDaily: adminProcedure
     .input(
       z.object({
+        id: z.string().cuid().optional(),
         locationId: z.string().cuid(),
         date: z.string().regex(dateRegex),
         /** Inclusive end date for multi-day publish (week / month). Defaults to `date`. */
@@ -478,6 +560,44 @@ export const menuRouter = createTRPCRouter({
         input.locationId,
       );
 
+      const loc = await ctx.db.location.findUnique({
+        where: { id: input.locationId },
+        select: { defaultCutoffTime: true },
+      });
+      const cutoffTime = normalizeCutoffTime(
+        input.cutoffTime ?? loc?.defaultCutoffTime,
+      );
+
+      // Update a single existing meal option
+      if (input.id) {
+        const existing = await ctx.db.dailyMenu.findUnique({
+          where: { id: input.id },
+        });
+        if (!existing || existing.locationId !== input.locationId) {
+          throw new TRPCError({ code: "NOT_FOUND" });
+        }
+        const menu = await saveDailyMenu(ctx.db, {
+          id: input.id,
+          locationId: input.locationId,
+          date: input.date,
+          slot: input.slot,
+          title: input.title,
+          description: input.description,
+          price: input.price,
+          imageUrl: input.imageUrl,
+          catalogItemId: input.catalogItemId,
+          isPublished: input.isPublished,
+          cutoffTime,
+        });
+        return {
+          count: 1,
+          startDate: input.date,
+          endDate: input.date,
+          rolloverNote: `Orders close at ${cutoffTime} Asia/Dhaka each day; after that, employees order for the next day.`,
+          menus: [menu],
+        };
+      }
+
       const end = input.endDate ?? input.date;
       let dates: string[];
       try {
@@ -495,16 +615,10 @@ export const menuRouter = createTRPCRouter({
         });
       }
 
-      const loc = await ctx.db.location.findUnique({
-        where: { id: input.locationId },
-        select: { defaultCutoffTime: true },
-      });
-      const cutoffTime = normalizeCutoffTime(loc?.defaultCutoffTime);
-
       const results = [];
       for (const d of dates) {
         results.push(
-          await upsertOneDaily(ctx.db, {
+          await saveDailyMenu(ctx.db, {
             locationId: input.locationId,
             date: d,
             slot: input.slot,
@@ -526,6 +640,41 @@ export const menuRouter = createTRPCRouter({
         rolloverNote: `Orders close at ${cutoffTime} Asia/Dhaka each day; after that, employees order for the next day.`,
         menus: results,
       };
+    }),
+
+  deleteDaily: adminProcedure
+    .input(
+      z.object({
+        id: z.string().cuid(),
+        locationId: z.string().cuid(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertLocationAccess(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        input.locationId,
+      );
+      const existing = await ctx.db.dailyMenu.findUnique({
+        where: { id: input.id },
+        include: {
+          _count: {
+            select: { orders: { where: { status: { not: "CANCELLED" } } } },
+          },
+        },
+      });
+      if (!existing || existing.locationId !== input.locationId) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+      if (existing._count.orders > 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot delete a meal that already has orders — unpublish instead",
+        });
+      }
+      await ctx.db.dailyMenu.delete({ where: { id: input.id } });
+      return { ok: true as const };
     }),
 
   cloudinarySignature: adminProcedure.query(() => {

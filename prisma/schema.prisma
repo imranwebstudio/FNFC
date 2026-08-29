@@ -130,6 +130,8 @@ model Location {
   address          String?
   /// Order cutoff as "HH:mm" in Asia/Dhaka (e.g. "14:00")
   defaultCutoffTime String  @default("14:00")
+  /// When false, dinner menus are hidden from employees and admin meal UI
+  dinnerEnabled    Boolean  @default(false)
   isActive         Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -166,7 +168,7 @@ model MealCatalog {
   weekdayMenus WeekdayMenu[]
 }
 
-/// Recurring meal for a weekday at one office (e.g. every Sunday lunch)
+/// Recurring meal option for a weekday at one office (many per weekday+slot)
 model WeekdayMenu {
   id            String   @id @default(cuid())
   locationId    String
@@ -183,32 +185,37 @@ model WeekdayMenu {
 
   location    Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
   catalogItem MealCatalog? @relation(fields: [catalogItemId], references: [id], onDelete: SetNull)
+  dailyMenus  DailyMenu[]
 
-  @@unique([locationId, weekday, slot])
+  @@index([locationId, weekday, slot])
   @@index([weekday, isActive])
 }
 
 model DailyMenu {
-  id            String   @id @default(cuid())
-  locationId    String
-  date          DateTime @db.Date
-  slot          MealSlot
-  title         String
-  description   String?
-  price         Int
-  imageUrl      String?
-  catalogItemId String?
+  id                  String   @id @default(cuid())
+  locationId          String
+  date                DateTime @db.Date
+  slot                MealSlot
+  title               String
+  description         String?
+  price               Int
+  imageUrl            String?
+  catalogItemId       String?
+  /// When set, this row was materialized from a weekday template
+  sourceWeekdayMenuId String?
   /// Absolute cutoff datetime (Asia/Dhaka resolved); null = use location default for that day
-  cutoffAt      DateTime?
-  isPublished   Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  cutoffAt            DateTime?
+  isPublished         Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
-  location    Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  catalogItem MealCatalog? @relation(fields: [catalogItemId], references: [id], onDelete: SetNull)
-  orders      Order[]
+  location          Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  catalogItem       MealCatalog? @relation(fields: [catalogItemId], references: [id], onDelete: SetNull)
+  sourceWeekdayMenu WeekdayMenu? @relation(fields: [sourceWeekdayMenuId], references: [id], onDelete: SetNull)
+  orders            Order[]
 
-  @@unique([locationId, date, slot])
+  @@unique([date, sourceWeekdayMenuId])
+  @@index([locationId, date, slot])
   @@index([date, isPublished])
 }
 
