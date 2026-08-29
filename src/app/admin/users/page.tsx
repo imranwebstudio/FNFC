@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users } from "lucide-react";
+import { Loader2, Users } from "lucide-react";
 
 import {
   Badge,
@@ -22,6 +22,7 @@ export default function AdminUsersPage() {
   const [depositUserId, setDepositUserId] = useState<string | null>(null);
   const [amount, setAmount] = useState(1000);
   const [note, setNote] = useState("");
+  const [modeError, setModeError] = useState<string | null>(null);
   const utils = api.useUtils();
 
   useEffect(() => {
@@ -30,10 +31,14 @@ export default function AdminUsersPage() {
     }
   }, [locations.data, locationId]);
 
-  const users = api.admin.listUsers.useQuery(
-    { locationId, search: search || undefined },
-    { enabled: Boolean(locationId) },
-  );
+  const listInput = {
+    locationId,
+    search: search || undefined,
+  };
+
+  const users = api.admin.listUsers.useQuery(listInput, {
+    enabled: Boolean(locationId),
+  });
 
   const deposit = api.wallet.deposit.useMutation({
     onSuccess: async () => {
@@ -43,16 +48,43 @@ export default function AdminUsersPage() {
     },
   });
   const setMode = api.wallet.setPaymentMode.useMutation({
-    onSuccess: async () => utils.admin.listUsers.invalidate(),
+    onMutate: async ({ userId, paymentMode }) => {
+      setModeError(null);
+      await utils.admin.listUsers.cancel(listInput);
+      const previous = utils.admin.listUsers.getData(listInput);
+      utils.admin.listUsers.setData(listInput, (old) =>
+        old?.map((u) => (u.id === userId ? { ...u, paymentMode } : u)),
+      );
+      return { previous };
+    },
+    onError: (err, _vars, ctx) => {
+      if (ctx?.previous) {
+        utils.admin.listUsers.setData(listInput, ctx.previous);
+      }
+      setModeError(err.message || "Could not change payment mode");
+    },
+    onSettled: () => {
+      void utils.admin.listUsers.invalidate();
+    },
   });
+
+  const pendingModeUserId = setMode.isPending
+    ? setMode.variables?.userId
+    : undefined;
 
   return (
     <div>
       <PageTitle
         icon={<Users className="h-5 w-5" strokeWidth={2.25} />}
         title="Users & deposits"
-        subtitle="Record wallet deposits / due payments. Toggle cash vs wallet."
+        subtitle="Record wallet deposits / due payments. Switch cash vs wallet per user."
       />
+
+      {modeError ? (
+        <p className="mb-4 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-400">
+          {modeError}
+        </p>
+      ) : null}
 
       <div className="mb-4 grid gap-3 sm:grid-cols-2">
         <div>
@@ -81,6 +113,8 @@ export default function AdminUsersPage() {
       <ul className="space-y-2">
         {users.data?.map((u) => {
           const due = Math.max(0, -u.balance);
+          const nextMode = u.paymentMode === "CASH" ? "WALLET" : "CASH";
+          const modeBusy = pendingModeUserId === u.id;
           return (
             <Panel key={u.id} className="py-3">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -101,22 +135,35 @@ export default function AdminUsersPage() {
                         · Due {formatTaka(due)}
                       </span>
                     ) : null}{" "}
-                    · <Badge>{u.paymentMode}</Badge>
+                    ·{" "}
+                    <Badge
+                      tone={u.paymentMode === "WALLET" ? "good" : "neutral"}
+                    >
+                      {u.paymentMode}
+                    </Badge>
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="secondary"
+                    disabled={modeBusy}
+                    aria-busy={modeBusy}
                     onClick={() =>
                       setMode.mutate({
                         userId: u.id,
-                        paymentMode:
-                          u.paymentMode === "CASH" ? "WALLET" : "CASH",
+                        paymentMode: nextMode,
                       })
                     }
                   >
-                    Toggle mode
+                    {modeBusy ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Switching…
+                      </>
+                    ) : (
+                      <>Switch to {nextMode === "WALLET" ? "Wallet" : "Cash"}</>
+                    )}
                   </Button>
                   <Button
                     type="button"
