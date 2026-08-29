@@ -10,12 +10,13 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
-    "dev": "next dev --turbo",
+    "dev": "next dev",
+    "dev:turbo": "next dev --turbo",
     "postinstall": "prisma generate",
     "preview": "next build && next start",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "vercel-build": "prisma migrate deploy && next build"
+    "vercel-build": "prisma generate && prisma migrate deploy && next build"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -32,6 +33,7 @@
     "date-fns": "^4.4.0",
     "date-fns-tz": "^3.2.0",
     "framer-motion": "^13.0.0",
+    "lucide-react": "^1.30.0",
     "next": "^15.2.3",
     "next-auth": "5.0.0-beta.25",
     "next-cloudinary": "^6.18.8",

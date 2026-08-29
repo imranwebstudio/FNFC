@@ -1,10 +1,12 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { formatInTimeZone } from "date-fns-tz";
 
 import {
-  cutoffFromTime,
+  dayArchiveAt,
   dhakaDateOnly,
-  todayDateString,
+  getOrderWindow,
+  ORDER_ROLLOVER_TIME,
 } from "~/lib/datetime";
 import {
   adminProcedure,
@@ -46,14 +48,22 @@ export const orderRouter = createTRPCRouter({
         });
       }
 
-      const dateStr = todayDateString();
-      const cutoff =
-        menu.cutoffAt ??
-        cutoffFromTime(dateStr, menu.location.defaultCutoffTime);
+      const window = getOrderWindow();
+      const menuDate = formatInTimeZone(menu.date, "UTC", "yyyy-MM-dd");
+      if (menuDate !== window.orderDate) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: window.rolledOver
+            ? `Today's lunch closed at ${ORDER_ROLLOVER_TIME}. You can only order for tomorrow now.`
+            : "This menu is not available for ordering right now",
+        });
+      }
+
+      const cutoff = menu.cutoffAt ?? dayArchiveAt(menuDate);
       if (new Date() > cutoff) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Ordering cutoff has passed",
+          message: `Ordering closed at ${ORDER_ROLLOVER_TIME} (Asia/Dhaka)`,
         });
       }
 
@@ -132,10 +142,9 @@ export const orderRouter = createTRPCRouter({
         });
       }
 
-      const dateStr = todayDateString();
+      const menuDate = formatInTimeZone(order.dailyMenu.date, "UTC", "yyyy-MM-dd");
       const cutoff =
-        order.dailyMenu.cutoffAt ??
-        cutoffFromTime(dateStr, order.dailyMenu.location.defaultCutoffTime);
+        order.dailyMenu.cutoffAt ?? dayArchiveAt(menuDate);
       if (new Date() > cutoff) {
         throw new TRPCError({
           code: "BAD_REQUEST",

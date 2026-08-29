@@ -112,7 +112,7 @@ export function Combobox({
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-line bg-rice py-1 shadow-lg"
+          className="surface-card absolute z-20 mt-1.5 max-h-48 w-full overflow-auto rounded-2xl py-1.5"
         >
           {filtered.map((opt, i) => (
             <li key={opt} role="option" aria-selected={i === highlight}>

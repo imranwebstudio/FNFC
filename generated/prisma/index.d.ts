@@ -49,6 +49,11 @@ export type AdminLocation = $Result.DefaultSelection<Prisma.$AdminLocationPayloa
  */
 export type MealCatalog = $Result.DefaultSelection<Prisma.$MealCatalogPayload>
 /**
+ * Model WeekdayMenu
+ * Recurring meal for a weekday at one office (e.g. every Sunday lunch)
+ */
+export type WeekdayMenu = $Result.DefaultSelection<Prisma.$WeekdayMenuPayload>
+/**
  * Model DailyMenu
  * 
  */
@@ -120,6 +125,19 @@ export const WalletTxType: {
 
 export type WalletTxType = (typeof WalletTxType)[keyof typeof WalletTxType]
 
+
+export const Weekday: {
+  SAT: 'SAT',
+  SUN: 'SUN',
+  MON: 'MON',
+  TUE: 'TUE',
+  WED: 'WED',
+  THU: 'THU',
+  FRI: 'FRI'
+};
+
+export type Weekday = (typeof Weekday)[keyof typeof Weekday]
+
 }
 
 export type Role = $Enums.Role
@@ -145,6 +163,10 @@ export const PaymentStatus: typeof $Enums.PaymentStatus
 export type WalletTxType = $Enums.WalletTxType
 
 export const WalletTxType: typeof $Enums.WalletTxType
+
+export type Weekday = $Enums.Weekday
+
+export const Weekday: typeof $Enums.Weekday
 
 /**
  * ##  Prisma Client ʲˢ
@@ -333,6 +355,16 @@ export class PrismaClient<
     * ```
     */
   get mealCatalog(): Prisma.MealCatalogDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.weekdayMenu`: Exposes CRUD operations for the **WeekdayMenu** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more WeekdayMenus
+    * const weekdayMenus = await prisma.weekdayMenu.findMany()
+    * ```
+    */
+  get weekdayMenu(): Prisma.WeekdayMenuDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.dailyMenu`: Exposes CRUD operations for the **DailyMenu** model.
@@ -811,6 +843,7 @@ export namespace Prisma {
     Location: 'Location',
     AdminLocation: 'AdminLocation',
     MealCatalog: 'MealCatalog',
+    WeekdayMenu: 'WeekdayMenu',
     DailyMenu: 'DailyMenu',
     Order: 'Order',
     WalletTransaction: 'WalletTransaction'
@@ -832,7 +865,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "account" | "session" | "verificationToken" | "user" | "location" | "adminLocation" | "mealCatalog" | "dailyMenu" | "order" | "walletTransaction"
+      modelProps: "account" | "session" | "verificationToken" | "user" | "location" | "adminLocation" | "mealCatalog" | "weekdayMenu" | "dailyMenu" | "order" | "walletTransaction"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1354,6 +1387,80 @@ export namespace Prisma {
           }
         }
       }
+      WeekdayMenu: {
+        payload: Prisma.$WeekdayMenuPayload<ExtArgs>
+        fields: Prisma.WeekdayMenuFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.WeekdayMenuFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeekdayMenuPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.WeekdayMenuFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeekdayMenuPayload>
+          }
+          findFirst: {
+            args: Prisma.WeekdayMenuFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeekdayMenuPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.WeekdayMenuFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeekdayMenuPayload>
+          }
+          findMany: {
+            args: Prisma.WeekdayMenuFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeekdayMenuPayload>[]
+          }
+          create: {
+            args: Prisma.WeekdayMenuCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeekdayMenuPayload>
+          }
+          createMany: {
+            args: Prisma.WeekdayMenuCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.WeekdayMenuCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeekdayMenuPayload>[]
+          }
+          delete: {
+            args: Prisma.WeekdayMenuDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeekdayMenuPayload>
+          }
+          update: {
+            args: Prisma.WeekdayMenuUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeekdayMenuPayload>
+          }
+          deleteMany: {
+            args: Prisma.WeekdayMenuDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.WeekdayMenuUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.WeekdayMenuUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeekdayMenuPayload>[]
+          }
+          upsert: {
+            args: Prisma.WeekdayMenuUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$WeekdayMenuPayload>
+          }
+          aggregate: {
+            args: Prisma.WeekdayMenuAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateWeekdayMenu>
+          }
+          groupBy: {
+            args: Prisma.WeekdayMenuGroupByArgs<ExtArgs>
+            result: $Utils.Optional<WeekdayMenuGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.WeekdayMenuCountArgs<ExtArgs>
+            result: $Utils.Optional<WeekdayMenuCountAggregateOutputType> | number
+          }
+        }
+      }
       DailyMenu: {
         payload: Prisma.$DailyMenuPayload<ExtArgs>
         fields: Prisma.DailyMenuFieldRefs
@@ -1679,6 +1786,7 @@ export namespace Prisma {
     location?: LocationOmit
     adminLocation?: AdminLocationOmit
     mealCatalog?: MealCatalogOmit
+    weekdayMenu?: WeekdayMenuOmit
     dailyMenu?: DailyMenuOmit
     order?: OrderOmit
     walletTransaction?: WalletTransactionOmit
@@ -1841,6 +1949,7 @@ export namespace Prisma {
     users: number
     adminLocations: number
     dailyMenus: number
+    weekdayMenus: number
     orders: number
   }
 
@@ -1848,6 +1957,7 @@ export namespace Prisma {
     users?: boolean | LocationCountOutputTypeCountUsersArgs
     adminLocations?: boolean | LocationCountOutputTypeCountAdminLocationsArgs
     dailyMenus?: boolean | LocationCountOutputTypeCountDailyMenusArgs
+    weekdayMenus?: boolean | LocationCountOutputTypeCountWeekdayMenusArgs
     orders?: boolean | LocationCountOutputTypeCountOrdersArgs
   }
 
@@ -1886,6 +1996,13 @@ export namespace Prisma {
   /**
    * LocationCountOutputType without action
    */
+  export type LocationCountOutputTypeCountWeekdayMenusArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: WeekdayMenuWhereInput
+  }
+
+  /**
+   * LocationCountOutputType without action
+   */
   export type LocationCountOutputTypeCountOrdersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: OrderWhereInput
   }
@@ -1897,10 +2014,12 @@ export namespace Prisma {
 
   export type MealCatalogCountOutputType = {
     dailyMenus: number
+    weekdayMenus: number
   }
 
   export type MealCatalogCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     dailyMenus?: boolean | MealCatalogCountOutputTypeCountDailyMenusArgs
+    weekdayMenus?: boolean | MealCatalogCountOutputTypeCountWeekdayMenusArgs
   }
 
   // Custom InputTypes
@@ -1919,6 +2038,13 @@ export namespace Prisma {
    */
   export type MealCatalogCountOutputTypeCountDailyMenusArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: DailyMenuWhereInput
+  }
+
+  /**
+   * MealCatalogCountOutputType without action
+   */
+  export type MealCatalogCountOutputTypeCountWeekdayMenusArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: WeekdayMenuWhereInput
   }
 
 
@@ -6825,6 +6951,7 @@ export namespace Prisma {
     users?: boolean | Location$usersArgs<ExtArgs>
     adminLocations?: boolean | Location$adminLocationsArgs<ExtArgs>
     dailyMenus?: boolean | Location$dailyMenusArgs<ExtArgs>
+    weekdayMenus?: boolean | Location$weekdayMenusArgs<ExtArgs>
     orders?: boolean | Location$ordersArgs<ExtArgs>
     _count?: boolean | LocationCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["location"]>
@@ -6864,6 +6991,7 @@ export namespace Prisma {
     users?: boolean | Location$usersArgs<ExtArgs>
     adminLocations?: boolean | Location$adminLocationsArgs<ExtArgs>
     dailyMenus?: boolean | Location$dailyMenusArgs<ExtArgs>
+    weekdayMenus?: boolean | Location$weekdayMenusArgs<ExtArgs>
     orders?: boolean | Location$ordersArgs<ExtArgs>
     _count?: boolean | LocationCountOutputTypeDefaultArgs<ExtArgs>
   }
@@ -6876,6 +7004,7 @@ export namespace Prisma {
       users: Prisma.$UserPayload<ExtArgs>[]
       adminLocations: Prisma.$AdminLocationPayload<ExtArgs>[]
       dailyMenus: Prisma.$DailyMenuPayload<ExtArgs>[]
+      weekdayMenus: Prisma.$WeekdayMenuPayload<ExtArgs>[]
       orders: Prisma.$OrderPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -7286,6 +7415,7 @@ export namespace Prisma {
     users<T extends Location$usersArgs<ExtArgs> = {}>(args?: Subset<T, Location$usersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     adminLocations<T extends Location$adminLocationsArgs<ExtArgs> = {}>(args?: Subset<T, Location$adminLocationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AdminLocationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     dailyMenus<T extends Location$dailyMenusArgs<ExtArgs> = {}>(args?: Subset<T, Location$dailyMenusArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DailyMenuPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    weekdayMenus<T extends Location$weekdayMenusArgs<ExtArgs> = {}>(args?: Subset<T, Location$weekdayMenusArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WeekdayMenuPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     orders<T extends Location$ordersArgs<ExtArgs> = {}>(args?: Subset<T, Location$ordersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -7780,6 +7910,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: DailyMenuScalarFieldEnum | DailyMenuScalarFieldEnum[]
+  }
+
+  /**
+   * Location.weekdayMenus
+   */
+  export type Location$weekdayMenusArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeekdayMenu
+     */
+    select?: WeekdayMenuSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeekdayMenu
+     */
+    omit?: WeekdayMenuOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeekdayMenuInclude<ExtArgs> | null
+    where?: WeekdayMenuWhereInput
+    orderBy?: WeekdayMenuOrderByWithRelationInput | WeekdayMenuOrderByWithRelationInput[]
+    cursor?: WeekdayMenuWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: WeekdayMenuScalarFieldEnum | WeekdayMenuScalarFieldEnum[]
   }
 
   /**
@@ -9088,6 +9242,7 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     dailyMenus?: boolean | MealCatalog$dailyMenusArgs<ExtArgs>
+    weekdayMenus?: boolean | MealCatalog$weekdayMenusArgs<ExtArgs>
     _count?: boolean | MealCatalogCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["mealCatalog"]>
 
@@ -9127,6 +9282,7 @@ export namespace Prisma {
   export type MealCatalogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "imageUrl" | "defaultPrice" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["mealCatalog"]>
   export type MealCatalogInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     dailyMenus?: boolean | MealCatalog$dailyMenusArgs<ExtArgs>
+    weekdayMenus?: boolean | MealCatalog$weekdayMenusArgs<ExtArgs>
     _count?: boolean | MealCatalogCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type MealCatalogIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -9136,6 +9292,7 @@ export namespace Prisma {
     name: "MealCatalog"
     objects: {
       dailyMenus: Prisma.$DailyMenuPayload<ExtArgs>[]
+      weekdayMenus: Prisma.$WeekdayMenuPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -9541,6 +9698,7 @@ export namespace Prisma {
   export interface Prisma__MealCatalogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     dailyMenus<T extends MealCatalog$dailyMenusArgs<ExtArgs> = {}>(args?: Subset<T, MealCatalog$dailyMenusArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DailyMenuPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    weekdayMenus<T extends MealCatalog$weekdayMenusArgs<ExtArgs> = {}>(args?: Subset<T, MealCatalog$weekdayMenusArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WeekdayMenuPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -9990,6 +10148,30 @@ export namespace Prisma {
   }
 
   /**
+   * MealCatalog.weekdayMenus
+   */
+  export type MealCatalog$weekdayMenusArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeekdayMenu
+     */
+    select?: WeekdayMenuSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeekdayMenu
+     */
+    omit?: WeekdayMenuOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeekdayMenuInclude<ExtArgs> | null
+    where?: WeekdayMenuWhereInput
+    orderBy?: WeekdayMenuOrderByWithRelationInput | WeekdayMenuOrderByWithRelationInput[]
+    cursor?: WeekdayMenuWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: WeekdayMenuScalarFieldEnum | WeekdayMenuScalarFieldEnum[]
+  }
+
+  /**
    * MealCatalog without action
    */
   export type MealCatalogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -10005,6 +10187,1216 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: MealCatalogInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model WeekdayMenu
+   */
+
+  export type AggregateWeekdayMenu = {
+    _count: WeekdayMenuCountAggregateOutputType | null
+    _avg: WeekdayMenuAvgAggregateOutputType | null
+    _sum: WeekdayMenuSumAggregateOutputType | null
+    _min: WeekdayMenuMinAggregateOutputType | null
+    _max: WeekdayMenuMaxAggregateOutputType | null
+  }
+
+  export type WeekdayMenuAvgAggregateOutputType = {
+    price: number | null
+  }
+
+  export type WeekdayMenuSumAggregateOutputType = {
+    price: number | null
+  }
+
+  export type WeekdayMenuMinAggregateOutputType = {
+    id: string | null
+    locationId: string | null
+    weekday: $Enums.Weekday | null
+    slot: $Enums.MealSlot | null
+    title: string | null
+    description: string | null
+    price: number | null
+    imageUrl: string | null
+    catalogItemId: string | null
+    isActive: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type WeekdayMenuMaxAggregateOutputType = {
+    id: string | null
+    locationId: string | null
+    weekday: $Enums.Weekday | null
+    slot: $Enums.MealSlot | null
+    title: string | null
+    description: string | null
+    price: number | null
+    imageUrl: string | null
+    catalogItemId: string | null
+    isActive: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type WeekdayMenuCountAggregateOutputType = {
+    id: number
+    locationId: number
+    weekday: number
+    slot: number
+    title: number
+    description: number
+    price: number
+    imageUrl: number
+    catalogItemId: number
+    isActive: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type WeekdayMenuAvgAggregateInputType = {
+    price?: true
+  }
+
+  export type WeekdayMenuSumAggregateInputType = {
+    price?: true
+  }
+
+  export type WeekdayMenuMinAggregateInputType = {
+    id?: true
+    locationId?: true
+    weekday?: true
+    slot?: true
+    title?: true
+    description?: true
+    price?: true
+    imageUrl?: true
+    catalogItemId?: true
+    isActive?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type WeekdayMenuMaxAggregateInputType = {
+    id?: true
+    locationId?: true
+    weekday?: true
+    slot?: true
+    title?: true
+    description?: true
+    price?: true
+    imageUrl?: true
+    catalogItemId?: true
+    isActive?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type WeekdayMenuCountAggregateInputType = {
+    id?: true
+    locationId?: true
+    weekday?: true
+    slot?: true
+    title?: true
+    description?: true
+    price?: true
+    imageUrl?: true
+    catalogItemId?: true
+    isActive?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type WeekdayMenuAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which WeekdayMenu to aggregate.
+     */
+    where?: WeekdayMenuWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WeekdayMenus to fetch.
+     */
+    orderBy?: WeekdayMenuOrderByWithRelationInput | WeekdayMenuOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: WeekdayMenuWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WeekdayMenus from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WeekdayMenus.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned WeekdayMenus
+    **/
+    _count?: true | WeekdayMenuCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: WeekdayMenuAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: WeekdayMenuSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: WeekdayMenuMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: WeekdayMenuMaxAggregateInputType
+  }
+
+  export type GetWeekdayMenuAggregateType<T extends WeekdayMenuAggregateArgs> = {
+        [P in keyof T & keyof AggregateWeekdayMenu]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateWeekdayMenu[P]>
+      : GetScalarType<T[P], AggregateWeekdayMenu[P]>
+  }
+
+
+
+
+  export type WeekdayMenuGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: WeekdayMenuWhereInput
+    orderBy?: WeekdayMenuOrderByWithAggregationInput | WeekdayMenuOrderByWithAggregationInput[]
+    by: WeekdayMenuScalarFieldEnum[] | WeekdayMenuScalarFieldEnum
+    having?: WeekdayMenuScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: WeekdayMenuCountAggregateInputType | true
+    _avg?: WeekdayMenuAvgAggregateInputType
+    _sum?: WeekdayMenuSumAggregateInputType
+    _min?: WeekdayMenuMinAggregateInputType
+    _max?: WeekdayMenuMaxAggregateInputType
+  }
+
+  export type WeekdayMenuGroupByOutputType = {
+    id: string
+    locationId: string
+    weekday: $Enums.Weekday
+    slot: $Enums.MealSlot
+    title: string
+    description: string | null
+    price: number
+    imageUrl: string | null
+    catalogItemId: string | null
+    isActive: boolean
+    createdAt: Date
+    updatedAt: Date
+    _count: WeekdayMenuCountAggregateOutputType | null
+    _avg: WeekdayMenuAvgAggregateOutputType | null
+    _sum: WeekdayMenuSumAggregateOutputType | null
+    _min: WeekdayMenuMinAggregateOutputType | null
+    _max: WeekdayMenuMaxAggregateOutputType | null
+  }
+
+  type GetWeekdayMenuGroupByPayload<T extends WeekdayMenuGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<WeekdayMenuGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof WeekdayMenuGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], WeekdayMenuGroupByOutputType[P]>
+            : GetScalarType<T[P], WeekdayMenuGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type WeekdayMenuSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    locationId?: boolean
+    weekday?: boolean
+    slot?: boolean
+    title?: boolean
+    description?: boolean
+    price?: boolean
+    imageUrl?: boolean
+    catalogItemId?: boolean
+    isActive?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    location?: boolean | LocationDefaultArgs<ExtArgs>
+    catalogItem?: boolean | WeekdayMenu$catalogItemArgs<ExtArgs>
+  }, ExtArgs["result"]["weekdayMenu"]>
+
+  export type WeekdayMenuSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    locationId?: boolean
+    weekday?: boolean
+    slot?: boolean
+    title?: boolean
+    description?: boolean
+    price?: boolean
+    imageUrl?: boolean
+    catalogItemId?: boolean
+    isActive?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    location?: boolean | LocationDefaultArgs<ExtArgs>
+    catalogItem?: boolean | WeekdayMenu$catalogItemArgs<ExtArgs>
+  }, ExtArgs["result"]["weekdayMenu"]>
+
+  export type WeekdayMenuSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    locationId?: boolean
+    weekday?: boolean
+    slot?: boolean
+    title?: boolean
+    description?: boolean
+    price?: boolean
+    imageUrl?: boolean
+    catalogItemId?: boolean
+    isActive?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    location?: boolean | LocationDefaultArgs<ExtArgs>
+    catalogItem?: boolean | WeekdayMenu$catalogItemArgs<ExtArgs>
+  }, ExtArgs["result"]["weekdayMenu"]>
+
+  export type WeekdayMenuSelectScalar = {
+    id?: boolean
+    locationId?: boolean
+    weekday?: boolean
+    slot?: boolean
+    title?: boolean
+    description?: boolean
+    price?: boolean
+    imageUrl?: boolean
+    catalogItemId?: boolean
+    isActive?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type WeekdayMenuOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "locationId" | "weekday" | "slot" | "title" | "description" | "price" | "imageUrl" | "catalogItemId" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["weekdayMenu"]>
+  export type WeekdayMenuInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    location?: boolean | LocationDefaultArgs<ExtArgs>
+    catalogItem?: boolean | WeekdayMenu$catalogItemArgs<ExtArgs>
+  }
+  export type WeekdayMenuIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    location?: boolean | LocationDefaultArgs<ExtArgs>
+    catalogItem?: boolean | WeekdayMenu$catalogItemArgs<ExtArgs>
+  }
+  export type WeekdayMenuIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    location?: boolean | LocationDefaultArgs<ExtArgs>
+    catalogItem?: boolean | WeekdayMenu$catalogItemArgs<ExtArgs>
+  }
+
+  export type $WeekdayMenuPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "WeekdayMenu"
+    objects: {
+      location: Prisma.$LocationPayload<ExtArgs>
+      catalogItem: Prisma.$MealCatalogPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      locationId: string
+      weekday: $Enums.Weekday
+      slot: $Enums.MealSlot
+      title: string
+      description: string | null
+      price: number
+      imageUrl: string | null
+      catalogItemId: string | null
+      isActive: boolean
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["weekdayMenu"]>
+    composites: {}
+  }
+
+  type WeekdayMenuGetPayload<S extends boolean | null | undefined | WeekdayMenuDefaultArgs> = $Result.GetResult<Prisma.$WeekdayMenuPayload, S>
+
+  type WeekdayMenuCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<WeekdayMenuFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: WeekdayMenuCountAggregateInputType | true
+    }
+
+  export interface WeekdayMenuDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['WeekdayMenu'], meta: { name: 'WeekdayMenu' } }
+    /**
+     * Find zero or one WeekdayMenu that matches the filter.
+     * @param {WeekdayMenuFindUniqueArgs} args - Arguments to find a WeekdayMenu
+     * @example
+     * // Get one WeekdayMenu
+     * const weekdayMenu = await prisma.weekdayMenu.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends WeekdayMenuFindUniqueArgs>(args: SelectSubset<T, WeekdayMenuFindUniqueArgs<ExtArgs>>): Prisma__WeekdayMenuClient<$Result.GetResult<Prisma.$WeekdayMenuPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one WeekdayMenu that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {WeekdayMenuFindUniqueOrThrowArgs} args - Arguments to find a WeekdayMenu
+     * @example
+     * // Get one WeekdayMenu
+     * const weekdayMenu = await prisma.weekdayMenu.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends WeekdayMenuFindUniqueOrThrowArgs>(args: SelectSubset<T, WeekdayMenuFindUniqueOrThrowArgs<ExtArgs>>): Prisma__WeekdayMenuClient<$Result.GetResult<Prisma.$WeekdayMenuPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first WeekdayMenu that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WeekdayMenuFindFirstArgs} args - Arguments to find a WeekdayMenu
+     * @example
+     * // Get one WeekdayMenu
+     * const weekdayMenu = await prisma.weekdayMenu.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends WeekdayMenuFindFirstArgs>(args?: SelectSubset<T, WeekdayMenuFindFirstArgs<ExtArgs>>): Prisma__WeekdayMenuClient<$Result.GetResult<Prisma.$WeekdayMenuPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first WeekdayMenu that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WeekdayMenuFindFirstOrThrowArgs} args - Arguments to find a WeekdayMenu
+     * @example
+     * // Get one WeekdayMenu
+     * const weekdayMenu = await prisma.weekdayMenu.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends WeekdayMenuFindFirstOrThrowArgs>(args?: SelectSubset<T, WeekdayMenuFindFirstOrThrowArgs<ExtArgs>>): Prisma__WeekdayMenuClient<$Result.GetResult<Prisma.$WeekdayMenuPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more WeekdayMenus that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WeekdayMenuFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all WeekdayMenus
+     * const weekdayMenus = await prisma.weekdayMenu.findMany()
+     * 
+     * // Get first 10 WeekdayMenus
+     * const weekdayMenus = await prisma.weekdayMenu.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const weekdayMenuWithIdOnly = await prisma.weekdayMenu.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends WeekdayMenuFindManyArgs>(args?: SelectSubset<T, WeekdayMenuFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WeekdayMenuPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a WeekdayMenu.
+     * @param {WeekdayMenuCreateArgs} args - Arguments to create a WeekdayMenu.
+     * @example
+     * // Create one WeekdayMenu
+     * const WeekdayMenu = await prisma.weekdayMenu.create({
+     *   data: {
+     *     // ... data to create a WeekdayMenu
+     *   }
+     * })
+     * 
+     */
+    create<T extends WeekdayMenuCreateArgs>(args: SelectSubset<T, WeekdayMenuCreateArgs<ExtArgs>>): Prisma__WeekdayMenuClient<$Result.GetResult<Prisma.$WeekdayMenuPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many WeekdayMenus.
+     * @param {WeekdayMenuCreateManyArgs} args - Arguments to create many WeekdayMenus.
+     * @example
+     * // Create many WeekdayMenus
+     * const weekdayMenu = await prisma.weekdayMenu.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends WeekdayMenuCreateManyArgs>(args?: SelectSubset<T, WeekdayMenuCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many WeekdayMenus and returns the data saved in the database.
+     * @param {WeekdayMenuCreateManyAndReturnArgs} args - Arguments to create many WeekdayMenus.
+     * @example
+     * // Create many WeekdayMenus
+     * const weekdayMenu = await prisma.weekdayMenu.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many WeekdayMenus and only return the `id`
+     * const weekdayMenuWithIdOnly = await prisma.weekdayMenu.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends WeekdayMenuCreateManyAndReturnArgs>(args?: SelectSubset<T, WeekdayMenuCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WeekdayMenuPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a WeekdayMenu.
+     * @param {WeekdayMenuDeleteArgs} args - Arguments to delete one WeekdayMenu.
+     * @example
+     * // Delete one WeekdayMenu
+     * const WeekdayMenu = await prisma.weekdayMenu.delete({
+     *   where: {
+     *     // ... filter to delete one WeekdayMenu
+     *   }
+     * })
+     * 
+     */
+    delete<T extends WeekdayMenuDeleteArgs>(args: SelectSubset<T, WeekdayMenuDeleteArgs<ExtArgs>>): Prisma__WeekdayMenuClient<$Result.GetResult<Prisma.$WeekdayMenuPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one WeekdayMenu.
+     * @param {WeekdayMenuUpdateArgs} args - Arguments to update one WeekdayMenu.
+     * @example
+     * // Update one WeekdayMenu
+     * const weekdayMenu = await prisma.weekdayMenu.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends WeekdayMenuUpdateArgs>(args: SelectSubset<T, WeekdayMenuUpdateArgs<ExtArgs>>): Prisma__WeekdayMenuClient<$Result.GetResult<Prisma.$WeekdayMenuPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more WeekdayMenus.
+     * @param {WeekdayMenuDeleteManyArgs} args - Arguments to filter WeekdayMenus to delete.
+     * @example
+     * // Delete a few WeekdayMenus
+     * const { count } = await prisma.weekdayMenu.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends WeekdayMenuDeleteManyArgs>(args?: SelectSubset<T, WeekdayMenuDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more WeekdayMenus.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WeekdayMenuUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many WeekdayMenus
+     * const weekdayMenu = await prisma.weekdayMenu.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends WeekdayMenuUpdateManyArgs>(args: SelectSubset<T, WeekdayMenuUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more WeekdayMenus and returns the data updated in the database.
+     * @param {WeekdayMenuUpdateManyAndReturnArgs} args - Arguments to update many WeekdayMenus.
+     * @example
+     * // Update many WeekdayMenus
+     * const weekdayMenu = await prisma.weekdayMenu.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more WeekdayMenus and only return the `id`
+     * const weekdayMenuWithIdOnly = await prisma.weekdayMenu.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends WeekdayMenuUpdateManyAndReturnArgs>(args: SelectSubset<T, WeekdayMenuUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WeekdayMenuPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one WeekdayMenu.
+     * @param {WeekdayMenuUpsertArgs} args - Arguments to update or create a WeekdayMenu.
+     * @example
+     * // Update or create a WeekdayMenu
+     * const weekdayMenu = await prisma.weekdayMenu.upsert({
+     *   create: {
+     *     // ... data to create a WeekdayMenu
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the WeekdayMenu we want to update
+     *   }
+     * })
+     */
+    upsert<T extends WeekdayMenuUpsertArgs>(args: SelectSubset<T, WeekdayMenuUpsertArgs<ExtArgs>>): Prisma__WeekdayMenuClient<$Result.GetResult<Prisma.$WeekdayMenuPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of WeekdayMenus.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WeekdayMenuCountArgs} args - Arguments to filter WeekdayMenus to count.
+     * @example
+     * // Count the number of WeekdayMenus
+     * const count = await prisma.weekdayMenu.count({
+     *   where: {
+     *     // ... the filter for the WeekdayMenus we want to count
+     *   }
+     * })
+    **/
+    count<T extends WeekdayMenuCountArgs>(
+      args?: Subset<T, WeekdayMenuCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], WeekdayMenuCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a WeekdayMenu.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WeekdayMenuAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends WeekdayMenuAggregateArgs>(args: Subset<T, WeekdayMenuAggregateArgs>): Prisma.PrismaPromise<GetWeekdayMenuAggregateType<T>>
+
+    /**
+     * Group by WeekdayMenu.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {WeekdayMenuGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends WeekdayMenuGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: WeekdayMenuGroupByArgs['orderBy'] }
+        : { orderBy?: WeekdayMenuGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, WeekdayMenuGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetWeekdayMenuGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the WeekdayMenu model
+   */
+  readonly fields: WeekdayMenuFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for WeekdayMenu.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__WeekdayMenuClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    location<T extends LocationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, LocationDefaultArgs<ExtArgs>>): Prisma__LocationClient<$Result.GetResult<Prisma.$LocationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    catalogItem<T extends WeekdayMenu$catalogItemArgs<ExtArgs> = {}>(args?: Subset<T, WeekdayMenu$catalogItemArgs<ExtArgs>>): Prisma__MealCatalogClient<$Result.GetResult<Prisma.$MealCatalogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the WeekdayMenu model
+   */
+  interface WeekdayMenuFieldRefs {
+    readonly id: FieldRef<"WeekdayMenu", 'String'>
+    readonly locationId: FieldRef<"WeekdayMenu", 'String'>
+    readonly weekday: FieldRef<"WeekdayMenu", 'Weekday'>
+    readonly slot: FieldRef<"WeekdayMenu", 'MealSlot'>
+    readonly title: FieldRef<"WeekdayMenu", 'String'>
+    readonly description: FieldRef<"WeekdayMenu", 'String'>
+    readonly price: FieldRef<"WeekdayMenu", 'Int'>
+    readonly imageUrl: FieldRef<"WeekdayMenu", 'String'>
+    readonly catalogItemId: FieldRef<"WeekdayMenu", 'String'>
+    readonly isActive: FieldRef<"WeekdayMenu", 'Boolean'>
+    readonly createdAt: FieldRef<"WeekdayMenu", 'DateTime'>
+    readonly updatedAt: FieldRef<"WeekdayMenu", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * WeekdayMenu findUnique
+   */
+  export type WeekdayMenuFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeekdayMenu
+     */
+    select?: WeekdayMenuSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeekdayMenu
+     */
+    omit?: WeekdayMenuOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeekdayMenuInclude<ExtArgs> | null
+    /**
+     * Filter, which WeekdayMenu to fetch.
+     */
+    where: WeekdayMenuWhereUniqueInput
+  }
+
+  /**
+   * WeekdayMenu findUniqueOrThrow
+   */
+  export type WeekdayMenuFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeekdayMenu
+     */
+    select?: WeekdayMenuSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeekdayMenu
+     */
+    omit?: WeekdayMenuOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeekdayMenuInclude<ExtArgs> | null
+    /**
+     * Filter, which WeekdayMenu to fetch.
+     */
+    where: WeekdayMenuWhereUniqueInput
+  }
+
+  /**
+   * WeekdayMenu findFirst
+   */
+  export type WeekdayMenuFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeekdayMenu
+     */
+    select?: WeekdayMenuSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeekdayMenu
+     */
+    omit?: WeekdayMenuOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeekdayMenuInclude<ExtArgs> | null
+    /**
+     * Filter, which WeekdayMenu to fetch.
+     */
+    where?: WeekdayMenuWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WeekdayMenus to fetch.
+     */
+    orderBy?: WeekdayMenuOrderByWithRelationInput | WeekdayMenuOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for WeekdayMenus.
+     */
+    cursor?: WeekdayMenuWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WeekdayMenus from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WeekdayMenus.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of WeekdayMenus.
+     */
+    distinct?: WeekdayMenuScalarFieldEnum | WeekdayMenuScalarFieldEnum[]
+  }
+
+  /**
+   * WeekdayMenu findFirstOrThrow
+   */
+  export type WeekdayMenuFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeekdayMenu
+     */
+    select?: WeekdayMenuSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeekdayMenu
+     */
+    omit?: WeekdayMenuOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeekdayMenuInclude<ExtArgs> | null
+    /**
+     * Filter, which WeekdayMenu to fetch.
+     */
+    where?: WeekdayMenuWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WeekdayMenus to fetch.
+     */
+    orderBy?: WeekdayMenuOrderByWithRelationInput | WeekdayMenuOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for WeekdayMenus.
+     */
+    cursor?: WeekdayMenuWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WeekdayMenus from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WeekdayMenus.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of WeekdayMenus.
+     */
+    distinct?: WeekdayMenuScalarFieldEnum | WeekdayMenuScalarFieldEnum[]
+  }
+
+  /**
+   * WeekdayMenu findMany
+   */
+  export type WeekdayMenuFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeekdayMenu
+     */
+    select?: WeekdayMenuSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeekdayMenu
+     */
+    omit?: WeekdayMenuOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeekdayMenuInclude<ExtArgs> | null
+    /**
+     * Filter, which WeekdayMenus to fetch.
+     */
+    where?: WeekdayMenuWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of WeekdayMenus to fetch.
+     */
+    orderBy?: WeekdayMenuOrderByWithRelationInput | WeekdayMenuOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing WeekdayMenus.
+     */
+    cursor?: WeekdayMenuWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` WeekdayMenus from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` WeekdayMenus.
+     */
+    skip?: number
+    distinct?: WeekdayMenuScalarFieldEnum | WeekdayMenuScalarFieldEnum[]
+  }
+
+  /**
+   * WeekdayMenu create
+   */
+  export type WeekdayMenuCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeekdayMenu
+     */
+    select?: WeekdayMenuSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeekdayMenu
+     */
+    omit?: WeekdayMenuOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeekdayMenuInclude<ExtArgs> | null
+    /**
+     * The data needed to create a WeekdayMenu.
+     */
+    data: XOR<WeekdayMenuCreateInput, WeekdayMenuUncheckedCreateInput>
+  }
+
+  /**
+   * WeekdayMenu createMany
+   */
+  export type WeekdayMenuCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many WeekdayMenus.
+     */
+    data: WeekdayMenuCreateManyInput | WeekdayMenuCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * WeekdayMenu createManyAndReturn
+   */
+  export type WeekdayMenuCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeekdayMenu
+     */
+    select?: WeekdayMenuSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeekdayMenu
+     */
+    omit?: WeekdayMenuOmit<ExtArgs> | null
+    /**
+     * The data used to create many WeekdayMenus.
+     */
+    data: WeekdayMenuCreateManyInput | WeekdayMenuCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeekdayMenuIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * WeekdayMenu update
+   */
+  export type WeekdayMenuUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeekdayMenu
+     */
+    select?: WeekdayMenuSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeekdayMenu
+     */
+    omit?: WeekdayMenuOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeekdayMenuInclude<ExtArgs> | null
+    /**
+     * The data needed to update a WeekdayMenu.
+     */
+    data: XOR<WeekdayMenuUpdateInput, WeekdayMenuUncheckedUpdateInput>
+    /**
+     * Choose, which WeekdayMenu to update.
+     */
+    where: WeekdayMenuWhereUniqueInput
+  }
+
+  /**
+   * WeekdayMenu updateMany
+   */
+  export type WeekdayMenuUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update WeekdayMenus.
+     */
+    data: XOR<WeekdayMenuUpdateManyMutationInput, WeekdayMenuUncheckedUpdateManyInput>
+    /**
+     * Filter which WeekdayMenus to update
+     */
+    where?: WeekdayMenuWhereInput
+    /**
+     * Limit how many WeekdayMenus to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * WeekdayMenu updateManyAndReturn
+   */
+  export type WeekdayMenuUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeekdayMenu
+     */
+    select?: WeekdayMenuSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeekdayMenu
+     */
+    omit?: WeekdayMenuOmit<ExtArgs> | null
+    /**
+     * The data used to update WeekdayMenus.
+     */
+    data: XOR<WeekdayMenuUpdateManyMutationInput, WeekdayMenuUncheckedUpdateManyInput>
+    /**
+     * Filter which WeekdayMenus to update
+     */
+    where?: WeekdayMenuWhereInput
+    /**
+     * Limit how many WeekdayMenus to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeekdayMenuIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * WeekdayMenu upsert
+   */
+  export type WeekdayMenuUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeekdayMenu
+     */
+    select?: WeekdayMenuSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeekdayMenu
+     */
+    omit?: WeekdayMenuOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeekdayMenuInclude<ExtArgs> | null
+    /**
+     * The filter to search for the WeekdayMenu to update in case it exists.
+     */
+    where: WeekdayMenuWhereUniqueInput
+    /**
+     * In case the WeekdayMenu found by the `where` argument doesn't exist, create a new WeekdayMenu with this data.
+     */
+    create: XOR<WeekdayMenuCreateInput, WeekdayMenuUncheckedCreateInput>
+    /**
+     * In case the WeekdayMenu was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<WeekdayMenuUpdateInput, WeekdayMenuUncheckedUpdateInput>
+  }
+
+  /**
+   * WeekdayMenu delete
+   */
+  export type WeekdayMenuDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeekdayMenu
+     */
+    select?: WeekdayMenuSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeekdayMenu
+     */
+    omit?: WeekdayMenuOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeekdayMenuInclude<ExtArgs> | null
+    /**
+     * Filter which WeekdayMenu to delete.
+     */
+    where: WeekdayMenuWhereUniqueInput
+  }
+
+  /**
+   * WeekdayMenu deleteMany
+   */
+  export type WeekdayMenuDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which WeekdayMenus to delete
+     */
+    where?: WeekdayMenuWhereInput
+    /**
+     * Limit how many WeekdayMenus to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * WeekdayMenu.catalogItem
+   */
+  export type WeekdayMenu$catalogItemArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MealCatalog
+     */
+    select?: MealCatalogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MealCatalog
+     */
+    omit?: MealCatalogOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MealCatalogInclude<ExtArgs> | null
+    where?: MealCatalogWhereInput
+  }
+
+  /**
+   * WeekdayMenu without action
+   */
+  export type WeekdayMenuDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the WeekdayMenu
+     */
+    select?: WeekdayMenuSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the WeekdayMenu
+     */
+    omit?: WeekdayMenuOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: WeekdayMenuInclude<ExtArgs> | null
   }
 
 
@@ -13809,6 +15201,24 @@ export namespace Prisma {
   export type MealCatalogScalarFieldEnum = (typeof MealCatalogScalarFieldEnum)[keyof typeof MealCatalogScalarFieldEnum]
 
 
+  export const WeekdayMenuScalarFieldEnum: {
+    id: 'id',
+    locationId: 'locationId',
+    weekday: 'weekday',
+    slot: 'slot',
+    title: 'title',
+    description: 'description',
+    price: 'price',
+    imageUrl: 'imageUrl',
+    catalogItemId: 'catalogItemId',
+    isActive: 'isActive',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type WeekdayMenuScalarFieldEnum = (typeof WeekdayMenuScalarFieldEnum)[keyof typeof WeekdayMenuScalarFieldEnum]
+
+
   export const DailyMenuScalarFieldEnum: {
     id: 'id',
     locationId: 'locationId',
@@ -13964,6 +15374,20 @@ export namespace Prisma {
    * Reference to a field of type 'Boolean'
    */
   export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
+   * Reference to a field of type 'Weekday'
+   */
+  export type EnumWeekdayFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Weekday'>
+    
+
+
+  /**
+   * Reference to a field of type 'Weekday[]'
+   */
+  export type ListEnumWeekdayFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Weekday[]'>
     
 
 
@@ -14380,6 +15804,7 @@ export namespace Prisma {
     users?: UserListRelationFilter
     adminLocations?: AdminLocationListRelationFilter
     dailyMenus?: DailyMenuListRelationFilter
+    weekdayMenus?: WeekdayMenuListRelationFilter
     orders?: OrderListRelationFilter
   }
 
@@ -14394,6 +15819,7 @@ export namespace Prisma {
     users?: UserOrderByRelationAggregateInput
     adminLocations?: AdminLocationOrderByRelationAggregateInput
     dailyMenus?: DailyMenuOrderByRelationAggregateInput
+    weekdayMenus?: WeekdayMenuOrderByRelationAggregateInput
     orders?: OrderOrderByRelationAggregateInput
   }
 
@@ -14411,6 +15837,7 @@ export namespace Prisma {
     users?: UserListRelationFilter
     adminLocations?: AdminLocationListRelationFilter
     dailyMenus?: DailyMenuListRelationFilter
+    weekdayMenus?: WeekdayMenuListRelationFilter
     orders?: OrderListRelationFilter
   }, "id">
 
@@ -14502,6 +15929,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"MealCatalog"> | Date | string
     updatedAt?: DateTimeFilter<"MealCatalog"> | Date | string
     dailyMenus?: DailyMenuListRelationFilter
+    weekdayMenus?: WeekdayMenuListRelationFilter
   }
 
   export type MealCatalogOrderByWithRelationInput = {
@@ -14514,6 +15942,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     dailyMenus?: DailyMenuOrderByRelationAggregateInput
+    weekdayMenus?: WeekdayMenuOrderByRelationAggregateInput
   }
 
   export type MealCatalogWhereUniqueInput = Prisma.AtLeast<{
@@ -14529,6 +15958,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"MealCatalog"> | Date | string
     updatedAt?: DateTimeFilter<"MealCatalog"> | Date | string
     dailyMenus?: DailyMenuListRelationFilter
+    weekdayMenus?: WeekdayMenuListRelationFilter
   }, "id">
 
   export type MealCatalogOrderByWithAggregationInput = {
@@ -14559,6 +15989,102 @@ export namespace Prisma {
     isActive?: BoolWithAggregatesFilter<"MealCatalog"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"MealCatalog"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"MealCatalog"> | Date | string
+  }
+
+  export type WeekdayMenuWhereInput = {
+    AND?: WeekdayMenuWhereInput | WeekdayMenuWhereInput[]
+    OR?: WeekdayMenuWhereInput[]
+    NOT?: WeekdayMenuWhereInput | WeekdayMenuWhereInput[]
+    id?: StringFilter<"WeekdayMenu"> | string
+    locationId?: StringFilter<"WeekdayMenu"> | string
+    weekday?: EnumWeekdayFilter<"WeekdayMenu"> | $Enums.Weekday
+    slot?: EnumMealSlotFilter<"WeekdayMenu"> | $Enums.MealSlot
+    title?: StringFilter<"WeekdayMenu"> | string
+    description?: StringNullableFilter<"WeekdayMenu"> | string | null
+    price?: IntFilter<"WeekdayMenu"> | number
+    imageUrl?: StringNullableFilter<"WeekdayMenu"> | string | null
+    catalogItemId?: StringNullableFilter<"WeekdayMenu"> | string | null
+    isActive?: BoolFilter<"WeekdayMenu"> | boolean
+    createdAt?: DateTimeFilter<"WeekdayMenu"> | Date | string
+    updatedAt?: DateTimeFilter<"WeekdayMenu"> | Date | string
+    location?: XOR<LocationScalarRelationFilter, LocationWhereInput>
+    catalogItem?: XOR<MealCatalogNullableScalarRelationFilter, MealCatalogWhereInput> | null
+  }
+
+  export type WeekdayMenuOrderByWithRelationInput = {
+    id?: SortOrder
+    locationId?: SortOrder
+    weekday?: SortOrder
+    slot?: SortOrder
+    title?: SortOrder
+    description?: SortOrderInput | SortOrder
+    price?: SortOrder
+    imageUrl?: SortOrderInput | SortOrder
+    catalogItemId?: SortOrderInput | SortOrder
+    isActive?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    location?: LocationOrderByWithRelationInput
+    catalogItem?: MealCatalogOrderByWithRelationInput
+  }
+
+  export type WeekdayMenuWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    locationId_weekday_slot?: WeekdayMenuLocationIdWeekdaySlotCompoundUniqueInput
+    AND?: WeekdayMenuWhereInput | WeekdayMenuWhereInput[]
+    OR?: WeekdayMenuWhereInput[]
+    NOT?: WeekdayMenuWhereInput | WeekdayMenuWhereInput[]
+    locationId?: StringFilter<"WeekdayMenu"> | string
+    weekday?: EnumWeekdayFilter<"WeekdayMenu"> | $Enums.Weekday
+    slot?: EnumMealSlotFilter<"WeekdayMenu"> | $Enums.MealSlot
+    title?: StringFilter<"WeekdayMenu"> | string
+    description?: StringNullableFilter<"WeekdayMenu"> | string | null
+    price?: IntFilter<"WeekdayMenu"> | number
+    imageUrl?: StringNullableFilter<"WeekdayMenu"> | string | null
+    catalogItemId?: StringNullableFilter<"WeekdayMenu"> | string | null
+    isActive?: BoolFilter<"WeekdayMenu"> | boolean
+    createdAt?: DateTimeFilter<"WeekdayMenu"> | Date | string
+    updatedAt?: DateTimeFilter<"WeekdayMenu"> | Date | string
+    location?: XOR<LocationScalarRelationFilter, LocationWhereInput>
+    catalogItem?: XOR<MealCatalogNullableScalarRelationFilter, MealCatalogWhereInput> | null
+  }, "id" | "locationId_weekday_slot">
+
+  export type WeekdayMenuOrderByWithAggregationInput = {
+    id?: SortOrder
+    locationId?: SortOrder
+    weekday?: SortOrder
+    slot?: SortOrder
+    title?: SortOrder
+    description?: SortOrderInput | SortOrder
+    price?: SortOrder
+    imageUrl?: SortOrderInput | SortOrder
+    catalogItemId?: SortOrderInput | SortOrder
+    isActive?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: WeekdayMenuCountOrderByAggregateInput
+    _avg?: WeekdayMenuAvgOrderByAggregateInput
+    _max?: WeekdayMenuMaxOrderByAggregateInput
+    _min?: WeekdayMenuMinOrderByAggregateInput
+    _sum?: WeekdayMenuSumOrderByAggregateInput
+  }
+
+  export type WeekdayMenuScalarWhereWithAggregatesInput = {
+    AND?: WeekdayMenuScalarWhereWithAggregatesInput | WeekdayMenuScalarWhereWithAggregatesInput[]
+    OR?: WeekdayMenuScalarWhereWithAggregatesInput[]
+    NOT?: WeekdayMenuScalarWhereWithAggregatesInput | WeekdayMenuScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"WeekdayMenu"> | string
+    locationId?: StringWithAggregatesFilter<"WeekdayMenu"> | string
+    weekday?: EnumWeekdayWithAggregatesFilter<"WeekdayMenu"> | $Enums.Weekday
+    slot?: EnumMealSlotWithAggregatesFilter<"WeekdayMenu"> | $Enums.MealSlot
+    title?: StringWithAggregatesFilter<"WeekdayMenu"> | string
+    description?: StringNullableWithAggregatesFilter<"WeekdayMenu"> | string | null
+    price?: IntWithAggregatesFilter<"WeekdayMenu"> | number
+    imageUrl?: StringNullableWithAggregatesFilter<"WeekdayMenu"> | string | null
+    catalogItemId?: StringNullableWithAggregatesFilter<"WeekdayMenu"> | string | null
+    isActive?: BoolWithAggregatesFilter<"WeekdayMenu"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"WeekdayMenu"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"WeekdayMenu"> | Date | string
   }
 
   export type DailyMenuWhereInput = {
@@ -15224,6 +16750,7 @@ export namespace Prisma {
     users?: UserCreateNestedManyWithoutLocationInput
     adminLocations?: AdminLocationCreateNestedManyWithoutLocationInput
     dailyMenus?: DailyMenuCreateNestedManyWithoutLocationInput
+    weekdayMenus?: WeekdayMenuCreateNestedManyWithoutLocationInput
     orders?: OrderCreateNestedManyWithoutLocationInput
   }
 
@@ -15238,6 +16765,7 @@ export namespace Prisma {
     users?: UserUncheckedCreateNestedManyWithoutLocationInput
     adminLocations?: AdminLocationUncheckedCreateNestedManyWithoutLocationInput
     dailyMenus?: DailyMenuUncheckedCreateNestedManyWithoutLocationInput
+    weekdayMenus?: WeekdayMenuUncheckedCreateNestedManyWithoutLocationInput
     orders?: OrderUncheckedCreateNestedManyWithoutLocationInput
   }
 
@@ -15252,6 +16780,7 @@ export namespace Prisma {
     users?: UserUpdateManyWithoutLocationNestedInput
     adminLocations?: AdminLocationUpdateManyWithoutLocationNestedInput
     dailyMenus?: DailyMenuUpdateManyWithoutLocationNestedInput
+    weekdayMenus?: WeekdayMenuUpdateManyWithoutLocationNestedInput
     orders?: OrderUpdateManyWithoutLocationNestedInput
   }
 
@@ -15266,6 +16795,7 @@ export namespace Prisma {
     users?: UserUncheckedUpdateManyWithoutLocationNestedInput
     adminLocations?: AdminLocationUncheckedUpdateManyWithoutLocationNestedInput
     dailyMenus?: DailyMenuUncheckedUpdateManyWithoutLocationNestedInput
+    weekdayMenus?: WeekdayMenuUncheckedUpdateManyWithoutLocationNestedInput
     orders?: OrderUncheckedUpdateManyWithoutLocationNestedInput
   }
 
@@ -15349,6 +16879,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     dailyMenus?: DailyMenuCreateNestedManyWithoutCatalogItemInput
+    weekdayMenus?: WeekdayMenuCreateNestedManyWithoutCatalogItemInput
   }
 
   export type MealCatalogUncheckedCreateInput = {
@@ -15361,6 +16892,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     dailyMenus?: DailyMenuUncheckedCreateNestedManyWithoutCatalogItemInput
+    weekdayMenus?: WeekdayMenuUncheckedCreateNestedManyWithoutCatalogItemInput
   }
 
   export type MealCatalogUpdateInput = {
@@ -15373,6 +16905,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     dailyMenus?: DailyMenuUpdateManyWithoutCatalogItemNestedInput
+    weekdayMenus?: WeekdayMenuUpdateManyWithoutCatalogItemNestedInput
   }
 
   export type MealCatalogUncheckedUpdateInput = {
@@ -15385,6 +16918,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     dailyMenus?: DailyMenuUncheckedUpdateManyWithoutCatalogItemNestedInput
+    weekdayMenus?: WeekdayMenuUncheckedUpdateManyWithoutCatalogItemNestedInput
   }
 
   export type MealCatalogCreateManyInput = {
@@ -15415,6 +16949,109 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     defaultPrice?: IntFieldUpdateOperationsInput | number
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WeekdayMenuCreateInput = {
+    id?: string
+    weekday: $Enums.Weekday
+    slot: $Enums.MealSlot
+    title: string
+    description?: string | null
+    price: number
+    imageUrl?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    location: LocationCreateNestedOneWithoutWeekdayMenusInput
+    catalogItem?: MealCatalogCreateNestedOneWithoutWeekdayMenusInput
+  }
+
+  export type WeekdayMenuUncheckedCreateInput = {
+    id?: string
+    locationId: string
+    weekday: $Enums.Weekday
+    slot: $Enums.MealSlot
+    title: string
+    description?: string | null
+    price: number
+    imageUrl?: string | null
+    catalogItemId?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type WeekdayMenuUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    weekday?: EnumWeekdayFieldUpdateOperationsInput | $Enums.Weekday
+    slot?: EnumMealSlotFieldUpdateOperationsInput | $Enums.MealSlot
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: IntFieldUpdateOperationsInput | number
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    location?: LocationUpdateOneRequiredWithoutWeekdayMenusNestedInput
+    catalogItem?: MealCatalogUpdateOneWithoutWeekdayMenusNestedInput
+  }
+
+  export type WeekdayMenuUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    locationId?: StringFieldUpdateOperationsInput | string
+    weekday?: EnumWeekdayFieldUpdateOperationsInput | $Enums.Weekday
+    slot?: EnumMealSlotFieldUpdateOperationsInput | $Enums.MealSlot
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: IntFieldUpdateOperationsInput | number
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    catalogItemId?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WeekdayMenuCreateManyInput = {
+    id?: string
+    locationId: string
+    weekday: $Enums.Weekday
+    slot: $Enums.MealSlot
+    title: string
+    description?: string | null
+    price: number
+    imageUrl?: string | null
+    catalogItemId?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type WeekdayMenuUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    weekday?: EnumWeekdayFieldUpdateOperationsInput | $Enums.Weekday
+    slot?: EnumMealSlotFieldUpdateOperationsInput | $Enums.MealSlot
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: IntFieldUpdateOperationsInput | number
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WeekdayMenuUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    locationId?: StringFieldUpdateOperationsInput | string
+    weekday?: EnumWeekdayFieldUpdateOperationsInput | $Enums.Weekday
+    slot?: EnumMealSlotFieldUpdateOperationsInput | $Enums.MealSlot
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: IntFieldUpdateOperationsInput | number
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    catalogItemId?: NullableStringFieldUpdateOperationsInput | string | null
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16190,11 +17827,21 @@ export namespace Prisma {
     none?: DailyMenuWhereInput
   }
 
+  export type WeekdayMenuListRelationFilter = {
+    every?: WeekdayMenuWhereInput
+    some?: WeekdayMenuWhereInput
+    none?: WeekdayMenuWhereInput
+  }
+
   export type UserOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
   export type DailyMenuOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type WeekdayMenuOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -16297,6 +17944,13 @@ export namespace Prisma {
     defaultPrice?: SortOrder
   }
 
+  export type EnumWeekdayFilter<$PrismaModel = never> = {
+    equals?: $Enums.Weekday | EnumWeekdayFieldRefInput<$PrismaModel>
+    in?: $Enums.Weekday[] | ListEnumWeekdayFieldRefInput<$PrismaModel>
+    notIn?: $Enums.Weekday[] | ListEnumWeekdayFieldRefInput<$PrismaModel>
+    not?: NestedEnumWeekdayFilter<$PrismaModel> | $Enums.Weekday
+  }
+
   export type EnumMealSlotFilter<$PrismaModel = never> = {
     equals?: $Enums.MealSlot | EnumMealSlotFieldRefInput<$PrismaModel>
     in?: $Enums.MealSlot[] | ListEnumMealSlotFieldRefInput<$PrismaModel>
@@ -16307,6 +17961,85 @@ export namespace Prisma {
   export type MealCatalogNullableScalarRelationFilter = {
     is?: MealCatalogWhereInput | null
     isNot?: MealCatalogWhereInput | null
+  }
+
+  export type WeekdayMenuLocationIdWeekdaySlotCompoundUniqueInput = {
+    locationId: string
+    weekday: $Enums.Weekday
+    slot: $Enums.MealSlot
+  }
+
+  export type WeekdayMenuCountOrderByAggregateInput = {
+    id?: SortOrder
+    locationId?: SortOrder
+    weekday?: SortOrder
+    slot?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    price?: SortOrder
+    imageUrl?: SortOrder
+    catalogItemId?: SortOrder
+    isActive?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type WeekdayMenuAvgOrderByAggregateInput = {
+    price?: SortOrder
+  }
+
+  export type WeekdayMenuMaxOrderByAggregateInput = {
+    id?: SortOrder
+    locationId?: SortOrder
+    weekday?: SortOrder
+    slot?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    price?: SortOrder
+    imageUrl?: SortOrder
+    catalogItemId?: SortOrder
+    isActive?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type WeekdayMenuMinOrderByAggregateInput = {
+    id?: SortOrder
+    locationId?: SortOrder
+    weekday?: SortOrder
+    slot?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    price?: SortOrder
+    imageUrl?: SortOrder
+    catalogItemId?: SortOrder
+    isActive?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type WeekdayMenuSumOrderByAggregateInput = {
+    price?: SortOrder
+  }
+
+  export type EnumWeekdayWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.Weekday | EnumWeekdayFieldRefInput<$PrismaModel>
+    in?: $Enums.Weekday[] | ListEnumWeekdayFieldRefInput<$PrismaModel>
+    notIn?: $Enums.Weekday[] | ListEnumWeekdayFieldRefInput<$PrismaModel>
+    not?: NestedEnumWeekdayWithAggregatesFilter<$PrismaModel> | $Enums.Weekday
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumWeekdayFilter<$PrismaModel>
+    _max?: NestedEnumWeekdayFilter<$PrismaModel>
+  }
+
+  export type EnumMealSlotWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MealSlot | EnumMealSlotFieldRefInput<$PrismaModel>
+    in?: $Enums.MealSlot[] | ListEnumMealSlotFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MealSlot[] | ListEnumMealSlotFieldRefInput<$PrismaModel>
+    not?: NestedEnumMealSlotWithAggregatesFilter<$PrismaModel> | $Enums.MealSlot
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMealSlotFilter<$PrismaModel>
+    _max?: NestedEnumMealSlotFilter<$PrismaModel>
   }
 
   export type DailyMenuLocationIdDateSlotCompoundUniqueInput = {
@@ -16369,16 +18102,6 @@ export namespace Prisma {
 
   export type DailyMenuSumOrderByAggregateInput = {
     price?: SortOrder
-  }
-
-  export type EnumMealSlotWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.MealSlot | EnumMealSlotFieldRefInput<$PrismaModel>
-    in?: $Enums.MealSlot[] | ListEnumMealSlotFieldRefInput<$PrismaModel>
-    notIn?: $Enums.MealSlot[] | ListEnumMealSlotFieldRefInput<$PrismaModel>
-    not?: NestedEnumMealSlotWithAggregatesFilter<$PrismaModel> | $Enums.MealSlot
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumMealSlotFilter<$PrismaModel>
-    _max?: NestedEnumMealSlotFilter<$PrismaModel>
   }
 
   export type EnumOrderStatusFilter<$PrismaModel = never> = {
@@ -16907,6 +18630,13 @@ export namespace Prisma {
     connect?: DailyMenuWhereUniqueInput | DailyMenuWhereUniqueInput[]
   }
 
+  export type WeekdayMenuCreateNestedManyWithoutLocationInput = {
+    create?: XOR<WeekdayMenuCreateWithoutLocationInput, WeekdayMenuUncheckedCreateWithoutLocationInput> | WeekdayMenuCreateWithoutLocationInput[] | WeekdayMenuUncheckedCreateWithoutLocationInput[]
+    connectOrCreate?: WeekdayMenuCreateOrConnectWithoutLocationInput | WeekdayMenuCreateOrConnectWithoutLocationInput[]
+    createMany?: WeekdayMenuCreateManyLocationInputEnvelope
+    connect?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
+  }
+
   export type OrderCreateNestedManyWithoutLocationInput = {
     create?: XOR<OrderCreateWithoutLocationInput, OrderUncheckedCreateWithoutLocationInput> | OrderCreateWithoutLocationInput[] | OrderUncheckedCreateWithoutLocationInput[]
     connectOrCreate?: OrderCreateOrConnectWithoutLocationInput | OrderCreateOrConnectWithoutLocationInput[]
@@ -16933,6 +18663,13 @@ export namespace Prisma {
     connectOrCreate?: DailyMenuCreateOrConnectWithoutLocationInput | DailyMenuCreateOrConnectWithoutLocationInput[]
     createMany?: DailyMenuCreateManyLocationInputEnvelope
     connect?: DailyMenuWhereUniqueInput | DailyMenuWhereUniqueInput[]
+  }
+
+  export type WeekdayMenuUncheckedCreateNestedManyWithoutLocationInput = {
+    create?: XOR<WeekdayMenuCreateWithoutLocationInput, WeekdayMenuUncheckedCreateWithoutLocationInput> | WeekdayMenuCreateWithoutLocationInput[] | WeekdayMenuUncheckedCreateWithoutLocationInput[]
+    connectOrCreate?: WeekdayMenuCreateOrConnectWithoutLocationInput | WeekdayMenuCreateOrConnectWithoutLocationInput[]
+    createMany?: WeekdayMenuCreateManyLocationInputEnvelope
+    connect?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
   }
 
   export type OrderUncheckedCreateNestedManyWithoutLocationInput = {
@@ -16982,6 +18719,20 @@ export namespace Prisma {
     update?: DailyMenuUpdateWithWhereUniqueWithoutLocationInput | DailyMenuUpdateWithWhereUniqueWithoutLocationInput[]
     updateMany?: DailyMenuUpdateManyWithWhereWithoutLocationInput | DailyMenuUpdateManyWithWhereWithoutLocationInput[]
     deleteMany?: DailyMenuScalarWhereInput | DailyMenuScalarWhereInput[]
+  }
+
+  export type WeekdayMenuUpdateManyWithoutLocationNestedInput = {
+    create?: XOR<WeekdayMenuCreateWithoutLocationInput, WeekdayMenuUncheckedCreateWithoutLocationInput> | WeekdayMenuCreateWithoutLocationInput[] | WeekdayMenuUncheckedCreateWithoutLocationInput[]
+    connectOrCreate?: WeekdayMenuCreateOrConnectWithoutLocationInput | WeekdayMenuCreateOrConnectWithoutLocationInput[]
+    upsert?: WeekdayMenuUpsertWithWhereUniqueWithoutLocationInput | WeekdayMenuUpsertWithWhereUniqueWithoutLocationInput[]
+    createMany?: WeekdayMenuCreateManyLocationInputEnvelope
+    set?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
+    disconnect?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
+    delete?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
+    connect?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
+    update?: WeekdayMenuUpdateWithWhereUniqueWithoutLocationInput | WeekdayMenuUpdateWithWhereUniqueWithoutLocationInput[]
+    updateMany?: WeekdayMenuUpdateManyWithWhereWithoutLocationInput | WeekdayMenuUpdateManyWithWhereWithoutLocationInput[]
+    deleteMany?: WeekdayMenuScalarWhereInput | WeekdayMenuScalarWhereInput[]
   }
 
   export type OrderUpdateManyWithoutLocationNestedInput = {
@@ -17040,6 +18791,20 @@ export namespace Prisma {
     deleteMany?: DailyMenuScalarWhereInput | DailyMenuScalarWhereInput[]
   }
 
+  export type WeekdayMenuUncheckedUpdateManyWithoutLocationNestedInput = {
+    create?: XOR<WeekdayMenuCreateWithoutLocationInput, WeekdayMenuUncheckedCreateWithoutLocationInput> | WeekdayMenuCreateWithoutLocationInput[] | WeekdayMenuUncheckedCreateWithoutLocationInput[]
+    connectOrCreate?: WeekdayMenuCreateOrConnectWithoutLocationInput | WeekdayMenuCreateOrConnectWithoutLocationInput[]
+    upsert?: WeekdayMenuUpsertWithWhereUniqueWithoutLocationInput | WeekdayMenuUpsertWithWhereUniqueWithoutLocationInput[]
+    createMany?: WeekdayMenuCreateManyLocationInputEnvelope
+    set?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
+    disconnect?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
+    delete?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
+    connect?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
+    update?: WeekdayMenuUpdateWithWhereUniqueWithoutLocationInput | WeekdayMenuUpdateWithWhereUniqueWithoutLocationInput[]
+    updateMany?: WeekdayMenuUpdateManyWithWhereWithoutLocationInput | WeekdayMenuUpdateManyWithWhereWithoutLocationInput[]
+    deleteMany?: WeekdayMenuScalarWhereInput | WeekdayMenuScalarWhereInput[]
+  }
+
   export type OrderUncheckedUpdateManyWithoutLocationNestedInput = {
     create?: XOR<OrderCreateWithoutLocationInput, OrderUncheckedCreateWithoutLocationInput> | OrderCreateWithoutLocationInput[] | OrderUncheckedCreateWithoutLocationInput[]
     connectOrCreate?: OrderCreateOrConnectWithoutLocationInput | OrderCreateOrConnectWithoutLocationInput[]
@@ -17089,11 +18854,25 @@ export namespace Prisma {
     connect?: DailyMenuWhereUniqueInput | DailyMenuWhereUniqueInput[]
   }
 
+  export type WeekdayMenuCreateNestedManyWithoutCatalogItemInput = {
+    create?: XOR<WeekdayMenuCreateWithoutCatalogItemInput, WeekdayMenuUncheckedCreateWithoutCatalogItemInput> | WeekdayMenuCreateWithoutCatalogItemInput[] | WeekdayMenuUncheckedCreateWithoutCatalogItemInput[]
+    connectOrCreate?: WeekdayMenuCreateOrConnectWithoutCatalogItemInput | WeekdayMenuCreateOrConnectWithoutCatalogItemInput[]
+    createMany?: WeekdayMenuCreateManyCatalogItemInputEnvelope
+    connect?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
+  }
+
   export type DailyMenuUncheckedCreateNestedManyWithoutCatalogItemInput = {
     create?: XOR<DailyMenuCreateWithoutCatalogItemInput, DailyMenuUncheckedCreateWithoutCatalogItemInput> | DailyMenuCreateWithoutCatalogItemInput[] | DailyMenuUncheckedCreateWithoutCatalogItemInput[]
     connectOrCreate?: DailyMenuCreateOrConnectWithoutCatalogItemInput | DailyMenuCreateOrConnectWithoutCatalogItemInput[]
     createMany?: DailyMenuCreateManyCatalogItemInputEnvelope
     connect?: DailyMenuWhereUniqueInput | DailyMenuWhereUniqueInput[]
+  }
+
+  export type WeekdayMenuUncheckedCreateNestedManyWithoutCatalogItemInput = {
+    create?: XOR<WeekdayMenuCreateWithoutCatalogItemInput, WeekdayMenuUncheckedCreateWithoutCatalogItemInput> | WeekdayMenuCreateWithoutCatalogItemInput[] | WeekdayMenuUncheckedCreateWithoutCatalogItemInput[]
+    connectOrCreate?: WeekdayMenuCreateOrConnectWithoutCatalogItemInput | WeekdayMenuCreateOrConnectWithoutCatalogItemInput[]
+    createMany?: WeekdayMenuCreateManyCatalogItemInputEnvelope
+    connect?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
   }
 
   export type DailyMenuUpdateManyWithoutCatalogItemNestedInput = {
@@ -17110,6 +18889,20 @@ export namespace Prisma {
     deleteMany?: DailyMenuScalarWhereInput | DailyMenuScalarWhereInput[]
   }
 
+  export type WeekdayMenuUpdateManyWithoutCatalogItemNestedInput = {
+    create?: XOR<WeekdayMenuCreateWithoutCatalogItemInput, WeekdayMenuUncheckedCreateWithoutCatalogItemInput> | WeekdayMenuCreateWithoutCatalogItemInput[] | WeekdayMenuUncheckedCreateWithoutCatalogItemInput[]
+    connectOrCreate?: WeekdayMenuCreateOrConnectWithoutCatalogItemInput | WeekdayMenuCreateOrConnectWithoutCatalogItemInput[]
+    upsert?: WeekdayMenuUpsertWithWhereUniqueWithoutCatalogItemInput | WeekdayMenuUpsertWithWhereUniqueWithoutCatalogItemInput[]
+    createMany?: WeekdayMenuCreateManyCatalogItemInputEnvelope
+    set?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
+    disconnect?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
+    delete?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
+    connect?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
+    update?: WeekdayMenuUpdateWithWhereUniqueWithoutCatalogItemInput | WeekdayMenuUpdateWithWhereUniqueWithoutCatalogItemInput[]
+    updateMany?: WeekdayMenuUpdateManyWithWhereWithoutCatalogItemInput | WeekdayMenuUpdateManyWithWhereWithoutCatalogItemInput[]
+    deleteMany?: WeekdayMenuScalarWhereInput | WeekdayMenuScalarWhereInput[]
+  }
+
   export type DailyMenuUncheckedUpdateManyWithoutCatalogItemNestedInput = {
     create?: XOR<DailyMenuCreateWithoutCatalogItemInput, DailyMenuUncheckedCreateWithoutCatalogItemInput> | DailyMenuCreateWithoutCatalogItemInput[] | DailyMenuUncheckedCreateWithoutCatalogItemInput[]
     connectOrCreate?: DailyMenuCreateOrConnectWithoutCatalogItemInput | DailyMenuCreateOrConnectWithoutCatalogItemInput[]
@@ -17122,6 +18915,58 @@ export namespace Prisma {
     update?: DailyMenuUpdateWithWhereUniqueWithoutCatalogItemInput | DailyMenuUpdateWithWhereUniqueWithoutCatalogItemInput[]
     updateMany?: DailyMenuUpdateManyWithWhereWithoutCatalogItemInput | DailyMenuUpdateManyWithWhereWithoutCatalogItemInput[]
     deleteMany?: DailyMenuScalarWhereInput | DailyMenuScalarWhereInput[]
+  }
+
+  export type WeekdayMenuUncheckedUpdateManyWithoutCatalogItemNestedInput = {
+    create?: XOR<WeekdayMenuCreateWithoutCatalogItemInput, WeekdayMenuUncheckedCreateWithoutCatalogItemInput> | WeekdayMenuCreateWithoutCatalogItemInput[] | WeekdayMenuUncheckedCreateWithoutCatalogItemInput[]
+    connectOrCreate?: WeekdayMenuCreateOrConnectWithoutCatalogItemInput | WeekdayMenuCreateOrConnectWithoutCatalogItemInput[]
+    upsert?: WeekdayMenuUpsertWithWhereUniqueWithoutCatalogItemInput | WeekdayMenuUpsertWithWhereUniqueWithoutCatalogItemInput[]
+    createMany?: WeekdayMenuCreateManyCatalogItemInputEnvelope
+    set?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
+    disconnect?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
+    delete?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
+    connect?: WeekdayMenuWhereUniqueInput | WeekdayMenuWhereUniqueInput[]
+    update?: WeekdayMenuUpdateWithWhereUniqueWithoutCatalogItemInput | WeekdayMenuUpdateWithWhereUniqueWithoutCatalogItemInput[]
+    updateMany?: WeekdayMenuUpdateManyWithWhereWithoutCatalogItemInput | WeekdayMenuUpdateManyWithWhereWithoutCatalogItemInput[]
+    deleteMany?: WeekdayMenuScalarWhereInput | WeekdayMenuScalarWhereInput[]
+  }
+
+  export type LocationCreateNestedOneWithoutWeekdayMenusInput = {
+    create?: XOR<LocationCreateWithoutWeekdayMenusInput, LocationUncheckedCreateWithoutWeekdayMenusInput>
+    connectOrCreate?: LocationCreateOrConnectWithoutWeekdayMenusInput
+    connect?: LocationWhereUniqueInput
+  }
+
+  export type MealCatalogCreateNestedOneWithoutWeekdayMenusInput = {
+    create?: XOR<MealCatalogCreateWithoutWeekdayMenusInput, MealCatalogUncheckedCreateWithoutWeekdayMenusInput>
+    connectOrCreate?: MealCatalogCreateOrConnectWithoutWeekdayMenusInput
+    connect?: MealCatalogWhereUniqueInput
+  }
+
+  export type EnumWeekdayFieldUpdateOperationsInput = {
+    set?: $Enums.Weekday
+  }
+
+  export type EnumMealSlotFieldUpdateOperationsInput = {
+    set?: $Enums.MealSlot
+  }
+
+  export type LocationUpdateOneRequiredWithoutWeekdayMenusNestedInput = {
+    create?: XOR<LocationCreateWithoutWeekdayMenusInput, LocationUncheckedCreateWithoutWeekdayMenusInput>
+    connectOrCreate?: LocationCreateOrConnectWithoutWeekdayMenusInput
+    upsert?: LocationUpsertWithoutWeekdayMenusInput
+    connect?: LocationWhereUniqueInput
+    update?: XOR<XOR<LocationUpdateToOneWithWhereWithoutWeekdayMenusInput, LocationUpdateWithoutWeekdayMenusInput>, LocationUncheckedUpdateWithoutWeekdayMenusInput>
+  }
+
+  export type MealCatalogUpdateOneWithoutWeekdayMenusNestedInput = {
+    create?: XOR<MealCatalogCreateWithoutWeekdayMenusInput, MealCatalogUncheckedCreateWithoutWeekdayMenusInput>
+    connectOrCreate?: MealCatalogCreateOrConnectWithoutWeekdayMenusInput
+    upsert?: MealCatalogUpsertWithoutWeekdayMenusInput
+    disconnect?: MealCatalogWhereInput | boolean
+    delete?: MealCatalogWhereInput | boolean
+    connect?: MealCatalogWhereUniqueInput
+    update?: XOR<XOR<MealCatalogUpdateToOneWithWhereWithoutWeekdayMenusInput, MealCatalogUpdateWithoutWeekdayMenusInput>, MealCatalogUncheckedUpdateWithoutWeekdayMenusInput>
   }
 
   export type LocationCreateNestedOneWithoutDailyMenusInput = {
@@ -17148,10 +18993,6 @@ export namespace Prisma {
     connectOrCreate?: OrderCreateOrConnectWithoutDailyMenuInput | OrderCreateOrConnectWithoutDailyMenuInput[]
     createMany?: OrderCreateManyDailyMenuInputEnvelope
     connect?: OrderWhereUniqueInput | OrderWhereUniqueInput[]
-  }
-
-  export type EnumMealSlotFieldUpdateOperationsInput = {
-    set?: $Enums.MealSlot
   }
 
   export type LocationUpdateOneRequiredWithoutDailyMenusNestedInput = {
@@ -17577,11 +19418,28 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
+  export type NestedEnumWeekdayFilter<$PrismaModel = never> = {
+    equals?: $Enums.Weekday | EnumWeekdayFieldRefInput<$PrismaModel>
+    in?: $Enums.Weekday[] | ListEnumWeekdayFieldRefInput<$PrismaModel>
+    notIn?: $Enums.Weekday[] | ListEnumWeekdayFieldRefInput<$PrismaModel>
+    not?: NestedEnumWeekdayFilter<$PrismaModel> | $Enums.Weekday
+  }
+
   export type NestedEnumMealSlotFilter<$PrismaModel = never> = {
     equals?: $Enums.MealSlot | EnumMealSlotFieldRefInput<$PrismaModel>
     in?: $Enums.MealSlot[] | ListEnumMealSlotFieldRefInput<$PrismaModel>
     notIn?: $Enums.MealSlot[] | ListEnumMealSlotFieldRefInput<$PrismaModel>
     not?: NestedEnumMealSlotFilter<$PrismaModel> | $Enums.MealSlot
+  }
+
+  export type NestedEnumWeekdayWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.Weekday | EnumWeekdayFieldRefInput<$PrismaModel>
+    in?: $Enums.Weekday[] | ListEnumWeekdayFieldRefInput<$PrismaModel>
+    notIn?: $Enums.Weekday[] | ListEnumWeekdayFieldRefInput<$PrismaModel>
+    not?: NestedEnumWeekdayWithAggregatesFilter<$PrismaModel> | $Enums.Weekday
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumWeekdayFilter<$PrismaModel>
+    _max?: NestedEnumWeekdayFilter<$PrismaModel>
   }
 
   export type NestedEnumMealSlotWithAggregatesFilter<$PrismaModel = never> = {
@@ -17887,6 +19745,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     adminLocations?: AdminLocationCreateNestedManyWithoutLocationInput
     dailyMenus?: DailyMenuCreateNestedManyWithoutLocationInput
+    weekdayMenus?: WeekdayMenuCreateNestedManyWithoutLocationInput
     orders?: OrderCreateNestedManyWithoutLocationInput
   }
 
@@ -17900,6 +19759,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     adminLocations?: AdminLocationUncheckedCreateNestedManyWithoutLocationInput
     dailyMenus?: DailyMenuUncheckedCreateNestedManyWithoutLocationInput
+    weekdayMenus?: WeekdayMenuUncheckedCreateNestedManyWithoutLocationInput
     orders?: OrderUncheckedCreateNestedManyWithoutLocationInput
   }
 
@@ -18115,6 +19975,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     adminLocations?: AdminLocationUpdateManyWithoutLocationNestedInput
     dailyMenus?: DailyMenuUpdateManyWithoutLocationNestedInput
+    weekdayMenus?: WeekdayMenuUpdateManyWithoutLocationNestedInput
     orders?: OrderUpdateManyWithoutLocationNestedInput
   }
 
@@ -18128,6 +19989,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     adminLocations?: AdminLocationUncheckedUpdateManyWithoutLocationNestedInput
     dailyMenus?: DailyMenuUncheckedUpdateManyWithoutLocationNestedInput
+    weekdayMenus?: WeekdayMenuUncheckedUpdateManyWithoutLocationNestedInput
     orders?: OrderUncheckedUpdateManyWithoutLocationNestedInput
   }
 
@@ -18420,6 +20282,44 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type WeekdayMenuCreateWithoutLocationInput = {
+    id?: string
+    weekday: $Enums.Weekday
+    slot: $Enums.MealSlot
+    title: string
+    description?: string | null
+    price: number
+    imageUrl?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    catalogItem?: MealCatalogCreateNestedOneWithoutWeekdayMenusInput
+  }
+
+  export type WeekdayMenuUncheckedCreateWithoutLocationInput = {
+    id?: string
+    weekday: $Enums.Weekday
+    slot: $Enums.MealSlot
+    title: string
+    description?: string | null
+    price: number
+    imageUrl?: string | null
+    catalogItemId?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type WeekdayMenuCreateOrConnectWithoutLocationInput = {
+    where: WeekdayMenuWhereUniqueInput
+    create: XOR<WeekdayMenuCreateWithoutLocationInput, WeekdayMenuUncheckedCreateWithoutLocationInput>
+  }
+
+  export type WeekdayMenuCreateManyLocationInputEnvelope = {
+    data: WeekdayMenuCreateManyLocationInput | WeekdayMenuCreateManyLocationInput[]
+    skipDuplicates?: boolean
+  }
+
   export type OrderCreateWithoutLocationInput = {
     id?: string
     amount: number
@@ -18550,6 +20450,40 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"DailyMenu"> | Date | string
   }
 
+  export type WeekdayMenuUpsertWithWhereUniqueWithoutLocationInput = {
+    where: WeekdayMenuWhereUniqueInput
+    update: XOR<WeekdayMenuUpdateWithoutLocationInput, WeekdayMenuUncheckedUpdateWithoutLocationInput>
+    create: XOR<WeekdayMenuCreateWithoutLocationInput, WeekdayMenuUncheckedCreateWithoutLocationInput>
+  }
+
+  export type WeekdayMenuUpdateWithWhereUniqueWithoutLocationInput = {
+    where: WeekdayMenuWhereUniqueInput
+    data: XOR<WeekdayMenuUpdateWithoutLocationInput, WeekdayMenuUncheckedUpdateWithoutLocationInput>
+  }
+
+  export type WeekdayMenuUpdateManyWithWhereWithoutLocationInput = {
+    where: WeekdayMenuScalarWhereInput
+    data: XOR<WeekdayMenuUpdateManyMutationInput, WeekdayMenuUncheckedUpdateManyWithoutLocationInput>
+  }
+
+  export type WeekdayMenuScalarWhereInput = {
+    AND?: WeekdayMenuScalarWhereInput | WeekdayMenuScalarWhereInput[]
+    OR?: WeekdayMenuScalarWhereInput[]
+    NOT?: WeekdayMenuScalarWhereInput | WeekdayMenuScalarWhereInput[]
+    id?: StringFilter<"WeekdayMenu"> | string
+    locationId?: StringFilter<"WeekdayMenu"> | string
+    weekday?: EnumWeekdayFilter<"WeekdayMenu"> | $Enums.Weekday
+    slot?: EnumMealSlotFilter<"WeekdayMenu"> | $Enums.MealSlot
+    title?: StringFilter<"WeekdayMenu"> | string
+    description?: StringNullableFilter<"WeekdayMenu"> | string | null
+    price?: IntFilter<"WeekdayMenu"> | number
+    imageUrl?: StringNullableFilter<"WeekdayMenu"> | string | null
+    catalogItemId?: StringNullableFilter<"WeekdayMenu"> | string | null
+    isActive?: BoolFilter<"WeekdayMenu"> | boolean
+    createdAt?: DateTimeFilter<"WeekdayMenu"> | Date | string
+    updatedAt?: DateTimeFilter<"WeekdayMenu"> | Date | string
+  }
+
   export type OrderUpsertWithWhereUniqueWithoutLocationInput = {
     where: OrderWhereUniqueInput
     update: XOR<OrderUpdateWithoutLocationInput, OrderUncheckedUpdateWithoutLocationInput>
@@ -18631,6 +20565,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     users?: UserCreateNestedManyWithoutLocationInput
     dailyMenus?: DailyMenuCreateNestedManyWithoutLocationInput
+    weekdayMenus?: WeekdayMenuCreateNestedManyWithoutLocationInput
     orders?: OrderCreateNestedManyWithoutLocationInput
   }
 
@@ -18644,6 +20579,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     users?: UserUncheckedCreateNestedManyWithoutLocationInput
     dailyMenus?: DailyMenuUncheckedCreateNestedManyWithoutLocationInput
+    weekdayMenus?: WeekdayMenuUncheckedCreateNestedManyWithoutLocationInput
     orders?: OrderUncheckedCreateNestedManyWithoutLocationInput
   }
 
@@ -18734,6 +20670,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     users?: UserUpdateManyWithoutLocationNestedInput
     dailyMenus?: DailyMenuUpdateManyWithoutLocationNestedInput
+    weekdayMenus?: WeekdayMenuUpdateManyWithoutLocationNestedInput
     orders?: OrderUpdateManyWithoutLocationNestedInput
   }
 
@@ -18747,6 +20684,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     users?: UserUncheckedUpdateManyWithoutLocationNestedInput
     dailyMenus?: DailyMenuUncheckedUpdateManyWithoutLocationNestedInput
+    weekdayMenus?: WeekdayMenuUncheckedUpdateManyWithoutLocationNestedInput
     orders?: OrderUncheckedUpdateManyWithoutLocationNestedInput
   }
 
@@ -18792,6 +20730,44 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type WeekdayMenuCreateWithoutCatalogItemInput = {
+    id?: string
+    weekday: $Enums.Weekday
+    slot: $Enums.MealSlot
+    title: string
+    description?: string | null
+    price: number
+    imageUrl?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    location: LocationCreateNestedOneWithoutWeekdayMenusInput
+  }
+
+  export type WeekdayMenuUncheckedCreateWithoutCatalogItemInput = {
+    id?: string
+    locationId: string
+    weekday: $Enums.Weekday
+    slot: $Enums.MealSlot
+    title: string
+    description?: string | null
+    price: number
+    imageUrl?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type WeekdayMenuCreateOrConnectWithoutCatalogItemInput = {
+    where: WeekdayMenuWhereUniqueInput
+    create: XOR<WeekdayMenuCreateWithoutCatalogItemInput, WeekdayMenuUncheckedCreateWithoutCatalogItemInput>
+  }
+
+  export type WeekdayMenuCreateManyCatalogItemInputEnvelope = {
+    data: WeekdayMenuCreateManyCatalogItemInput | WeekdayMenuCreateManyCatalogItemInput[]
+    skipDuplicates?: boolean
+  }
+
   export type DailyMenuUpsertWithWhereUniqueWithoutCatalogItemInput = {
     where: DailyMenuWhereUniqueInput
     update: XOR<DailyMenuUpdateWithoutCatalogItemInput, DailyMenuUncheckedUpdateWithoutCatalogItemInput>
@@ -18808,6 +20784,158 @@ export namespace Prisma {
     data: XOR<DailyMenuUpdateManyMutationInput, DailyMenuUncheckedUpdateManyWithoutCatalogItemInput>
   }
 
+  export type WeekdayMenuUpsertWithWhereUniqueWithoutCatalogItemInput = {
+    where: WeekdayMenuWhereUniqueInput
+    update: XOR<WeekdayMenuUpdateWithoutCatalogItemInput, WeekdayMenuUncheckedUpdateWithoutCatalogItemInput>
+    create: XOR<WeekdayMenuCreateWithoutCatalogItemInput, WeekdayMenuUncheckedCreateWithoutCatalogItemInput>
+  }
+
+  export type WeekdayMenuUpdateWithWhereUniqueWithoutCatalogItemInput = {
+    where: WeekdayMenuWhereUniqueInput
+    data: XOR<WeekdayMenuUpdateWithoutCatalogItemInput, WeekdayMenuUncheckedUpdateWithoutCatalogItemInput>
+  }
+
+  export type WeekdayMenuUpdateManyWithWhereWithoutCatalogItemInput = {
+    where: WeekdayMenuScalarWhereInput
+    data: XOR<WeekdayMenuUpdateManyMutationInput, WeekdayMenuUncheckedUpdateManyWithoutCatalogItemInput>
+  }
+
+  export type LocationCreateWithoutWeekdayMenusInput = {
+    id?: string
+    name: string
+    address?: string | null
+    defaultCutoffTime?: string
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    users?: UserCreateNestedManyWithoutLocationInput
+    adminLocations?: AdminLocationCreateNestedManyWithoutLocationInput
+    dailyMenus?: DailyMenuCreateNestedManyWithoutLocationInput
+    orders?: OrderCreateNestedManyWithoutLocationInput
+  }
+
+  export type LocationUncheckedCreateWithoutWeekdayMenusInput = {
+    id?: string
+    name: string
+    address?: string | null
+    defaultCutoffTime?: string
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    users?: UserUncheckedCreateNestedManyWithoutLocationInput
+    adminLocations?: AdminLocationUncheckedCreateNestedManyWithoutLocationInput
+    dailyMenus?: DailyMenuUncheckedCreateNestedManyWithoutLocationInput
+    orders?: OrderUncheckedCreateNestedManyWithoutLocationInput
+  }
+
+  export type LocationCreateOrConnectWithoutWeekdayMenusInput = {
+    where: LocationWhereUniqueInput
+    create: XOR<LocationCreateWithoutWeekdayMenusInput, LocationUncheckedCreateWithoutWeekdayMenusInput>
+  }
+
+  export type MealCatalogCreateWithoutWeekdayMenusInput = {
+    id?: string
+    name: string
+    description?: string | null
+    imageUrl?: string | null
+    defaultPrice: number
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    dailyMenus?: DailyMenuCreateNestedManyWithoutCatalogItemInput
+  }
+
+  export type MealCatalogUncheckedCreateWithoutWeekdayMenusInput = {
+    id?: string
+    name: string
+    description?: string | null
+    imageUrl?: string | null
+    defaultPrice: number
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    dailyMenus?: DailyMenuUncheckedCreateNestedManyWithoutCatalogItemInput
+  }
+
+  export type MealCatalogCreateOrConnectWithoutWeekdayMenusInput = {
+    where: MealCatalogWhereUniqueInput
+    create: XOR<MealCatalogCreateWithoutWeekdayMenusInput, MealCatalogUncheckedCreateWithoutWeekdayMenusInput>
+  }
+
+  export type LocationUpsertWithoutWeekdayMenusInput = {
+    update: XOR<LocationUpdateWithoutWeekdayMenusInput, LocationUncheckedUpdateWithoutWeekdayMenusInput>
+    create: XOR<LocationCreateWithoutWeekdayMenusInput, LocationUncheckedCreateWithoutWeekdayMenusInput>
+    where?: LocationWhereInput
+  }
+
+  export type LocationUpdateToOneWithWhereWithoutWeekdayMenusInput = {
+    where?: LocationWhereInput
+    data: XOR<LocationUpdateWithoutWeekdayMenusInput, LocationUncheckedUpdateWithoutWeekdayMenusInput>
+  }
+
+  export type LocationUpdateWithoutWeekdayMenusInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    users?: UserUpdateManyWithoutLocationNestedInput
+    adminLocations?: AdminLocationUpdateManyWithoutLocationNestedInput
+    dailyMenus?: DailyMenuUpdateManyWithoutLocationNestedInput
+    orders?: OrderUpdateManyWithoutLocationNestedInput
+  }
+
+  export type LocationUncheckedUpdateWithoutWeekdayMenusInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    users?: UserUncheckedUpdateManyWithoutLocationNestedInput
+    adminLocations?: AdminLocationUncheckedUpdateManyWithoutLocationNestedInput
+    dailyMenus?: DailyMenuUncheckedUpdateManyWithoutLocationNestedInput
+    orders?: OrderUncheckedUpdateManyWithoutLocationNestedInput
+  }
+
+  export type MealCatalogUpsertWithoutWeekdayMenusInput = {
+    update: XOR<MealCatalogUpdateWithoutWeekdayMenusInput, MealCatalogUncheckedUpdateWithoutWeekdayMenusInput>
+    create: XOR<MealCatalogCreateWithoutWeekdayMenusInput, MealCatalogUncheckedCreateWithoutWeekdayMenusInput>
+    where?: MealCatalogWhereInput
+  }
+
+  export type MealCatalogUpdateToOneWithWhereWithoutWeekdayMenusInput = {
+    where?: MealCatalogWhereInput
+    data: XOR<MealCatalogUpdateWithoutWeekdayMenusInput, MealCatalogUncheckedUpdateWithoutWeekdayMenusInput>
+  }
+
+  export type MealCatalogUpdateWithoutWeekdayMenusInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    defaultPrice?: IntFieldUpdateOperationsInput | number
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    dailyMenus?: DailyMenuUpdateManyWithoutCatalogItemNestedInput
+  }
+
+  export type MealCatalogUncheckedUpdateWithoutWeekdayMenusInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    defaultPrice?: IntFieldUpdateOperationsInput | number
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    dailyMenus?: DailyMenuUncheckedUpdateManyWithoutCatalogItemNestedInput
+  }
+
   export type LocationCreateWithoutDailyMenusInput = {
     id?: string
     name: string
@@ -18818,6 +20946,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     users?: UserCreateNestedManyWithoutLocationInput
     adminLocations?: AdminLocationCreateNestedManyWithoutLocationInput
+    weekdayMenus?: WeekdayMenuCreateNestedManyWithoutLocationInput
     orders?: OrderCreateNestedManyWithoutLocationInput
   }
 
@@ -18831,6 +20960,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     users?: UserUncheckedCreateNestedManyWithoutLocationInput
     adminLocations?: AdminLocationUncheckedCreateNestedManyWithoutLocationInput
+    weekdayMenus?: WeekdayMenuUncheckedCreateNestedManyWithoutLocationInput
     orders?: OrderUncheckedCreateNestedManyWithoutLocationInput
   }
 
@@ -18848,6 +20978,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
+    weekdayMenus?: WeekdayMenuCreateNestedManyWithoutCatalogItemInput
   }
 
   export type MealCatalogUncheckedCreateWithoutDailyMenusInput = {
@@ -18859,6 +20990,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
+    weekdayMenus?: WeekdayMenuUncheckedCreateNestedManyWithoutCatalogItemInput
   }
 
   export type MealCatalogCreateOrConnectWithoutDailyMenusInput = {
@@ -18927,6 +21059,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     users?: UserUpdateManyWithoutLocationNestedInput
     adminLocations?: AdminLocationUpdateManyWithoutLocationNestedInput
+    weekdayMenus?: WeekdayMenuUpdateManyWithoutLocationNestedInput
     orders?: OrderUpdateManyWithoutLocationNestedInput
   }
 
@@ -18940,6 +21073,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     users?: UserUncheckedUpdateManyWithoutLocationNestedInput
     adminLocations?: AdminLocationUncheckedUpdateManyWithoutLocationNestedInput
+    weekdayMenus?: WeekdayMenuUncheckedUpdateManyWithoutLocationNestedInput
     orders?: OrderUncheckedUpdateManyWithoutLocationNestedInput
   }
 
@@ -18963,6 +21097,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    weekdayMenus?: WeekdayMenuUpdateManyWithoutCatalogItemNestedInput
   }
 
   export type MealCatalogUncheckedUpdateWithoutDailyMenusInput = {
@@ -18974,6 +21109,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    weekdayMenus?: WeekdayMenuUncheckedUpdateManyWithoutCatalogItemNestedInput
   }
 
   export type OrderUpsertWithWhereUniqueWithoutDailyMenuInput = {
@@ -19095,6 +21231,7 @@ export namespace Prisma {
     users?: UserCreateNestedManyWithoutLocationInput
     adminLocations?: AdminLocationCreateNestedManyWithoutLocationInput
     dailyMenus?: DailyMenuCreateNestedManyWithoutLocationInput
+    weekdayMenus?: WeekdayMenuCreateNestedManyWithoutLocationInput
   }
 
   export type LocationUncheckedCreateWithoutOrdersInput = {
@@ -19108,6 +21245,7 @@ export namespace Prisma {
     users?: UserUncheckedCreateNestedManyWithoutLocationInput
     adminLocations?: AdminLocationUncheckedCreateNestedManyWithoutLocationInput
     dailyMenus?: DailyMenuUncheckedCreateNestedManyWithoutLocationInput
+    weekdayMenus?: WeekdayMenuUncheckedCreateNestedManyWithoutLocationInput
   }
 
   export type LocationCreateOrConnectWithoutOrdersInput = {
@@ -19273,6 +21411,7 @@ export namespace Prisma {
     users?: UserUpdateManyWithoutLocationNestedInput
     adminLocations?: AdminLocationUpdateManyWithoutLocationNestedInput
     dailyMenus?: DailyMenuUpdateManyWithoutLocationNestedInput
+    weekdayMenus?: WeekdayMenuUpdateManyWithoutLocationNestedInput
   }
 
   export type LocationUncheckedUpdateWithoutOrdersInput = {
@@ -19286,6 +21425,7 @@ export namespace Prisma {
     users?: UserUncheckedUpdateManyWithoutLocationNestedInput
     adminLocations?: AdminLocationUncheckedUpdateManyWithoutLocationNestedInput
     dailyMenus?: DailyMenuUncheckedUpdateManyWithoutLocationNestedInput
+    weekdayMenus?: WeekdayMenuUncheckedUpdateManyWithoutLocationNestedInput
   }
 
   export type WalletTransactionUpsertWithWhereUniqueWithoutOrderInput = {
@@ -19901,6 +22041,20 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type WeekdayMenuCreateManyLocationInput = {
+    id?: string
+    weekday: $Enums.Weekday
+    slot: $Enums.MealSlot
+    title: string
+    description?: string | null
+    price: number
+    imageUrl?: string | null
+    catalogItemId?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type OrderCreateManyLocationInput = {
     id?: string
     userId: string
@@ -20046,6 +22200,48 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type WeekdayMenuUpdateWithoutLocationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    weekday?: EnumWeekdayFieldUpdateOperationsInput | $Enums.Weekday
+    slot?: EnumMealSlotFieldUpdateOperationsInput | $Enums.MealSlot
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: IntFieldUpdateOperationsInput | number
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    catalogItem?: MealCatalogUpdateOneWithoutWeekdayMenusNestedInput
+  }
+
+  export type WeekdayMenuUncheckedUpdateWithoutLocationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    weekday?: EnumWeekdayFieldUpdateOperationsInput | $Enums.Weekday
+    slot?: EnumMealSlotFieldUpdateOperationsInput | $Enums.MealSlot
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: IntFieldUpdateOperationsInput | number
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    catalogItemId?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WeekdayMenuUncheckedUpdateManyWithoutLocationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    weekday?: EnumWeekdayFieldUpdateOperationsInput | $Enums.Weekday
+    slot?: EnumMealSlotFieldUpdateOperationsInput | $Enums.MealSlot
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: IntFieldUpdateOperationsInput | number
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    catalogItemId?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type OrderUpdateWithoutLocationInput = {
     id?: StringFieldUpdateOperationsInput | string
     amount?: IntFieldUpdateOperationsInput | number
@@ -20105,6 +22301,20 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type WeekdayMenuCreateManyCatalogItemInput = {
+    id?: string
+    locationId: string
+    weekday: $Enums.Weekday
+    slot: $Enums.MealSlot
+    title: string
+    description?: string | null
+    price: number
+    imageUrl?: string | null
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type DailyMenuUpdateWithoutCatalogItemInput = {
     id?: StringFieldUpdateOperationsInput | string
     date?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -20148,6 +22358,48 @@ export namespace Prisma {
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     cutoffAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WeekdayMenuUpdateWithoutCatalogItemInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    weekday?: EnumWeekdayFieldUpdateOperationsInput | $Enums.Weekday
+    slot?: EnumMealSlotFieldUpdateOperationsInput | $Enums.MealSlot
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: IntFieldUpdateOperationsInput | number
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    location?: LocationUpdateOneRequiredWithoutWeekdayMenusNestedInput
+  }
+
+  export type WeekdayMenuUncheckedUpdateWithoutCatalogItemInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    locationId?: StringFieldUpdateOperationsInput | string
+    weekday?: EnumWeekdayFieldUpdateOperationsInput | $Enums.Weekday
+    slot?: EnumMealSlotFieldUpdateOperationsInput | $Enums.MealSlot
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: IntFieldUpdateOperationsInput | number
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type WeekdayMenuUncheckedUpdateManyWithoutCatalogItemInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    locationId?: StringFieldUpdateOperationsInput | string
+    weekday?: EnumWeekdayFieldUpdateOperationsInput | $Enums.Weekday
+    slot?: EnumMealSlotFieldUpdateOperationsInput | $Enums.MealSlot
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    price?: IntFieldUpdateOperationsInput | number
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

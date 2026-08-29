@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { UserRound } from "lucide-react";
 
 import { ProfileForm } from "~/components/profile-form";
 import { PageTitle, Panel } from "~/components/ui";
@@ -19,6 +20,7 @@ export default function ProfilePage() {
         transition={{ duration: 0.3 }}
       >
         <PageTitle
+          icon={<UserRound className="h-5 w-5" strokeWidth={2.25} />}
           title="Your profile"
           subtitle="Update desk, building, floor, or office. Changing office switches which menu you see."
         />

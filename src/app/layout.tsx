@@ -1,8 +1,9 @@
 import "~/styles/globals.css";
 
 import { type Metadata } from "next";
-import { DM_Sans, Fraunces } from "next/font/google";
+import { Outfit, Syne } from "next/font/google";
 
+import { GradientBlobs } from "~/components/gradient-blobs";
 import { APP_NAME } from "~/lib/constants";
 import { TRPCReactProvider } from "~/trpc/react";
 
@@ -12,23 +13,28 @@ export const metadata: Metadata = {
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
-const display = Fraunces({
+const display = Syne({
   subsets: ["latin"],
   variable: "--font-display",
+  weight: ["600", "700", "800"],
 });
 
-const body = DM_Sans({
+const body = Outfit({
   subsets: ["latin"],
   variable: "--font-body",
+  weight: ["400", "500", "600", "700"],
 });
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`}>
+    <html lang="en" className={`${display.variable} ${body.variable} dark`}>
       <body className="bg-grain font-sans antialiased">
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+        <GradientBlobs />
+        <div className="app-shell">
+          <TRPCReactProvider>{children}</TRPCReactProvider>
+        </div>
       </body>
     </html>
   );

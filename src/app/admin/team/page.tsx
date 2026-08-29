@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { redirect } from "next/navigation";
+import { MapPinned } from "lucide-react";
 
 import {
   Badge,
@@ -66,6 +67,7 @@ export default function AdminTeamPage() {
   return (
     <div>
       <PageTitle
+        icon={<MapPinned className="h-5 w-5" strokeWidth={2.25} />}
         title="Staff & offices"
         subtitle="Super admin only: create office locations, promote admins, assign which offices they manage, and ban users."
       />

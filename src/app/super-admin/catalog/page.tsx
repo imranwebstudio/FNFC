@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function LegacyCatalogRedirect() {
-  redirect("/admin/catalog");
+export default function SuperAdminCatalogRedirect() {
+  redirect("/admin/menu");
 }

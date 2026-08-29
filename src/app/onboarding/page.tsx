@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { Sparkles } from "lucide-react";
 
 import { ProfileForm } from "~/components/profile-form";
 import { PageTitle, Panel } from "~/components/ui";
@@ -17,6 +18,7 @@ export default function OnboardingPage() {
         transition={{ duration: 0.35 }}
       >
         <PageTitle
+          icon={<Sparkles className="h-5 w-5" strokeWidth={2.25} />}
           title="Almost there"
           subtitle="Pick from suggestions or type your own if it’s not listed."
         />

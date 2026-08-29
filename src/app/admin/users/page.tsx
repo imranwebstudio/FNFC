@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Users } from "lucide-react";
 
 import {
   Badge,
@@ -48,6 +49,7 @@ export default function AdminUsersPage() {
   return (
     <div>
       <PageTitle
+        icon={<Users className="h-5 w-5" strokeWidth={2.25} />}
         title="Users & deposits"
         subtitle="Record wallet deposits / due payments. Toggle cash vs wallet."
       />

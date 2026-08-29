@@ -197,6 +197,21 @@ exports.Prisma.MealCatalogScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.WeekdayMenuScalarFieldEnum = {
+  id: 'id',
+  locationId: 'locationId',
+  weekday: 'weekday',
+  slot: 'slot',
+  title: 'title',
+  description: 'description',
+  price: 'price',
+  imageUrl: 'imageUrl',
+  catalogItemId: 'catalogItemId',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.DailyMenuScalarFieldEnum = {
   id: 'id',
   locationId: 'locationId',
@@ -265,6 +280,16 @@ exports.PaymentMode = exports.$Enums.PaymentMode = {
   WALLET: 'WALLET'
 };
 
+exports.Weekday = exports.$Enums.Weekday = {
+  SAT: 'SAT',
+  SUN: 'SUN',
+  MON: 'MON',
+  TUE: 'TUE',
+  WED: 'WED',
+  THU: 'THU',
+  FRI: 'FRI'
+};
+
 exports.MealSlot = exports.$Enums.MealSlot = {
   LUNCH: 'LUNCH',
   DINNER: 'DINNER'
@@ -297,6 +322,7 @@ exports.Prisma.ModelName = {
   Location: 'Location',
   AdminLocation: 'AdminLocation',
   MealCatalog: 'MealCatalog',
+  WeekdayMenu: 'WeekdayMenu',
   DailyMenu: 'DailyMenu',
   Order: 'Order',
   WalletTransaction: 'WalletTransaction'

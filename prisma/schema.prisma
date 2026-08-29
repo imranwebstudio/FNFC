@@ -46,6 +46,17 @@ enum WalletTxType {
   ADJUSTMENT
 }
 
+/// Bangladesh week starts Saturday
+enum Weekday {
+  SAT
+  SUN
+  MON
+  TUE
+  WED
+  THU
+  FRI
+}
+
 model Account {
   id                       String  @id @default(cuid())
   userId                   String
@@ -126,6 +137,7 @@ model Location {
   users          User[]
   adminLocations AdminLocation[]
   dailyMenus     DailyMenu[]
+  weekdayMenus   WeekdayMenu[]
   orders         Order[]
 }
 
@@ -150,7 +162,30 @@ model MealCatalog {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  dailyMenus DailyMenu[]
+  dailyMenus   DailyMenu[]
+  weekdayMenus WeekdayMenu[]
+}
+
+/// Recurring meal for a weekday at one office (e.g. every Sunday lunch)
+model WeekdayMenu {
+  id            String   @id @default(cuid())
+  locationId    String
+  weekday       Weekday
+  slot          MealSlot
+  title         String
+  description   String?
+  price         Int
+  imageUrl      String?
+  catalogItemId String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  location    Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  catalogItem MealCatalog? @relation(fields: [catalogItemId], references: [id], onDelete: SetNull)
+
+  @@unique([locationId, weekday, slot])
+  @@index([weekday, isActive])
 }
 
 model DailyMenu {

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Banknote, ClipboardList, PackageCheck } from "lucide-react";
 
 import { Badge, Button, Label, PageTitle, Panel, Select } from "~/components/ui";
 import { formatTaka, todayDateString } from "~/lib/datetime";
@@ -31,11 +32,12 @@ export default function AdminOrdersPage() {
   return (
     <div>
       <PageTitle
+        icon={<ClipboardList className="h-5 w-5" strokeWidth={2.25} />}
         title="Distribution board"
         subtitle="Mark delivered when food is handed over. Confirm cash paid separately when the customer pays."
       />
 
-      <div className="mb-4 grid max-w-lg gap-3 sm:grid-cols-2">
+      <div className="mb-5 grid max-w-lg gap-3 sm:grid-cols-2">
         <div>
           <Label>Location</Label>
           <Select
@@ -57,14 +59,14 @@ export default function AdminOrdersPage() {
           <Label>Date</Label>
           <input
             type="date"
-            className="w-full rounded-xl border border-line bg-rice/90 px-3 py-2.5 text-sm"
+            className="w-full rounded-2xl border border-line bg-rice px-3.5 py-2.5 text-sm outline-none transition focus:border-leaf/50 focus:ring-4 focus:ring-leaf/15"
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />
         </div>
       </div>
 
-      <ul className="space-y-2">
+      <ul className="space-y-2.5">
         {orders.data?.map((o, i) => (
           <motion.li
             key={o.id}
@@ -72,23 +74,21 @@ export default function AdminOrdersPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.02 }}
           >
-            <Panel className="flex flex-wrap items-center justify-between gap-3 py-3">
+            <Panel className="flex flex-wrap items-center justify-between gap-3 py-3.5">
               <div>
-                <p className="font-semibold">
+                <p className="font-semibold tracking-tight">
                   {o.user.name ?? o.user.email}{" "}
                   <span className="text-xs font-normal text-ink-muted">
                     {o.user.employeeId}
                   </span>
                 </p>
-                <p className="text-xs text-ink-muted">
+                <p className="mt-0.5 text-xs text-ink-muted">
                   {o.location.name} · Bldg {o.user.buildingNumber} · Fl{" "}
                   {o.user.floorNumber} · Desk {o.user.deskNumber} ·{" "}
                   {o.dailyMenu.slot} · {o.dailyMenu.title}
                 </p>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  <Badge
-                    tone={o.status === "DELIVERED" ? "good" : "warn"}
-                  >
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  <Badge tone={o.status === "DELIVERED" ? "good" : "warn"}>
                     {o.status}
                   </Badge>
                   <Badge
@@ -103,7 +103,7 @@ export default function AdminOrdersPage() {
                     {o.paymentStatus}
                   </Badge>
                   <Badge>{o.user.paymentMode}</Badge>
-                  <span className="text-xs font-semibold">
+                  <span className="text-xs font-bold tabular-nums">
                     {formatTaka(o.amount)}
                   </span>
                 </div>
@@ -116,6 +116,7 @@ export default function AdminOrdersPage() {
                     disabled={deliver.isPending}
                     onClick={() => deliver.mutate({ orderId: o.id })}
                   >
+                    <PackageCheck className="h-4 w-4" />
                     Mark delivered
                   </Button>
                 ) : null}
@@ -125,6 +126,7 @@ export default function AdminOrdersPage() {
                     disabled={confirmPay.isPending}
                     onClick={() => confirmPay.mutate({ orderId: o.id })}
                   >
+                    <Banknote className="h-4 w-4" />
                     Confirm cash paid
                   </Button>
                 ) : null}

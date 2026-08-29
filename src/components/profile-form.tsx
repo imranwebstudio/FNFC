@@ -29,7 +29,7 @@ export function ProfileForm({
     onSuccess: async () => {
       await Promise.all([
         utils.user.me.invalidate(),
-        utils.menu.today.invalidate(),
+        utils.menu.todayForUser.invalidate(),
       ]);
       onSuccess?.();
     },
