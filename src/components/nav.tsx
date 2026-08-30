@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Receipt,
   UserRound,
   UtensilsCrossed,
   Wallet,
@@ -40,8 +39,7 @@ export function AppNav({ user }: { user: NavUser }) {
       ]
     : [
         { href: "/app", label: "Today", Icon: UtensilsCrossed },
-        { href: "/app/orders", label: "Orders", Icon: Receipt },
-        { href: "/app/wallet", label: "Wallet", Icon: Wallet },
+        { href: "/app/account", label: "Account", Icon: Wallet },
         { href: "/app/profile", label: "Profile", Icon: UserRound },
       ];
 

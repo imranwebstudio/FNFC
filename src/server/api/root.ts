@@ -1,3 +1,4 @@
+import { accountRouter } from "~/server/api/routers/account";
 import { adminRouter } from "~/server/api/routers/admin";
 import { analyticsRouter } from "~/server/api/routers/analytics";
 import { locationRouter } from "~/server/api/routers/location";
@@ -13,6 +14,7 @@ export const appRouter = createTRPCRouter({
   menu: menuRouter,
   order: orderRouter,
   wallet: walletRouter,
+  account: accountRouter,
   admin: adminRouter,
   analytics: analyticsRouter,
 });

@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Loader2, Users } from "lucide-react";
+import { Loader2, ScrollText, Users } from "lucide-react";
 
 import {
   Badge,
@@ -41,10 +42,11 @@ export default function AdminUsersPage() {
   });
 
   const deposit = api.wallet.deposit.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (_data, vars) => {
       setDepositUserId(null);
       setNote("");
       await utils.admin.listUsers.invalidate();
+      await utils.account.userStatement.invalidate({ userId: vars.userId });
     },
   });
   const setMode = api.wallet.setPaymentMode.useMutation({
@@ -144,6 +146,13 @@ export default function AdminUsersPage() {
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  <Link
+                    href={`/admin/users/${u.id}`}
+                    className="inline-flex items-center gap-2 rounded-2xl bg-sand/80 px-3 py-2 text-sm font-semibold text-ink transition hover:bg-sand"
+                  >
+                    <ScrollText className="h-4 w-4" />
+                    Account
+                  </Link>
                   <Button
                     type="button"
                     variant="secondary"

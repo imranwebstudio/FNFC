@@ -15,6 +15,10 @@ import {
   createTRPCRouter,
   protectedProcedure,
 } from "~/server/api/trpc";
+import {
+  chargeWalletForOrder,
+  shouldChargeWallet,
+} from "~/server/order-payment";
 
 export const orderRouter = createTRPCRouter({
   create: protectedProcedure
@@ -99,11 +103,7 @@ export const orderRouter = createTRPCRouter({
       }
 
       return ctx.db.$transaction(async (tx) => {
-        if (user.paymentMode === "WALLET") {
-          const updated = await tx.user.update({
-            where: { id: user.id },
-            data: { balance: { decrement: menu.price } },
-          });
+        if (shouldChargeWallet(user)) {
           const order = await tx.order.create({
             data: {
               userId: user.id,
@@ -115,15 +115,11 @@ export const orderRouter = createTRPCRouter({
               paymentStatus: "WALLET_CHARGED",
             },
           });
-          await tx.walletTransaction.create({
-            data: {
-              userId: user.id,
-              type: "CHARGE",
-              amount: -menu.price,
-              balanceAfter: updated.balance,
-              orderId: order.id,
-              note: `Order: ${menu.title}`,
-            },
+          await chargeWalletForOrder(tx, {
+            userId: user.id,
+            amount: menu.price,
+            orderId: order.id,
+            note: `Order: ${menu.title}`,
           });
           return order;
         }
@@ -232,11 +228,7 @@ export const orderRouter = createTRPCRouter({
         undefined;
 
       return ctx.db.$transaction(async (tx) => {
-        if (target.paymentMode === "WALLET") {
-          const updated = await tx.user.update({
-            where: { id: target.id },
-            data: { balance: { decrement: menu.price } },
-          });
+        if (shouldChargeWallet(target)) {
           const order = await tx.order.create({
             data: {
               userId: target.id,
@@ -249,16 +241,12 @@ export const orderRouter = createTRPCRouter({
               placedById,
             },
           });
-          await tx.walletTransaction.create({
-            data: {
-              userId: target.id,
-              type: "CHARGE",
-              amount: -menu.price,
-              balanceAfter: updated.balance,
-              orderId: order.id,
-              createdById: placedById,
-              note: `Admin order: ${menu.title}`,
-            },
+          await chargeWalletForOrder(tx, {
+            userId: target.id,
+            amount: menu.price,
+            orderId: order.id,
+            createdById: placedById,
+            note: `Admin order: ${menu.title}`,
           });
           return order;
         }
@@ -459,6 +447,7 @@ export const orderRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const order = await ctx.db.order.findUnique({
         where: { id: input.orderId },
+        include: { user: true, dailyMenu: true },
       });
       if (!order) throw new TRPCError({ code: "NOT_FOUND" });
 
@@ -476,12 +465,80 @@ export const orderRouter = createTRPCRouter({
         });
       }
 
-      return ctx.db.order.update({
-        where: { id: order.id },
-        data: {
-          paymentStatus: "PAID",
-          paidAt: new Date(),
-        },
+      return ctx.db.$transaction(async (tx) => {
+        if (shouldChargeWallet(order.user)) {
+          await chargeWalletForOrder(tx, {
+            userId: order.userId,
+            amount: order.amount,
+            orderId: order.id,
+            createdById: ctx.session.user.id,
+            note: `Order: ${order.dailyMenu.title}`,
+          });
+          return tx.order.update({
+            where: { id: order.id },
+            data: { paymentStatus: "WALLET_CHARGED" },
+          });
+        }
+
+        return tx.order.update({
+          where: { id: order.id },
+          data: {
+            paymentStatus: "PAID",
+            paidAt: new Date(),
+          },
+        });
+      });
+    }),
+
+  /** Fix cash-paid orders that should have deducted prepaid balance. */
+  repairWalletCharge: adminProcedure
+    .input(z.object({ orderId: z.string().cuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const order = await ctx.db.order.findUnique({
+        where: { id: input.orderId },
+        include: { user: true, dailyMenu: true },
+      });
+      if (!order) throw new TRPCError({ code: "NOT_FOUND" });
+
+      await assertLocationAccess(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        order.locationId,
+      );
+
+      if (order.paymentStatus !== "PAID") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Only cash-paid orders can be repaired",
+        });
+      }
+
+      const existingCharge = await ctx.db.walletTransaction.findFirst({
+        where: { orderId: order.id, type: "CHARGE" },
+      });
+      if (existingCharge) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Order already has a wallet charge",
+        });
+      }
+
+      return ctx.db.$transaction(async (tx) => {
+        await chargeWalletForOrder(tx, {
+          userId: order.userId,
+          amount: order.amount,
+          orderId: order.id,
+          createdById: ctx.session.user.id,
+          note: `Order: ${order.dailyMenu.title}`,
+        });
+        return tx.order.update({
+          where: { id: order.id },
+          data: {
+            paymentStatus: "WALLET_CHARGED",
+            paidAt: null,
+          },
+        });
       });
     }),
 });

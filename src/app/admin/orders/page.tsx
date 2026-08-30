@@ -66,19 +66,26 @@ export default function AdminOrdersPage() {
   );
 
   const deliver = api.order.markDelivered.useMutation({
-    onSuccess: async () => utils.order.listForAdmin.invalidate(),
+    onSuccess: async () => {
+      await utils.order.listForAdmin.invalidate();
+      await utils.account.userStatement.invalidate();
+    },
   });
   const confirmPay = api.order.confirmCashPayment.useMutation({
-    onSuccess: async () => utils.order.listForAdmin.invalidate(),
+    onSuccess: async () => {
+      await utils.order.listForAdmin.invalidate();
+      await utils.account.userStatement.invalidate();
+    },
   });
   const createForUser = api.order.createForUser.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (_data, vars) => {
       setBehalfOk(true);
       setBehalfMsg(`Order placed for ${formatMenuDateLabel(behalfDate)}`);
       setBehalfMenuId("");
       setBehalfNote("Phone order");
       await utils.order.listForAdmin.invalidate();
       await utils.admin.listUsers.invalidate();
+      await utils.account.userStatement.invalidate({ userId: vars.userId });
     },
     onError: (e) => {
       setBehalfOk(false);

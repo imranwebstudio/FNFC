@@ -28,14 +28,14 @@ export function TodayMenu() {
       setNote("");
       await utils.menu.todayForUser.invalidate();
       await utils.order.listMine.invalidate();
-      await utils.wallet.summary.invalidate();
+      await utils.account.myStatement.invalidate();
     },
   });
   const cancel = api.order.cancel.useMutation({
     onSuccess: async () => {
       await utils.menu.todayForUser.invalidate();
       await utils.order.listMine.invalidate();
-      await utils.wallet.summary.invalidate();
+      await utils.account.myStatement.invalidate();
     },
   });
 
