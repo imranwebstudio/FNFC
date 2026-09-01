@@ -5396,6 +5396,7 @@ export namespace Prisma {
     image: string | null
     role: $Enums.Role | null
     employeeId: string | null
+    phoneNumber: string | null
     deskNumber: string | null
     buildingNumber: string | null
     floorNumber: string | null
@@ -5416,6 +5417,7 @@ export namespace Prisma {
     image: string | null
     role: $Enums.Role | null
     employeeId: string | null
+    phoneNumber: string | null
     deskNumber: string | null
     buildingNumber: string | null
     floorNumber: string | null
@@ -5436,6 +5438,7 @@ export namespace Prisma {
     image: number
     role: number
     employeeId: number
+    phoneNumber: number
     deskNumber: number
     buildingNumber: number
     floorNumber: number
@@ -5466,6 +5469,7 @@ export namespace Prisma {
     image?: true
     role?: true
     employeeId?: true
+    phoneNumber?: true
     deskNumber?: true
     buildingNumber?: true
     floorNumber?: true
@@ -5486,6 +5490,7 @@ export namespace Prisma {
     image?: true
     role?: true
     employeeId?: true
+    phoneNumber?: true
     deskNumber?: true
     buildingNumber?: true
     floorNumber?: true
@@ -5506,6 +5511,7 @@ export namespace Prisma {
     image?: true
     role?: true
     employeeId?: true
+    phoneNumber?: true
     deskNumber?: true
     buildingNumber?: true
     floorNumber?: true
@@ -5613,6 +5619,7 @@ export namespace Prisma {
     image: string | null
     role: $Enums.Role
     employeeId: string | null
+    phoneNumber: string | null
     deskNumber: string | null
     buildingNumber: string | null
     floorNumber: string | null
@@ -5652,6 +5659,7 @@ export namespace Prisma {
     image?: boolean
     role?: boolean
     employeeId?: boolean
+    phoneNumber?: boolean
     deskNumber?: boolean
     buildingNumber?: boolean
     floorNumber?: boolean
@@ -5681,6 +5689,7 @@ export namespace Prisma {
     image?: boolean
     role?: boolean
     employeeId?: boolean
+    phoneNumber?: boolean
     deskNumber?: boolean
     buildingNumber?: boolean
     floorNumber?: boolean
@@ -5702,6 +5711,7 @@ export namespace Prisma {
     image?: boolean
     role?: boolean
     employeeId?: boolean
+    phoneNumber?: boolean
     deskNumber?: boolean
     buildingNumber?: boolean
     floorNumber?: boolean
@@ -5723,6 +5733,7 @@ export namespace Prisma {
     image?: boolean
     role?: boolean
     employeeId?: boolean
+    phoneNumber?: boolean
     deskNumber?: boolean
     buildingNumber?: boolean
     floorNumber?: boolean
@@ -5735,7 +5746,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "role" | "employeeId" | "deskNumber" | "buildingNumber" | "floorNumber" | "locationId" | "paymentMode" | "balance" | "profileComplete" | "isBanned" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "role" | "employeeId" | "phoneNumber" | "deskNumber" | "buildingNumber" | "floorNumber" | "locationId" | "paymentMode" | "balance" | "profileComplete" | "isBanned" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     location?: boolean | User$locationArgs<ExtArgs>
     accounts?: boolean | User$accountsArgs<ExtArgs>
@@ -5774,6 +5785,7 @@ export namespace Prisma {
       image: string | null
       role: $Enums.Role
       employeeId: string | null
+      phoneNumber: string | null
       deskNumber: string | null
       buildingNumber: string | null
       floorNumber: string | null
@@ -6225,6 +6237,7 @@ export namespace Prisma {
     readonly image: FieldRef<"User", 'String'>
     readonly role: FieldRef<"User", 'Role'>
     readonly employeeId: FieldRef<"User", 'String'>
+    readonly phoneNumber: FieldRef<"User", 'String'>
     readonly deskNumber: FieldRef<"User", 'String'>
     readonly buildingNumber: FieldRef<"User", 'String'>
     readonly floorNumber: FieldRef<"User", 'String'>
@@ -15350,6 +15363,7 @@ export namespace Prisma {
     image: 'image',
     role: 'role',
     employeeId: 'employeeId',
+    phoneNumber: 'phoneNumber',
     deskNumber: 'deskNumber',
     buildingNumber: 'buildingNumber',
     floorNumber: 'floorNumber',
@@ -15869,6 +15883,7 @@ export namespace Prisma {
     image?: StringNullableFilter<"User"> | string | null
     role?: EnumRoleFilter<"User"> | $Enums.Role
     employeeId?: StringNullableFilter<"User"> | string | null
+    phoneNumber?: StringNullableFilter<"User"> | string | null
     deskNumber?: StringNullableFilter<"User"> | string | null
     buildingNumber?: StringNullableFilter<"User"> | string | null
     floorNumber?: StringNullableFilter<"User"> | string | null
@@ -15897,6 +15912,7 @@ export namespace Prisma {
     image?: SortOrderInput | SortOrder
     role?: SortOrder
     employeeId?: SortOrderInput | SortOrder
+    phoneNumber?: SortOrderInput | SortOrder
     deskNumber?: SortOrderInput | SortOrder
     buildingNumber?: SortOrderInput | SortOrder
     floorNumber?: SortOrderInput | SortOrder
@@ -15928,6 +15944,7 @@ export namespace Prisma {
     image?: StringNullableFilter<"User"> | string | null
     role?: EnumRoleFilter<"User"> | $Enums.Role
     employeeId?: StringNullableFilter<"User"> | string | null
+    phoneNumber?: StringNullableFilter<"User"> | string | null
     deskNumber?: StringNullableFilter<"User"> | string | null
     buildingNumber?: StringNullableFilter<"User"> | string | null
     floorNumber?: StringNullableFilter<"User"> | string | null
@@ -15956,6 +15973,7 @@ export namespace Prisma {
     image?: SortOrderInput | SortOrder
     role?: SortOrder
     employeeId?: SortOrderInput | SortOrder
+    phoneNumber?: SortOrderInput | SortOrder
     deskNumber?: SortOrderInput | SortOrder
     buildingNumber?: SortOrderInput | SortOrder
     floorNumber?: SortOrderInput | SortOrder
@@ -15984,6 +16002,7 @@ export namespace Prisma {
     image?: StringNullableWithAggregatesFilter<"User"> | string | null
     role?: EnumRoleWithAggregatesFilter<"User"> | $Enums.Role
     employeeId?: StringNullableWithAggregatesFilter<"User"> | string | null
+    phoneNumber?: StringNullableWithAggregatesFilter<"User"> | string | null
     deskNumber?: StringNullableWithAggregatesFilter<"User"> | string | null
     buildingNumber?: StringNullableWithAggregatesFilter<"User"> | string | null
     floorNumber?: StringNullableWithAggregatesFilter<"User"> | string | null
@@ -16813,6 +16832,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -16840,6 +16860,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -16867,6 +16888,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16894,6 +16916,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16921,6 +16944,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -16941,6 +16965,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16960,6 +16985,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -17953,6 +17979,7 @@ export namespace Prisma {
     image?: SortOrder
     role?: SortOrder
     employeeId?: SortOrder
+    phoneNumber?: SortOrder
     deskNumber?: SortOrder
     buildingNumber?: SortOrder
     floorNumber?: SortOrder
@@ -17977,6 +18004,7 @@ export namespace Prisma {
     image?: SortOrder
     role?: SortOrder
     employeeId?: SortOrder
+    phoneNumber?: SortOrder
     deskNumber?: SortOrder
     buildingNumber?: SortOrder
     floorNumber?: SortOrder
@@ -17997,6 +18025,7 @@ export namespace Prisma {
     image?: SortOrder
     role?: SortOrder
     employeeId?: SortOrder
+    phoneNumber?: SortOrder
     deskNumber?: SortOrder
     buildingNumber?: SortOrder
     floorNumber?: SortOrder
@@ -19890,6 +19919,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -19916,6 +19946,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -19958,6 +19989,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -19984,6 +20016,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -20010,6 +20043,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -20036,6 +20070,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -20078,6 +20113,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -20104,6 +20140,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -20620,6 +20657,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -20646,6 +20684,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -20847,6 +20886,7 @@ export namespace Prisma {
     image?: StringNullableFilter<"User"> | string | null
     role?: EnumRoleFilter<"User"> | $Enums.Role
     employeeId?: StringNullableFilter<"User"> | string | null
+    phoneNumber?: StringNullableFilter<"User"> | string | null
     deskNumber?: StringNullableFilter<"User"> | string | null
     buildingNumber?: StringNullableFilter<"User"> | string | null
     floorNumber?: StringNullableFilter<"User"> | string | null
@@ -20969,6 +21009,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -20995,6 +21036,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -21072,6 +21114,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21098,6 +21141,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -21755,6 +21799,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -21781,6 +21826,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -21812,6 +21858,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -21838,6 +21885,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -21986,6 +22034,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22012,6 +22061,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22049,6 +22099,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22075,6 +22126,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22203,6 +22255,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -22229,6 +22282,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -22297,6 +22351,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -22323,6 +22378,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -22365,6 +22421,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22391,6 +22448,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22471,6 +22529,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22497,6 +22556,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22839,6 +22899,7 @@ export namespace Prisma {
     image?: string | null
     role?: $Enums.Role
     employeeId?: string | null
+    phoneNumber?: string | null
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
@@ -22908,6 +22969,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22934,6 +22996,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
@@ -22960,6 +23023,7 @@ export namespace Prisma {
     image?: NullableStringFieldUpdateOperationsInput | string | null
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     employeeId?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null

@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 
 import { SignOutButton } from "~/components/sign-out-button";
-import { APP_NAME } from "~/lib/constants";
 import { formatTaka } from "~/lib/datetime";
 
 type NavUser = {
@@ -26,7 +25,13 @@ type NavLink = {
   Icon: typeof UtensilsCrossed;
 };
 
-export function AppNav({ user }: { user: NavUser }) {
+export function AppNav({
+  user,
+  appName,
+}: {
+  user: NavUser;
+  appName: string;
+}) {
   const pathname = usePathname();
   const due = Math.max(0, -user.balance);
   const isAdmin = user.role === "ADMIN" || user.role === "SUPER_ADMIN";
@@ -58,7 +63,7 @@ export function AppNav({ user }: { user: NavUser }) {
           href="/app"
           className="font-display text-lg font-bold tracking-tight text-leaf-deep sm:text-xl"
         >
-          {APP_NAME}
+          {appName}
         </Link>
         <nav className="hidden items-center gap-1 sm:flex">
           {navLinks.map(({ href, label, Icon }) => {

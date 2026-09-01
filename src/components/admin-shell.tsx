@@ -16,7 +16,6 @@ import {
 import { useEffect, useState } from "react";
 
 import { SignOutButton } from "~/components/sign-out-button";
-import { APP_NAME } from "~/lib/constants";
 import { formatTaka } from "~/lib/datetime";
 
 type NavUser = {
@@ -34,10 +33,12 @@ type AdminLink = {
 export function AdminShell({
   user,
   links,
+  appName,
   children,
 }: {
   user: NavUser;
   links: Array<{ href: string; label: string }>;
+  appName: string;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -89,7 +90,7 @@ export function AdminShell({
           href="/admin"
           className="font-display text-lg font-bold tracking-tight text-leaf"
         >
-          {APP_NAME}
+          {appName}
         </Link>
         <p className="mt-1 text-xs text-ink-muted">Admin dashboard</p>
       </div>

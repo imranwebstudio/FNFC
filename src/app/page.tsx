@@ -2,7 +2,7 @@ import { LogIn } from "lucide-react";
 
 import { redirect } from "next/navigation";
 
-import { APP_NAME } from "~/lib/constants";
+import { getAppName } from "~/lib/app-name.server";
 import { auth, signIn } from "~/server/auth";
 import { env } from "~/env";
 
@@ -18,6 +18,7 @@ export default async function HomePage({
   }
 
   const googleReady = Boolean(env.AUTH_GOOGLE_ID && env.AUTH_GOOGLE_SECRET);
+  const appName = getAppName();
 
   return (
     <main className="relative min-h-screen overflow-hidden">
@@ -32,7 +33,7 @@ export default async function HomePage({
 
       <div className="relative mx-auto flex min-h-screen max-w-5xl flex-col justify-end px-6 pb-16 pt-24 text-white md:pb-24">
         <p className="font-display text-5xl font-extrabold tracking-tight md:text-7xl">
-          {APP_NAME}
+          {appName}
         </p>
         <h1 className="mt-4 max-w-lg text-xl font-medium text-white/90 md:text-2xl">
           Office lunch, one tap. Biryani, polao, bhat — ordered before cutoff,

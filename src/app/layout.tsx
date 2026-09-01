@@ -4,11 +4,11 @@ import { type Metadata } from "next";
 import { Outfit, Syne } from "next/font/google";
 
 import { GradientBlobs } from "~/components/gradient-blobs";
-import { APP_NAME } from "~/lib/constants";
+import { getAppName } from "~/lib/app-name.server";
 import { TRPCReactProvider } from "~/trpc/react";
 
 export const metadata: Metadata = {
-  title: APP_NAME,
+  title: getAppName(),
   description: "Office lunch catering — one-click daily meals",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };

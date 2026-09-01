@@ -23,7 +23,7 @@ export default function ProfilePage() {
         <PageTitle
           icon={<UserRound className="h-5 w-5" strokeWidth={2.25} />}
           title="Your profile"
-          subtitle="Update desk, building, floor, or office. Changing office switches which menu you see."
+          subtitle="Update desk, building, floor, office, or phone. Changing office switches which menu you see."
         />
         <Panel>
           {me.isLoading ? (
@@ -33,6 +33,7 @@ export default function ProfilePage() {
               key={me.data.id}
               initial={{
                 employeeId: me.data.employeeId ?? "",
+                phoneNumber: me.data.phoneNumber ?? "",
                 deskNumber: me.data.deskNumber ?? "",
                 buildingNumber: me.data.buildingNumber ?? "",
                 floorNumber: me.data.floorNumber ?? "",

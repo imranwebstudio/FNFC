@@ -8,6 +8,7 @@ import { api } from "~/trpc/react";
 
 export type ProfileFormValues = {
   employeeId: string;
+  phoneNumber: string;
   deskNumber: string;
   buildingNumber: string;
   floorNumber: string;
@@ -37,6 +38,7 @@ export function ProfileForm({
 
   const [form, setForm] = useState<ProfileFormValues>({
     employeeId: initial?.employeeId ?? "",
+    phoneNumber: initial?.phoneNumber ?? "",
     deskNumber: initial?.deskNumber ?? "",
     buildingNumber: initial?.buildingNumber ?? "",
     floorNumber: initial?.floorNumber ?? "",
@@ -47,6 +49,7 @@ export function ProfileForm({
     if (!initial) return;
     setForm({
       employeeId: initial.employeeId ?? "",
+      phoneNumber: initial.phoneNumber ?? "",
       deskNumber: initial.deskNumber ?? "",
       buildingNumber: initial.buildingNumber ?? "",
       floorNumber: initial.floorNumber ?? "",
@@ -54,6 +57,7 @@ export function ProfileForm({
     });
   }, [
     initial?.employeeId,
+    initial?.phoneNumber,
     initial?.deskNumber,
     initial?.buildingNumber,
     initial?.floorNumber,
@@ -76,6 +80,16 @@ export function ProfileForm({
         value={form.employeeId}
         options={options.data?.employeeIds ?? []}
         onChange={(employeeId) => setForm((f) => ({ ...f, employeeId }))}
+      />
+      <Combobox
+        id="phoneNumber"
+        label="Phone number"
+        required
+        placeholder="e.g. 01712345678"
+        value={form.phoneNumber}
+        options={options.data?.phoneNumbers ?? []}
+        allowCustomHint="Bkash number is preferred (01XXXXXXXXX)."
+        onChange={(phoneNumber) => setForm((f) => ({ ...f, phoneNumber }))}
       />
       <div className="grid grid-cols-2 gap-3">
         <Combobox

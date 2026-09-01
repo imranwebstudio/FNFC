@@ -20,7 +20,7 @@ export default function OnboardingPage() {
         <PageTitle
           icon={<Sparkles className="h-5 w-5" strokeWidth={2.25} />}
           title="Almost there"
-          subtitle="Pick from suggestions or type your own if it’s not listed."
+          subtitle="Pick from suggestions or type your own if it’s not listed. Add your mobile number so admins can reach you."
         />
         <Panel>
           <ProfileForm

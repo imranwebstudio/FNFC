@@ -100,6 +100,7 @@ model User {
   image           String?
   role            Role      @default(USER)
   employeeId      String?
+  phoneNumber     String?
   deskNumber      String?
   buildingNumber  String?
   floorNumber     String?

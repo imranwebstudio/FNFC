@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { AdminShell } from "~/components/admin-shell";
+import { getAppName } from "~/lib/app-name.server";
 import { auth } from "~/server/auth";
 
 export default async function AdminLayout({
@@ -29,7 +30,7 @@ export default async function AdminLayout({
   ];
 
   return (
-    <AdminShell user={session.user} links={links}>
+    <AdminShell user={session.user} links={links} appName={getAppName()}>
       {children}
     </AdminShell>
   );

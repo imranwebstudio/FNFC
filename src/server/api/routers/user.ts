@@ -1,6 +1,11 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import {
+  formatPhoneForStorage,
+  isValidPhoneNumber,
+  normalizePhoneNumber,
+} from "~/lib/phone";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 function uniqueSorted(values: Array<string | null | undefined>) {
@@ -40,6 +45,7 @@ export const userRouter = createTRPCRouter({
         where: { profileComplete: true },
         select: {
           employeeId: true,
+          phoneNumber: true,
           deskNumber: true,
           buildingNumber: true,
           floorNumber: true,
@@ -51,6 +57,7 @@ export const userRouter = createTRPCRouter({
     return {
       locations: uniqueSorted(locations.map((l) => l.name)),
       employeeIds: uniqueSorted(users.map((u) => u.employeeId)),
+      phoneNumbers: uniqueSorted(users.map((u) => u.phoneNumber)),
       deskNumbers: uniqueSorted(users.map((u) => u.deskNumber)),
       buildingNumbers: uniqueSorted(users.map((u) => u.buildingNumber)),
       floorNumbers: uniqueSorted(users.map((u) => u.floorNumber)),
@@ -61,6 +68,13 @@ export const userRouter = createTRPCRouter({
     .input(
       z.object({
         employeeId: z.string().min(1).max(64),
+        phoneNumber: z
+          .string()
+          .min(1, "Phone number is required")
+          .max(20)
+          .refine((v) => isValidPhoneNumber(v), {
+            message: "Enter a valid Bangladesh mobile number (e.g. 01712345678)",
+          }),
         deskNumber: z.string().min(1).max(32),
         buildingNumber: z.string().min(1).max(64),
         floorNumber: z.string().min(1).max(32),
@@ -70,6 +84,7 @@ export const userRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const locationName = input.locationName.trim();
+      const phoneNumber = formatPhoneForStorage(normalizePhoneNumber(input.phoneNumber));
 
       let location = await ctx.db.location.findFirst({
         where: {
@@ -91,6 +106,7 @@ export const userRouter = createTRPCRouter({
         where: { id: ctx.session.user.id },
         data: {
           employeeId: input.employeeId.trim(),
+          phoneNumber,
           deskNumber: input.deskNumber.trim(),
           buildingNumber: input.buildingNumber.trim(),
           floorNumber: input.floorNumber.trim(),
