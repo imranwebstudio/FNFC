@@ -19,6 +19,7 @@ import {
   chargeWalletForOrder,
   shouldChargeWallet,
 } from "~/server/order-payment";
+import { deleteOrderRecord } from "~/server/delete-order";
 
 export const orderRouter = createTRPCRouter({
   create: protectedProcedure
@@ -540,5 +541,67 @@ export const orderRouter = createTRPCRouter({
           },
         });
       });
+    }),
+
+  deleteByAdmin: adminProcedure
+    .input(z.object({ orderId: z.string().cuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const order = await ctx.db.order.findUnique({
+        where: { id: input.orderId },
+      });
+      if (!order) throw new TRPCError({ code: "NOT_FOUND" });
+
+      await assertLocationAccess(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        order.locationId,
+      );
+
+      await ctx.db.$transaction(async (tx) => {
+        await deleteOrderRecord(tx, order);
+      });
+
+      return { ok: true };
+    }),
+
+  deleteUserHistory: adminProcedure
+    .input(z.object({ userId: z.string().cuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const target = await ctx.db.user.findUnique({
+        where: { id: input.userId },
+      });
+      if (!target) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (ctx.session.user.role !== "SUPER_ADMIN") {
+        if (!target.locationId) {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+        await assertLocationAccess(
+          ctx.db,
+          ctx.session.user.id,
+          ctx.session.user.role,
+          target.locationId,
+        );
+      }
+
+      const orders = await ctx.db.order.findMany({
+        where: { userId: input.userId },
+      });
+
+      if (orders.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "No orders to delete",
+        });
+      }
+
+      await ctx.db.$transaction(async (tx) => {
+        for (const order of orders) {
+          await deleteOrderRecord(tx, order);
+        }
+      });
+
+      return { deleted: orders.length };
     }),
 });

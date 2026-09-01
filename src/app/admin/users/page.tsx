@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Loader2, ScrollText, Users } from "lucide-react";
 
+import { FoodPlateLoader } from "~/components/food-plate-loader";
 import {
   Badge,
   Button,
@@ -14,6 +15,7 @@ import {
   Select,
 } from "~/components/ui";
 import { formatTaka } from "~/lib/datetime";
+import { promptBalanceEdit } from "~/lib/swal";
 import { api } from "~/trpc/react";
 
 export default function AdminUsersPage() {
@@ -24,6 +26,7 @@ export default function AdminUsersPage() {
   const [amount, setAmount] = useState(1000);
   const [note, setNote] = useState("");
   const [modeError, setModeError] = useState<string | null>(null);
+  const [balanceError, setBalanceError] = useState<string | null>(null);
   const utils = api.useUtils();
 
   useEffect(() => {
@@ -49,6 +52,18 @@ export default function AdminUsersPage() {
       await utils.account.userStatement.invalidate({ userId: vars.userId });
     },
   });
+
+  const setBalance = api.wallet.setBalance.useMutation({
+    onSuccess: async (_data, vars) => {
+      setBalanceError(null);
+      await utils.admin.listUsers.invalidate();
+      await utils.account.userStatement.invalidate({ userId: vars.userId });
+    },
+    onError: (err) => {
+      setBalanceError(err.message || "Could not update balance");
+    },
+  });
+
   const setMode = api.wallet.setPaymentMode.useMutation({
     onMutate: async ({ userId, paymentMode }) => {
       setModeError(null);
@@ -73,18 +88,27 @@ export default function AdminUsersPage() {
   const pendingModeUserId = setMode.isPending
     ? setMode.variables?.userId
     : undefined;
+  const pendingBalanceUserId = setBalance.isPending
+    ? setBalance.variables?.userId
+    : undefined;
 
   return (
     <div>
       <PageTitle
         icon={<Users className="h-5 w-5" strokeWidth={2.25} />}
         title="Users & deposits"
-        subtitle="Record wallet deposits / due payments. Switch cash vs wallet per user."
+        subtitle="Record wallet deposits / due payments. Switch cash vs wallet or edit balance per user."
       />
 
       {modeError ? (
         <p className="mb-4 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-400">
           {modeError}
+        </p>
+      ) : null}
+
+      {balanceError ? (
+        <p className="mb-4 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-400">
+          {balanceError}
         </p>
       ) : null}
 
@@ -112,11 +136,17 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
+      {users.isLoading ? (
+        <FoodPlateLoader label="Fetching members…" />
+      ) : null}
+
       <ul className="space-y-2">
-        {users.data?.map((u) => {
+        {!users.isLoading
+          ? users.data?.map((u) => {
           const due = Math.max(0, -u.balance);
           const nextMode = u.paymentMode === "CASH" ? "WALLET" : "CASH";
           const modeBusy = pendingModeUserId === u.id;
+          const balanceBusy = pendingBalanceUserId === u.id;
           return (
             <Panel key={u.id} className="py-3">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -181,6 +211,30 @@ export default function AdminUsersPage() {
                   >
                     Deposit
                   </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={balanceBusy}
+                    aria-busy={balanceBusy}
+                    onClick={async () => {
+                      const newBalance = await promptBalanceEdit({
+                        title: "Edit balance",
+                        text: `Current balance: ${formatTaka(u.balance)}. Enter the new wallet balance.`,
+                        currentBalance: u.balance,
+                      });
+                      if (newBalance === null || newBalance === u.balance) return;
+                      setBalance.mutate({ userId: u.id, balance: newBalance });
+                    }}
+                  >
+                    {balanceBusy ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Saving…
+                      </>
+                    ) : (
+                      "Edit balance"
+                    )}
+                  </Button>
                 </div>
               </div>
 
@@ -228,8 +282,12 @@ export default function AdminUsersPage() {
               ) : null}
             </Panel>
           );
-        })}
+        })
+          : null}
       </ul>
+      {!users.isLoading && users.data && users.data.length === 0 ? (
+        <p className="text-sm text-ink-muted">No members found.</p>
+      ) : null}
     </div>
   );
 }

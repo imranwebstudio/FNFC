@@ -176,3 +176,21 @@ body {
 .food-card:hover .food-card-media img {
   transform: scale(1.05);
 }
+
+.swal2-input,
+.swal2-textarea {
+  background: #111916 !important;
+  color: #eef3f0 !important;
+  border-color: #2a3732 !important;
+}
+
+.swal2-input:focus,
+.swal2-textarea:focus {
+  border-color: #2dd4bf !important;
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2) !important;
+}
+
+.swal2-validation-message {
+  background: #1a2421 !important;
+  color: #ff945f !important;
+}

@@ -9,6 +9,7 @@ import {
   Phone,
 } from "lucide-react";
 
+import { FoodPlateLoader } from "~/components/food-plate-loader";
 import {
   Badge,
   Button,
@@ -230,7 +231,11 @@ export default function AdminOrdersPage() {
                 {mealOptions.error.message}
               </p>
             ) : mealOptions.isLoading || mealOptions.isFetching ? (
-              <p className="mt-1 text-[11px] text-ink-muted">Loading meals…</p>
+              <FoodPlateLoader
+                size="sm"
+                label="Loading meals…"
+                className="items-start py-2"
+              />
             ) : mealOptions.data && mealOptions.data.menus.length === 0 ? (
               <p className="mt-1 text-[11px] text-ink-muted">
                 No meals on {formatMenuDateLabel(behalfDate)}. Change Meal day
@@ -285,8 +290,13 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
+      {orders.isLoading ? (
+        <FoodPlateLoader label="Fetching today's orders…" />
+      ) : null}
+
       <ul className="space-y-2.5">
-        {orders.data?.map((o, i) => (
+        {!orders.isLoading
+          ? orders.data?.map((o, i) => (
           <motion.li
             key={o.id}
             initial={{ opacity: 0, y: 6 }}
@@ -364,7 +374,8 @@ export default function AdminOrdersPage() {
               </div>
             </Panel>
           </motion.li>
-        ))}
+        ))
+          : null}
       </ul>
       {!orders.isLoading && orders.data?.length === 0 ? (
         <p className="text-sm text-ink-muted">No orders for this day.</p>

@@ -4,12 +4,14 @@ import { motion } from "framer-motion";
 import {
   ArrowDownLeft,
   ArrowUpRight,
+  Loader2,
   Receipt,
+  Trash2,
   Wallet,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { Badge, Panel, StatCard } from "~/components/ui";
+import { Badge, Button, Panel, StatCard } from "~/components/ui";
 import {
   formatMenuDateLabel,
   formatTaka,
@@ -52,9 +54,21 @@ function walletTypeLabel(type: string) {
   }
 }
 
-function EntryRow({ entry, index }: { entry: StatementEntry; index: number }) {
+function EntryRow({
+  entry,
+  index,
+  adminActions,
+}: {
+  entry: StatementEntry;
+  index: number;
+  adminActions?: {
+    onDeleteOrder: (orderId: string) => void;
+    deletingOrderId?: string;
+  };
+}) {
   if (entry.kind === "order") {
     const isCancelled = entry.status === "CANCELLED";
+    const deleteBusy = adminActions?.deletingOrderId === entry.id;
     return (
       <motion.li
         initial={{ opacity: 0, y: 6 }}
@@ -112,6 +126,28 @@ function EntryRow({ entry, index }: { entry: StatementEntry; index: number }) {
                   {entry.paymentStatus}
                 </Badge>
               </div>
+              {adminActions ? (
+                <Button
+                  type="button"
+                  variant="danger"
+                  className="mt-2 px-3 py-1.5 text-xs"
+                  disabled={deleteBusy}
+                  aria-busy={deleteBusy}
+                  onClick={() => adminActions.onDeleteOrder(entry.id)}
+                >
+                  {deleteBusy ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Deleting…
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete
+                    </>
+                  )}
+                </Button>
+              ) : null}
             </div>
           </div>
         </Panel>
@@ -176,10 +212,15 @@ export function AccountStatementView({
   summary,
   entries,
   title = "Activity",
+  adminActions,
 }: {
   summary: AccountStatementSummary;
   entries: StatementEntry[];
   title?: string;
+  adminActions?: {
+    onDeleteOrder: (orderId: string) => void;
+    deletingOrderId?: string;
+  };
 }) {
   const [filter, setFilter] = useState<Filter>("all");
 
@@ -300,7 +341,12 @@ export function AccountStatementView({
       ) : (
         <ul className="space-y-2">
           {filtered.map((entry, i) => (
-            <EntryRow key={`${entry.kind}-${entry.id}`} entry={entry} index={i} />
+            <EntryRow
+              key={`${entry.kind}-${entry.id}`}
+              entry={entry}
+              index={i}
+              adminActions={entry.kind === "order" ? adminActions : undefined}
+            />
           ))}
         </ul>
       )}

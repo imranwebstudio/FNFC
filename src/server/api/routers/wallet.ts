@@ -108,4 +108,59 @@ export const walletRouter = createTRPCRouter({
         data: { paymentMode: input.paymentMode },
       });
     }),
+
+  setBalance: adminProcedure
+    .input(
+      z.object({
+        userId: z.string().cuid(),
+        balance: z.number().int(),
+        note: z.string().max(300).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const target = await ctx.db.user.findUnique({
+        where: { id: input.userId },
+      });
+      if (!target) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (target.balance === input.balance) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Balance is already at that amount",
+        });
+      }
+
+      if (ctx.session.user.role !== "SUPER_ADMIN") {
+        if (!target.locationId) {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+        await assertLocationAccess(
+          ctx.db,
+          ctx.session.user.id,
+          ctx.session.user.role,
+          target.locationId,
+        );
+      }
+
+      const adjustment = input.balance - target.balance;
+
+      return ctx.db.$transaction(async (tx) => {
+        await tx.user.update({
+          where: { id: target.id },
+          data: { balance: input.balance },
+        });
+        return tx.walletTransaction.create({
+          data: {
+            userId: target.id,
+            type: "ADJUSTMENT",
+            amount: adjustment,
+            balanceAfter: input.balance,
+            createdById: ctx.session.user.id,
+            note:
+              input.note ??
+              `Balance adjusted by admin (${target.balance} → ${input.balance})`,
+          },
+        });
+      });
+    }),
 });

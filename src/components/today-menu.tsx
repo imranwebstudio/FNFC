@@ -12,6 +12,7 @@ import {
 import { useState } from "react";
 
 import { Badge, Button, PageTitle, Panel, Textarea } from "~/components/ui";
+import { FoodPlateLoader } from "~/components/food-plate-loader";
 import { cloudinaryDisplayUrl } from "~/lib/cloudinary-url";
 import {
   formatMenuDateLabel,
@@ -95,7 +96,7 @@ export function TodayMenu() {
       ) : null}
 
       {today.isLoading ? (
-        <p className="text-sm text-ink-muted">Loading menu…</p>
+        <FoodPlateLoader label="Checking today's menu…" />
       ) : null}
 
       {!today.isLoading && menus.length === 0 ? (

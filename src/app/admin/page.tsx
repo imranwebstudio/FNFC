@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+import { FoodPlateLoader } from "~/components/food-plate-loader";
 import { Label, Panel, Select, StatCard } from "~/components/ui";
 import { formatTaka } from "~/lib/datetime";
 import { api } from "~/trpc/react";
@@ -115,6 +116,10 @@ export default function AdminOverviewPage() {
         </div>
       </div>
 
+      {overview.isLoading ? (
+        <FoodPlateLoader label="Cooking up today's snapshot…" />
+      ) : (
+        <>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {primaryStats.map((s) => (
           <StatCard
@@ -200,6 +205,8 @@ export default function AdminOverviewPage() {
           )}
         </ul>
       </div>
+        </>
+      )}
     </div>
   );
 }

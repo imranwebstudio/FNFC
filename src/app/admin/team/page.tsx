@@ -13,6 +13,7 @@ import {
   Panel,
   Select,
 } from "~/components/ui";
+import { FoodPlateLoader } from "~/components/food-plate-loader";
 import { api } from "~/trpc/react";
 
 export default function AdminTeamPage() {
@@ -27,10 +28,6 @@ export default function AdminTeamPage() {
     defaultCutoffTime: "14:00",
   });
   const [cutoffEdits, setCutoffEdits] = useState<Record<string, string>>({});
-
-  if (me.data && me.data.role !== "SUPER_ADMIN") {
-    redirect("/admin");
-  }
 
   const createLoc = api.location.create.useMutation({
     onSuccess: async () => {
@@ -63,6 +60,14 @@ export default function AdminTeamPage() {
   const setBanned = api.admin.setBanned.useMutation({
     onSuccess: async () => utils.admin.listUsers.invalidate(),
   });
+
+  if (me.isLoading) {
+    return <FoodPlateLoader label="Loading staff tools…" />;
+  }
+
+  if (me.data && me.data.role !== "SUPER_ADMIN") {
+    redirect("/admin");
+  }
 
   const filtered =
     users.data?.filter((u) => {

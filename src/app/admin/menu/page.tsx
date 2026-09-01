@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BookOpen, Plus } from "lucide-react";
 
 import { CloudinaryUpload } from "~/components/cloudinary-upload";
+import { FoodPlateLoader } from "~/components/food-plate-loader";
 import {
   Badge,
   Button,
@@ -780,6 +781,9 @@ export default function AdminMenuPage() {
                 </span>
               ) : null}
             </h3>
+            {daily.isLoading ? (
+              <FoodPlateLoader size="inline" label="Loading day's meals…" />
+            ) : null}
             {!daily.isLoading && (!daily.data || daily.data.length === 0) ? (
               <Panel className="mb-3 py-3">
                 <p className="text-sm text-ink-muted">
@@ -789,7 +793,8 @@ export default function AdminMenuPage() {
               </Panel>
             ) : null}
             <ul className="space-y-2">
-              {daily.data
+              {!daily.isLoading
+                ? daily.data
                 ?.filter((m) => dinnerEnabled || m.slot !== "DINNER")
                 .map((m) => (
                 <Panel
@@ -847,7 +852,8 @@ export default function AdminMenuPage() {
                     </Button>
                   </div>
                 </Panel>
-              ))}
+              ))
+                : null}
             </ul>
           </div>
         </div>
@@ -868,8 +874,12 @@ export default function AdminMenuPage() {
         <p className="mb-3 text-xs text-ink-muted">
           Tap Use to fill the weekday or dated form.
         </p>
+        {catalog.isLoading ? (
+          <FoodPlateLoader size="inline" label="Loading saved meals…" />
+        ) : null}
         <ul className="grid gap-2 sm:grid-cols-2">
-          {savedMeals.map((c) => (
+          {!catalog.isLoading
+            ? savedMeals.map((c) => (
             <Panel key={c.id} className="py-3">
               <p className="font-semibold">{c.name}</p>
               <p className="text-xs text-ink-muted">
@@ -911,7 +921,8 @@ export default function AdminMenuPage() {
                 )}
               </div>
             </Panel>
-          ))}
+          ))
+            : null}
         </ul>
         {!catalog.isLoading && savedMeals.length === 0 ? (
           <Panel className="mt-2 py-3">

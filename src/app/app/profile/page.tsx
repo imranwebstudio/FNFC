@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { UserRound } from "lucide-react";
 
 import { ProfileForm } from "~/components/profile-form";
+import { FoodPlateLoader } from "~/components/food-plate-loader";
 import { PageTitle, Panel } from "~/components/ui";
 import { api } from "~/trpc/react";
 
@@ -26,7 +27,7 @@ export default function ProfilePage() {
         />
         <Panel>
           {me.isLoading ? (
-            <p className="text-sm text-ink-muted">Loading…</p>
+            <FoodPlateLoader size="inline" label="Loading profile…" />
           ) : me.data ? (
             <ProfileForm
               key={me.data.id}

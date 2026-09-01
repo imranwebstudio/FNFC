@@ -5,6 +5,7 @@ import { Wallet } from "lucide-react";
 import {
   AccountStatementView,
 } from "~/components/account-statement";
+import { FoodPlateLoader } from "~/components/food-plate-loader";
 import { PageTitle } from "~/components/ui";
 import { api } from "~/trpc/react";
 
@@ -21,7 +22,7 @@ export default function AccountPage() {
       />
 
       {statement.isLoading ? (
-        <p className="text-sm text-ink-muted">Loading account…</p>
+        <FoodPlateLoader label="Preparing your statement…" />
       ) : statement.data ? (
         <AccountStatementView
           summary={statement.data.summary}
