@@ -19,12 +19,14 @@ import {
   formatTaka,
 } from "~/lib/datetime";
 import { api } from "~/trpc/react";
+import { confirmAction, showSuccess } from "~/lib/swal";
 
 export function TodayMenu() {
   const utils = api.useUtils();
   const today = api.menu.todayForUser.useQuery();
   const create = api.order.create.useMutation({
     onSuccess: async () => {
+      showSuccess("Order placed", "Your meal has been booked.");
       setOrderedId(null);
       setNote("");
       await utils.menu.todayForUser.invalidate();
@@ -34,6 +36,7 @@ export function TodayMenu() {
   });
   const cancel = api.order.cancel.useMutation({
     onSuccess: async () => {
+      showSuccess("Order cancelled");
       await utils.menu.todayForUser.invalidate();
       await utils.order.listMine.invalidate();
       await utils.account.myStatement.invalidate();
@@ -193,9 +196,16 @@ export function TodayMenu() {
                           variant="ghost"
                           type="button"
                           disabled={cancel.isPending}
-                          onClick={() =>
-                            cancel.mutate({ orderId: menu.myOrder!.id })
-                          }
+                          onClick={async () => {
+                            const confirmed = await confirmAction({
+                              title: "Cancel this order? 😢",
+                              text: "Are you sure you want to cancel your meal order?",
+                              confirmText: "Yes, cancel order",
+                              cancelText: "Keep order",
+                            });
+                            if (!confirmed) return;
+                            cancel.mutate({ orderId: menu.myOrder!.id });
+                          }}
                         >
                           <X className="h-4 w-4" />
                           Cancel

@@ -2,9 +2,8 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import {
-  formatPhoneForStorage,
-  isValidPhoneNumber,
-  normalizePhoneNumber,
+  parsePhoneForStorage,
+  phoneNumberSchema,
 } from "~/lib/phone";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
@@ -68,13 +67,7 @@ export const userRouter = createTRPCRouter({
     .input(
       z.object({
         employeeId: z.string().min(1).max(64),
-        phoneNumber: z
-          .string()
-          .min(1, "Phone number is required")
-          .max(20)
-          .refine((v) => isValidPhoneNumber(v), {
-            message: "Enter a valid Bangladesh mobile number (e.g. 01712345678)",
-          }),
+        phoneNumber: phoneNumberSchema,
         deskNumber: z.string().min(1).max(32),
         buildingNumber: z.string().min(1).max(64),
         floorNumber: z.string().min(1).max(32),
@@ -84,7 +77,7 @@ export const userRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const locationName = input.locationName.trim();
-      const phoneNumber = formatPhoneForStorage(normalizePhoneNumber(input.phoneNumber));
+      const phoneNumber = parsePhoneForStorage(input.phoneNumber);
 
       let location = await ctx.db.location.findFirst({
         where: {
@@ -113,6 +106,17 @@ export const userRouter = createTRPCRouter({
           locationId: location.id,
           profileComplete: true,
         },
+      });
+    }),
+
+  updatePhone: protectedProcedure
+    .input(z.object({ phoneNumber: phoneNumberSchema }))
+    .mutation(async ({ ctx, input }) => {
+      const phoneNumber = parsePhoneForStorage(input.phoneNumber);
+      return ctx.db.user.update({
+        where: { id: ctx.session.user.id },
+        data: { phoneNumber },
+        select: { phoneNumber: true },
       });
     }),
 

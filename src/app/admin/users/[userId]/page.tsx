@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { use, useState } from "react";
-import { ArrowLeft, Loader2, UserRound } from "lucide-react";
+import { ArrowLeft, Loader2, Phone, UserRound } from "lucide-react";
 
 import {
   AccountStatementHeader,
@@ -11,7 +11,7 @@ import {
 import { FoodPlateLoader } from "~/components/food-plate-loader";
 import { Badge, Button, PageTitle, Panel } from "~/components/ui";
 import { formatTaka } from "~/lib/datetime";
-import { confirmAction, promptBalanceEdit } from "~/lib/swal";
+import { confirmAction, promptBalanceEdit, promptPhoneEdit, showSuccess } from "~/lib/swal";
 import { api } from "~/trpc/react";
 
 export default function AdminUserStatementPage({
@@ -22,6 +22,7 @@ export default function AdminUserStatementPage({
   const { userId } = use(params);
   const [balanceError, setBalanceError] = useState<string | null>(null);
   const [orderError, setOrderError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const utils = api.useUtils();
   const statement = api.account.userStatement.useQuery({ userId });
 
@@ -31,9 +32,21 @@ export default function AdminUserStatementPage({
     await utils.order.listForAdmin.invalidate();
   };
 
+  const setUserPhone = api.admin.setUserPhone.useMutation({
+    onSuccess: async () => {
+      setPhoneError(null);
+      showSuccess("Phone updated");
+      await invalidateStatement();
+    },
+    onError: (err) => {
+      setPhoneError(err.message || "Could not update phone");
+    },
+  });
+
   const setBalance = api.wallet.setBalance.useMutation({
     onSuccess: async () => {
       setBalanceError(null);
+      showSuccess("Balance updated");
       await invalidateStatement();
     },
     onError: (err) => {
@@ -44,6 +57,7 @@ export default function AdminUserStatementPage({
   const deleteOrder = api.order.deleteByAdmin.useMutation({
     onSuccess: async () => {
       setOrderError(null);
+      showSuccess("Order deleted");
       await invalidateStatement();
     },
     onError: (err) => {
@@ -54,6 +68,7 @@ export default function AdminUserStatementPage({
   const deleteUserHistory = api.order.deleteUserHistory.useMutation({
     onSuccess: async () => {
       setOrderError(null);
+      showSuccess("Order history cleared");
       await invalidateStatement();
     },
     onError: (err) => {
@@ -100,6 +115,11 @@ export default function AdminUserStatementPage({
               {orderError}
             </p>
           ) : null}
+          {phoneError ? (
+            <p className="mb-4 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-400">
+              {phoneError}
+            </p>
+          ) : null}
           <Panel className="mb-6">
             <AccountStatementHeader
               name={statement.data.user.name ?? statement.data.user.email}
@@ -111,7 +131,42 @@ export default function AdminUserStatementPage({
                 .filter(Boolean)
                 .join(" · ")}
             />
-            <div className="flex flex-wrap items-center gap-2">
+            <p className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+              <Phone className="h-4 w-4 shrink-0 text-ink-muted" strokeWidth={2.25} />
+              <span className="text-ink-muted">Phone:</span>
+              {statement.data.user.phoneNumber?.trim() ? (
+                <a
+                  href={`tel:${statement.data.user.phoneNumber.trim()}`}
+                  className="font-medium text-ink hover:underline"
+                >
+                  {statement.data.user.phoneNumber}
+                </a>
+              ) : (
+                <span className="font-medium text-ink-muted">No phone number</span>
+              )}
+              {user ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="ml-1 px-3 py-1.5 text-xs"
+                  disabled={setUserPhone.isPending}
+                  aria-busy={setUserPhone.isPending}
+                  onClick={async () => {
+                    const newPhone = await promptPhoneEdit({
+                      title: "Edit phone number",
+                      text: `Set phone for ${user.name ?? user.email ?? "member"}.`,
+                      currentPhone: user.phoneNumber ?? "",
+                    });
+                    if (newPhone === null) return;
+                    if (newPhone === (user.phoneNumber ?? "")) return;
+                    setUserPhone.mutate({ userId, phoneNumber: newPhone });
+                  }}
+                >
+                  {setUserPhone.isPending ? "Saving…" : "Edit phone"}
+                </Button>
+              ) : null}
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               <Badge>{statement.data.user.paymentMode}</Badge>
               <Badge tone="neutral">
                 Bal {formatTaka(statement.data.user.balance)}

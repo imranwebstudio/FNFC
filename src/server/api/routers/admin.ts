@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import { parsePhoneForStorage, phoneNumberSchema } from "~/lib/phone";
 import {
   adminProcedure,
   assertLocationAccess,
@@ -181,5 +182,38 @@ export const adminRouter = createTRPCRouter({
       }
 
       return updated;
+    }),
+
+  setUserPhone: adminProcedure
+    .input(
+      z.object({
+        userId: z.string().cuid(),
+        phoneNumber: phoneNumberSchema,
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const target = await ctx.db.user.findUnique({
+        where: { id: input.userId },
+      });
+      if (!target) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (ctx.session.user.role !== "SUPER_ADMIN") {
+        if (!target.locationId) {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+        await assertLocationAccess(
+          ctx.db,
+          ctx.session.user.id,
+          ctx.session.user.role,
+          target.locationId,
+        );
+      }
+
+      const phoneNumber = parsePhoneForStorage(input.phoneNumber);
+      return ctx.db.user.update({
+        where: { id: target.id },
+        data: { phoneNumber },
+        select: { id: true, phoneNumber: true },
+      });
     }),
 });

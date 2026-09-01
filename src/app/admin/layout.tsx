@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { AdminShell } from "~/components/admin-shell";
+import { PhoneNumberPrompt } from "~/components/phone-number-prompt";
 import { getAppName } from "~/lib/app-name.server";
 import { auth } from "~/server/auth";
 
@@ -31,6 +32,7 @@ export default async function AdminLayout({
 
   return (
     <AdminShell user={session.user} links={links} appName={getAppName()}>
+      <PhoneNumberPrompt />
       {children}
     </AdminShell>
   );

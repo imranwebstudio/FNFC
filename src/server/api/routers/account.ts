@@ -65,6 +65,7 @@ export const accountRouter = createTRPCRouter({
           name: true,
           email: true,
           employeeId: true,
+          phoneNumber: true,
           balance: true,
           paymentMode: true,
           locationId: true,

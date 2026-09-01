@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 /** Strip spaces/dashes for validation and storage. */
 export function normalizePhoneNumber(phone: string): string {
   return phone.replace(/[\s-]/g, "").trim();
@@ -15,4 +17,16 @@ export function formatPhoneForStorage(phone: string): string {
   if (n.startsWith("880")) return `+${n}`;
   if (n.startsWith("01")) return n;
   return n;
+}
+
+export const phoneNumberSchema = z
+  .string()
+  .min(1, "Phone number is required")
+  .max(20)
+  .refine((v) => isValidPhoneNumber(v), {
+    message: "Enter a valid Bangladesh mobile number (e.g. 01712345678)",
+  });
+
+export function parsePhoneForStorage(input: string): string {
+  return formatPhoneForStorage(normalizePhoneNumber(input));
 }

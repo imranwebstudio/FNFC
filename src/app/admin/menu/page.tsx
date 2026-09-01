@@ -23,6 +23,7 @@ import {
   WEEKDAYS,
   type WeekdayCode,
 } from "~/lib/datetime";
+import { showSuccess } from "~/lib/swal";
 import { api } from "~/trpc/react";
 
 const emptyForm = {
@@ -92,7 +93,7 @@ export default function AdminMenuPage() {
       await utils.location.list.invalidate();
       await utils.menu.listDaily.invalidate();
       await utils.menu.todayForUser.invalidate();
-      setMsg("Order cutoff updated");
+      showSuccess("Order cutoff updated");
     },
   });
 
@@ -102,10 +103,11 @@ export default function AdminMenuPage() {
       await utils.menu.listDaily.invalidate();
       await utils.menu.weekdayList.invalidate();
       await utils.menu.todayForUser.invalidate();
-      setMsg(
+      showSuccess(
+        loc.dinnerEnabled ? "Dinner enabled" : "Dinner disabled",
         loc.dinnerEnabled
-          ? "Dinner enabled — you can add dinner options"
-          : "Dinner hidden for this office",
+          ? "You can add dinner options for this office."
+          : "Dinner is hidden for this office.",
       );
       if (!loc.dinnerEnabled && weekEdit?.slot === "DINNER") {
         setWeekEdit(null);
@@ -145,7 +147,7 @@ export default function AdminMenuPage() {
   const updateTemplate = api.menu.catalogUpdate.useMutation({
     onSuccess: async () => {
       await utils.menu.catalogList.invalidate();
-      setMsg("Saved meal updated");
+      showSuccess("Saved meal updated");
     },
   });
 
@@ -154,11 +156,11 @@ export default function AdminMenuPage() {
       await utils.menu.weekdayList.invalidate();
       await utils.menu.listDaily.invalidate();
       await utils.menu.todayForUser.invalidate();
-      setMsg(
+      showSuccess(
         weekEdit
           ? weekEdit.id
-            ? `Updated ${WEEKDAY_LABELS[weekEdit.weekday]} ${weekEdit.slot.toLowerCase()} option`
-            : `Added option for every ${WEEKDAY_LABELS[weekEdit.weekday]} ${weekEdit.slot.toLowerCase()}`
+            ? `Updated ${WEEKDAY_LABELS[weekEdit.weekday]} ${weekEdit.slot.toLowerCase()}`
+            : `Added ${WEEKDAY_LABELS[weekEdit.weekday]} ${weekEdit.slot.toLowerCase()} option`
           : "Weekday meal saved",
       );
       setWeekEdit(null);
@@ -172,7 +174,7 @@ export default function AdminMenuPage() {
       await utils.menu.weekdayList.invalidate();
       await utils.menu.listDaily.invalidate();
       await utils.menu.todayForUser.invalidate();
-      setMsg("Weekday meal removed");
+      showSuccess("Weekday meal removed");
       setWeekEdit(null);
       setWeekForm(emptyWeekForm);
     },
@@ -183,7 +185,7 @@ export default function AdminMenuPage() {
     onSuccess: async () => {
       await utils.menu.listDaily.invalidate();
       await utils.menu.todayForUser.invalidate();
-      setMsg("Meal removed");
+      showSuccess("Meal removed");
       if (editingId) resetForm();
     },
     onError: (e) => setMsg(e.message),
@@ -194,10 +196,11 @@ export default function AdminMenuPage() {
       await utils.menu.listDaily.invalidate();
       await utils.menu.todayForUser.invalidate();
       await utils.menu.catalogList.invalidate();
-      setMsg(
+      showSuccess(
+        editingId ? "Meal updated" : "Meals published",
         editingId
-          ? "Meal updated"
-          : `Published for ${res.count} day${res.count === 1 ? "" : "s"} (${res.startDate} → ${res.endDate})`,
+          ? undefined
+          : `${res.count} day${res.count === 1 ? "" : "s"} (${res.startDate} → ${res.endDate})`,
       );
       setEditingId(null);
       if (!editingId) {

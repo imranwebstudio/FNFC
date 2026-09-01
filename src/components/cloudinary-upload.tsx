@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 
 import { Button, Label } from "~/components/ui";
 import { cloudinaryDisplayUrl } from "~/lib/cloudinary-url";
+import { showSuccess } from "~/lib/swal";
 
 type CloudinaryUploadProps = {
   value?: string;
@@ -38,6 +39,7 @@ export function CloudinaryUpload({
         throw new Error(json.error ?? "Upload failed");
       }
       onUploaded(json.url);
+      showSuccess("Photo uploaded");
       setProgress(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");

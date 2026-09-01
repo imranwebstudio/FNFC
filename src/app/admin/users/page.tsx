@@ -15,7 +15,7 @@ import {
   Select,
 } from "~/components/ui";
 import { formatTaka } from "~/lib/datetime";
-import { promptBalanceEdit } from "~/lib/swal";
+import { promptBalanceEdit, showSuccess } from "~/lib/swal";
 import { api } from "~/trpc/react";
 
 export default function AdminUsersPage() {
@@ -46,6 +46,7 @@ export default function AdminUsersPage() {
 
   const deposit = api.wallet.deposit.useMutation({
     onSuccess: async (_data, vars) => {
+      showSuccess("Deposit recorded");
       setDepositUserId(null);
       setNote("");
       await utils.admin.listUsers.invalidate();
@@ -56,6 +57,7 @@ export default function AdminUsersPage() {
   const setBalance = api.wallet.setBalance.useMutation({
     onSuccess: async (_data, vars) => {
       setBalanceError(null);
+      showSuccess("Balance updated");
       await utils.admin.listUsers.invalidate();
       await utils.account.userStatement.invalidate({ userId: vars.userId });
     },
@@ -79,6 +81,9 @@ export default function AdminUsersPage() {
         utils.admin.listUsers.setData(listInput, ctx.previous);
       }
       setModeError(err.message || "Could not change payment mode");
+    },
+    onSuccess: () => {
+      showSuccess("Payment mode updated");
     },
     onSettled: () => {
       void utils.admin.listUsers.invalidate();

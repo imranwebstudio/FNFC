@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { Combobox } from "~/components/combobox";
 import { Button } from "~/components/ui";
+import { showSuccess } from "~/lib/swal";
 import { api } from "~/trpc/react";
 
 export type ProfileFormValues = {
@@ -28,6 +29,7 @@ export function ProfileForm({
   const utils = api.useUtils();
   const save = api.user.completeProfile.useMutation({
     onSuccess: async () => {
+      showSuccess("Profile saved", "Your details were updated successfully.");
       await Promise.all([
         utils.user.me.invalidate(),
         utils.menu.todayForUser.invalidate(),
@@ -134,9 +136,6 @@ export function ProfileForm({
       />
       {save.error ? (
         <p className="text-sm text-red-700">{save.error.message}</p>
-      ) : null}
-      {save.isSuccess && !save.isPending ? (
-        <p className="text-sm text-leaf-deep">Saved.</p>
       ) : null}
       <Button type="submit" disabled={save.isPending} className="w-full">
         {save.isPending ? "Saving…" : submitLabel}

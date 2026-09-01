@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -26,6 +27,7 @@ import {
   todayDateString,
 } from "~/lib/datetime";
 import { api } from "~/trpc/react";
+import { showSuccess } from "~/lib/swal";
 
 export default function AdminOrdersPage() {
   const locations = api.location.list.useQuery();
@@ -68,18 +70,21 @@ export default function AdminOrdersPage() {
 
   const deliver = api.order.markDelivered.useMutation({
     onSuccess: async () => {
+      showSuccess("Marked delivered");
       await utils.order.listForAdmin.invalidate();
       await utils.account.userStatement.invalidate();
     },
   });
   const confirmPay = api.order.confirmCashPayment.useMutation({
     onSuccess: async () => {
+      showSuccess("Cash payment confirmed");
       await utils.order.listForAdmin.invalidate();
       await utils.account.userStatement.invalidate();
     },
   });
   const createForUser = api.order.createForUser.useMutation({
     onSuccess: async (_data, vars) => {
+      showSuccess("Order placed", `Order recorded for ${formatMenuDateLabel(behalfDate)}.`);
       setBehalfOk(true);
       setBehalfMsg(`Order placed for ${formatMenuDateLabel(behalfDate)}`);
       setBehalfMenuId("");
@@ -306,7 +311,12 @@ export default function AdminOrdersPage() {
             <Panel className="flex flex-wrap items-center justify-between gap-3 py-3.5">
               <div>
                 <p className="font-semibold tracking-tight">
-                  {o.user.name ?? o.user.email}{" "}
+                  <Link
+                    href={`/admin/users/${o.user.id}`}
+                    className="text-leaf-deep transition hover:text-leaf hover:underline"
+                  >
+                    {o.user.name ?? o.user.email}
+                  </Link>{" "}
                   <span className="text-xs font-normal text-ink-muted">
                     {o.user.employeeId}
                   </span>

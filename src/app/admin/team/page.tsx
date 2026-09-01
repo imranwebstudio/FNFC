@@ -14,6 +14,7 @@ import {
   Select,
 } from "~/components/ui";
 import { FoodPlateLoader } from "~/components/food-plate-loader";
+import { showSuccess } from "~/lib/swal";
 import { api } from "~/trpc/react";
 
 export default function AdminTeamPage() {
@@ -32,6 +33,7 @@ export default function AdminTeamPage() {
   const createLoc = api.location.create.useMutation({
     onSuccess: async () => {
       setLocForm({ name: "", address: "", defaultCutoffTime: "14:00" });
+      showSuccess("Location created");
       await utils.location.list.invalidate();
     },
   });
@@ -42,23 +44,39 @@ export default function AdminTeamPage() {
         delete next[vars.locationId];
         return next;
       });
+      showSuccess("Cutoff updated");
       await utils.location.list.invalidate();
     },
   });
   const setLocActive = api.location.update.useMutation({
-    onSuccess: async () => utils.location.list.invalidate(),
+    onSuccess: async () => {
+      showSuccess("Location updated");
+      await utils.location.list.invalidate();
+    },
   });
   const setRole = api.admin.setRole.useMutation({
-    onSuccess: async () => utils.admin.listUsers.invalidate(),
+    onSuccess: async () => {
+      showSuccess("Role updated");
+      await utils.admin.listUsers.invalidate();
+    },
   });
   const assign = api.admin.assignLocation.useMutation({
-    onSuccess: async () => utils.admin.listUsers.invalidate(),
+    onSuccess: async () => {
+      showSuccess("Office assigned");
+      await utils.admin.listUsers.invalidate();
+    },
   });
   const unassign = api.admin.removeLocationAssignment.useMutation({
-    onSuccess: async () => utils.admin.listUsers.invalidate(),
+    onSuccess: async () => {
+      showSuccess("Office unassigned");
+      await utils.admin.listUsers.invalidate();
+    },
   });
   const setBanned = api.admin.setBanned.useMutation({
-    onSuccess: async () => utils.admin.listUsers.invalidate(),
+    onSuccess: async () => {
+      showSuccess("User status updated");
+      await utils.admin.listUsers.invalidate();
+    },
   });
 
   if (me.isLoading) {
