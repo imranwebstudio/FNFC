@@ -8,6 +8,7 @@ export type StatementEntry =
       id: string;
       at: Date;
       amount: number;
+      quantity: number;
       mealTitle: string;
       mealSlot: string;
       mealDate: string;
@@ -48,6 +49,7 @@ export type AccountStatementSummary = {
 type OrderRow = {
   id: string;
   amount: number;
+  quantity: number;
   note: string | null;
   status: string;
   paymentStatus: string;
@@ -94,6 +96,7 @@ export function buildAccountStatement(input: {
       id: o.id,
       at: o.createdAt,
       amount: o.amount,
+      quantity: o.quantity,
       mealTitle: o.dailyMenu.title,
       mealSlot: o.dailyMenu.slot,
       mealDate: formatInTimeZone(o.dailyMenu.date, "UTC", "yyyy-MM-dd"),

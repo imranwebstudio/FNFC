@@ -478,14 +478,6 @@ export const menuRouter = createTRPCRouter({
     });
 
     const now = new Date();
-    const orderedBySlot = new Map<string, string>();
-    for (const m of menusByLoc) {
-      const order = m.orders[0];
-      if (order) {
-        const menuDateStr = formatInTimeZone(m.date, "UTC", "yyyy-MM-dd");
-        orderedBySlot.set(`${m.locationId}:${menuDateStr}:${m.slot}`, m.id);
-      }
-    }
 
     return {
       locationName: user.location?.name ?? null,
@@ -497,8 +489,6 @@ export const menuRouter = createTRPCRouter({
         const locCutoff = normalizeCutoffTime(m.location.defaultCutoffTime);
         const cutoff =
           m.cutoffAt ?? dayArchiveAt(menuDateStr, locCutoff);
-        const slotKey = `${m.locationId}:${menuDateStr}:${m.slot}`;
-        const orderedMenuId = orderedBySlot.get(slotKey);
         return {
           ...m,
           menuDate: menuDateStr,
@@ -506,8 +496,6 @@ export const menuRouter = createTRPCRouter({
           cutoffTime: locCutoff,
           isPastCutoff: now > cutoff,
           myOrder: m.orders[0] ?? null,
-          orderedOtherOptionId:
-            orderedMenuId && orderedMenuId !== m.id ? orderedMenuId : null,
           orders: undefined,
         };
       }),

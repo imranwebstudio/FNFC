@@ -4,7 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Clock3,
   MapPin,
+  Minus,
   Moon,
+  Plus,
   ShoppingBag,
   UtensilsCrossed,
   X,
@@ -18,6 +20,7 @@ import {
   formatMenuDateLabel,
   formatTaka,
 } from "~/lib/datetime";
+import { MAX_ORDER_QUANTITY } from "~/lib/order-quantity";
 import { api } from "~/trpc/react";
 import { confirmAction, showSuccess } from "~/lib/swal";
 
@@ -29,6 +32,7 @@ export function TodayMenu() {
       showSuccess("Order placed", "Your meal has been booked.");
       setOrderedId(null);
       setNote("");
+      setQuantity(1);
       await utils.menu.todayForUser.invalidate();
       await utils.order.listMine.invalidate();
       await utils.account.myStatement.invalidate();
@@ -45,6 +49,7 @@ export function TodayMenu() {
 
   const [note, setNote] = useState("");
   const [orderedId, setOrderedId] = useState<string | null>(null);
+  const [quantity, setQuantity] = useState(1);
 
   const menus = today.data?.menus ?? [];
   const window = today.data?.window;
@@ -189,7 +194,12 @@ export function TodayMenu() {
 
                   {menu.myOrder ? (
                     <div className="flex flex-wrap items-center gap-3">
-                      <Badge tone="good">Ordered</Badge>
+                      <Badge tone="good">
+                        Ordered
+                        {menu.myOrder.quantity > 1
+                          ? ` ×${menu.myOrder.quantity}`
+                          : ""}
+                      </Badge>
                       {menu.myOrder.status === "PLACED" &&
                       !menu.isPastCutoff ? (
                         <Button
@@ -214,11 +224,6 @@ export function TodayMenu() {
                         <Badge tone="neutral">{menu.myOrder.status}</Badge>
                       )}
                     </div>
-                  ) : menu.orderedOtherOptionId ? (
-                    <p className="text-xs text-ink-muted">
-                      You already ordered another {menu.slot.toLowerCase()}{" "}
-                      option. Cancel that order to switch.
-                    </p>
                   ) : menu.isPastCutoff ? (
                     <Badge tone="warn">Ordering closed</Badge>
                   ) : (
@@ -228,6 +233,48 @@ export function TodayMenu() {
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
                         >
+                          <div className="mb-3 flex items-center justify-between gap-3">
+                            <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                              Quantity
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                className="h-9 w-9 rounded-xl px-0"
+                                disabled={quantity <= 1}
+                                onClick={() =>
+                                  setQuantity((q) => Math.max(1, q - 1))
+                                }
+                                aria-label="Decrease quantity"
+                              >
+                                <Minus className="h-4 w-4" />
+                              </Button>
+                              <span className="min-w-[2ch] text-center text-sm font-bold tabular-nums text-ink">
+                                {quantity}
+                              </span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                className="h-9 w-9 rounded-xl px-0"
+                                disabled={quantity >= MAX_ORDER_QUANTITY}
+                                onClick={() =>
+                                  setQuantity((q) =>
+                                    Math.min(MAX_ORDER_QUANTITY, q + 1),
+                                  )
+                                }
+                                aria-label="Increase quantity"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          <p className="mb-3 text-xs text-ink-muted">
+                            {quantity} × {formatTaka(menu.price)} ={" "}
+                            <span className="font-semibold text-spice">
+                              {formatTaka(menu.price * quantity)}
+                            </span>
+                          </p>
                           <Textarea
                             placeholder="Optional note (extra spicy, no onion…)"
                             value={note}
@@ -241,6 +288,7 @@ export function TodayMenu() {
                               onClick={() =>
                                 create.mutate({
                                   dailyMenuId: menu.id,
+                                  quantity,
                                   note: note || undefined,
                                 })
                               }
@@ -253,7 +301,10 @@ export function TodayMenu() {
                             <Button
                               variant="ghost"
                               type="button"
-                              onClick={() => setOrderedId(null)}
+                              onClick={() => {
+                                setOrderedId(null);
+                                setQuantity(1);
+                              }}
                             >
                               Back
                             </Button>
@@ -268,7 +319,11 @@ export function TodayMenu() {
                         <Button
                           type="button"
                           className="w-full"
-                          onClick={() => setOrderedId(menu.id)}
+                          onClick={() => {
+                            setOrderedId(menu.id);
+                            setQuantity(1);
+                            setNote("");
+                          }}
                         >
                           <ShoppingBag className="h-4 w-4" />
                           Order this meal

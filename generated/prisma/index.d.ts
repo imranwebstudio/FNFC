@@ -12839,10 +12839,12 @@ export namespace Prisma {
   }
 
   export type OrderAvgAggregateOutputType = {
+    quantity: number | null
     amount: number | null
   }
 
   export type OrderSumAggregateOutputType = {
+    quantity: number | null
     amount: number | null
   }
 
@@ -12851,6 +12853,7 @@ export namespace Prisma {
     userId: string | null
     dailyMenuId: string | null
     locationId: string | null
+    quantity: number | null
     amount: number | null
     note: string | null
     status: $Enums.OrderStatus | null
@@ -12867,6 +12870,7 @@ export namespace Prisma {
     userId: string | null
     dailyMenuId: string | null
     locationId: string | null
+    quantity: number | null
     amount: number | null
     note: string | null
     status: $Enums.OrderStatus | null
@@ -12883,6 +12887,7 @@ export namespace Prisma {
     userId: number
     dailyMenuId: number
     locationId: number
+    quantity: number
     amount: number
     note: number
     status: number
@@ -12897,10 +12902,12 @@ export namespace Prisma {
 
 
   export type OrderAvgAggregateInputType = {
+    quantity?: true
     amount?: true
   }
 
   export type OrderSumAggregateInputType = {
+    quantity?: true
     amount?: true
   }
 
@@ -12909,6 +12916,7 @@ export namespace Prisma {
     userId?: true
     dailyMenuId?: true
     locationId?: true
+    quantity?: true
     amount?: true
     note?: true
     status?: true
@@ -12925,6 +12933,7 @@ export namespace Prisma {
     userId?: true
     dailyMenuId?: true
     locationId?: true
+    quantity?: true
     amount?: true
     note?: true
     status?: true
@@ -12941,6 +12950,7 @@ export namespace Prisma {
     userId?: true
     dailyMenuId?: true
     locationId?: true
+    quantity?: true
     amount?: true
     note?: true
     status?: true
@@ -13044,6 +13054,7 @@ export namespace Prisma {
     userId: string
     dailyMenuId: string
     locationId: string
+    quantity: number
     amount: number
     note: string | null
     status: $Enums.OrderStatus
@@ -13079,6 +13090,7 @@ export namespace Prisma {
     userId?: boolean
     dailyMenuId?: boolean
     locationId?: boolean
+    quantity?: boolean
     amount?: boolean
     note?: boolean
     status?: boolean
@@ -13101,6 +13113,7 @@ export namespace Prisma {
     userId?: boolean
     dailyMenuId?: boolean
     locationId?: boolean
+    quantity?: boolean
     amount?: boolean
     note?: boolean
     status?: boolean
@@ -13121,6 +13134,7 @@ export namespace Prisma {
     userId?: boolean
     dailyMenuId?: boolean
     locationId?: boolean
+    quantity?: boolean
     amount?: boolean
     note?: boolean
     status?: boolean
@@ -13141,6 +13155,7 @@ export namespace Prisma {
     userId?: boolean
     dailyMenuId?: boolean
     locationId?: boolean
+    quantity?: boolean
     amount?: boolean
     note?: boolean
     status?: boolean
@@ -13152,7 +13167,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "dailyMenuId" | "locationId" | "amount" | "note" | "status" | "paymentStatus" | "deliveredAt" | "paidAt" | "placedById" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
+  export type OrderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "dailyMenuId" | "locationId" | "quantity" | "amount" | "note" | "status" | "paymentStatus" | "deliveredAt" | "paidAt" | "placedById" | "createdAt" | "updatedAt", ExtArgs["result"]["order"]>
   export type OrderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     placedBy?: boolean | Order$placedByArgs<ExtArgs>
@@ -13188,6 +13203,10 @@ export namespace Prisma {
       userId: string
       dailyMenuId: string
       locationId: string
+      /**
+       * Number of meals in this order (unit price × quantity = amount)
+       */
+      quantity: number
       amount: number
       note: string | null
       status: $Enums.OrderStatus
@@ -13632,6 +13651,7 @@ export namespace Prisma {
     readonly userId: FieldRef<"Order", 'String'>
     readonly dailyMenuId: FieldRef<"Order", 'String'>
     readonly locationId: FieldRef<"Order", 'String'>
+    readonly quantity: FieldRef<"Order", 'Int'>
     readonly amount: FieldRef<"Order", 'Int'>
     readonly note: FieldRef<"Order", 'String'>
     readonly status: FieldRef<"Order", 'OrderStatus'>
@@ -15459,6 +15479,7 @@ export namespace Prisma {
     userId: 'userId',
     dailyMenuId: 'dailyMenuId',
     locationId: 'locationId',
+    quantity: 'quantity',
     amount: 'amount',
     note: 'note',
     status: 'status',
@@ -16439,6 +16460,7 @@ export namespace Prisma {
     userId?: StringFilter<"Order"> | string
     dailyMenuId?: StringFilter<"Order"> | string
     locationId?: StringFilter<"Order"> | string
+    quantity?: IntFilter<"Order"> | number
     amount?: IntFilter<"Order"> | number
     note?: StringNullableFilter<"Order"> | string | null
     status?: EnumOrderStatusFilter<"Order"> | $Enums.OrderStatus
@@ -16460,6 +16482,7 @@ export namespace Prisma {
     userId?: SortOrder
     dailyMenuId?: SortOrder
     locationId?: SortOrder
+    quantity?: SortOrder
     amount?: SortOrder
     note?: SortOrderInput | SortOrder
     status?: SortOrder
@@ -16484,6 +16507,7 @@ export namespace Prisma {
     userId?: StringFilter<"Order"> | string
     dailyMenuId?: StringFilter<"Order"> | string
     locationId?: StringFilter<"Order"> | string
+    quantity?: IntFilter<"Order"> | number
     amount?: IntFilter<"Order"> | number
     note?: StringNullableFilter<"Order"> | string | null
     status?: EnumOrderStatusFilter<"Order"> | $Enums.OrderStatus
@@ -16505,6 +16529,7 @@ export namespace Prisma {
     userId?: SortOrder
     dailyMenuId?: SortOrder
     locationId?: SortOrder
+    quantity?: SortOrder
     amount?: SortOrder
     note?: SortOrderInput | SortOrder
     status?: SortOrder
@@ -16529,6 +16554,7 @@ export namespace Prisma {
     userId?: StringWithAggregatesFilter<"Order"> | string
     dailyMenuId?: StringWithAggregatesFilter<"Order"> | string
     locationId?: StringWithAggregatesFilter<"Order"> | string
+    quantity?: IntWithAggregatesFilter<"Order"> | number
     amount?: IntWithAggregatesFilter<"Order"> | number
     note?: StringNullableWithAggregatesFilter<"Order"> | string | null
     status?: EnumOrderStatusWithAggregatesFilter<"Order"> | $Enums.OrderStatus
@@ -17449,6 +17475,7 @@ export namespace Prisma {
 
   export type OrderCreateInput = {
     id?: string
+    quantity?: number
     amount: number
     note?: string | null
     status?: $Enums.OrderStatus
@@ -17469,6 +17496,7 @@ export namespace Prisma {
     userId: string
     dailyMenuId: string
     locationId: string
+    quantity?: number
     amount: number
     note?: string | null
     status?: $Enums.OrderStatus
@@ -17483,6 +17511,7 @@ export namespace Prisma {
 
   export type OrderUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
     amount?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -17503,6 +17532,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     dailyMenuId?: StringFieldUpdateOperationsInput | string
     locationId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
     amount?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -17520,6 +17550,7 @@ export namespace Prisma {
     userId: string
     dailyMenuId: string
     locationId: string
+    quantity?: number
     amount: number
     note?: string | null
     status?: $Enums.OrderStatus
@@ -17533,6 +17564,7 @@ export namespace Prisma {
 
   export type OrderUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
     amount?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -17548,6 +17580,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     dailyMenuId?: StringFieldUpdateOperationsInput | string
     locationId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
     amount?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -18422,6 +18455,7 @@ export namespace Prisma {
     userId?: SortOrder
     dailyMenuId?: SortOrder
     locationId?: SortOrder
+    quantity?: SortOrder
     amount?: SortOrder
     note?: SortOrder
     status?: SortOrder
@@ -18434,6 +18468,7 @@ export namespace Prisma {
   }
 
   export type OrderAvgOrderByAggregateInput = {
+    quantity?: SortOrder
     amount?: SortOrder
   }
 
@@ -18442,6 +18477,7 @@ export namespace Prisma {
     userId?: SortOrder
     dailyMenuId?: SortOrder
     locationId?: SortOrder
+    quantity?: SortOrder
     amount?: SortOrder
     note?: SortOrder
     status?: SortOrder
@@ -18458,6 +18494,7 @@ export namespace Prisma {
     userId?: SortOrder
     dailyMenuId?: SortOrder
     locationId?: SortOrder
+    quantity?: SortOrder
     amount?: SortOrder
     note?: SortOrder
     status?: SortOrder
@@ -18470,6 +18507,7 @@ export namespace Prisma {
   }
 
   export type OrderSumOrderByAggregateInput = {
+    quantity?: SortOrder
     amount?: SortOrder
   }
 
@@ -20278,6 +20316,7 @@ export namespace Prisma {
 
   export type OrderCreateWithoutUserInput = {
     id?: string
+    quantity?: number
     amount: number
     note?: string | null
     status?: $Enums.OrderStatus
@@ -20296,6 +20335,7 @@ export namespace Prisma {
     id?: string
     dailyMenuId: string
     locationId: string
+    quantity?: number
     amount: number
     note?: string | null
     status?: $Enums.OrderStatus
@@ -20320,6 +20360,7 @@ export namespace Prisma {
 
   export type OrderCreateWithoutPlacedByInput = {
     id?: string
+    quantity?: number
     amount: number
     note?: string | null
     status?: $Enums.OrderStatus
@@ -20339,6 +20380,7 @@ export namespace Prisma {
     userId: string
     dailyMenuId: string
     locationId: string
+    quantity?: number
     amount: number
     note?: string | null
     status?: $Enums.OrderStatus
@@ -20575,6 +20617,7 @@ export namespace Prisma {
     userId?: StringFilter<"Order"> | string
     dailyMenuId?: StringFilter<"Order"> | string
     locationId?: StringFilter<"Order"> | string
+    quantity?: IntFilter<"Order"> | number
     amount?: IntFilter<"Order"> | number
     note?: StringNullableFilter<"Order"> | string | null
     status?: EnumOrderStatusFilter<"Order"> | $Enums.OrderStatus
@@ -20819,6 +20862,7 @@ export namespace Prisma {
 
   export type OrderCreateWithoutLocationInput = {
     id?: string
+    quantity?: number
     amount: number
     note?: string | null
     status?: $Enums.OrderStatus
@@ -20837,6 +20881,7 @@ export namespace Prisma {
     id?: string
     userId: string
     dailyMenuId: string
+    quantity?: number
     amount: number
     note?: string | null
     status?: $Enums.OrderStatus
@@ -21618,6 +21663,7 @@ export namespace Prisma {
 
   export type OrderCreateWithoutDailyMenuInput = {
     id?: string
+    quantity?: number
     amount: number
     note?: string | null
     status?: $Enums.OrderStatus
@@ -21636,6 +21682,7 @@ export namespace Prisma {
     id?: string
     userId: string
     locationId: string
+    quantity?: number
     amount: number
     note?: string | null
     status?: $Enums.OrderStatus
@@ -22308,6 +22355,7 @@ export namespace Prisma {
 
   export type OrderCreateWithoutWalletTxsInput = {
     id?: string
+    quantity?: number
     amount: number
     note?: string | null
     status?: $Enums.OrderStatus
@@ -22327,6 +22375,7 @@ export namespace Prisma {
     userId: string
     dailyMenuId: string
     locationId: string
+    quantity?: number
     amount: number
     note?: string | null
     status?: $Enums.OrderStatus
@@ -22480,6 +22529,7 @@ export namespace Prisma {
 
   export type OrderUpdateWithoutWalletTxsInput = {
     id?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
     amount?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -22499,6 +22549,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     dailyMenuId?: StringFieldUpdateOperationsInput | string
     locationId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
     amount?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -22605,6 +22656,7 @@ export namespace Prisma {
     id?: string
     dailyMenuId: string
     locationId: string
+    quantity?: number
     amount: number
     note?: string | null
     status?: $Enums.OrderStatus
@@ -22621,6 +22673,7 @@ export namespace Prisma {
     userId: string
     dailyMenuId: string
     locationId: string
+    quantity?: number
     amount: number
     note?: string | null
     status?: $Enums.OrderStatus
@@ -22733,6 +22786,7 @@ export namespace Prisma {
 
   export type OrderUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
     amount?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -22751,6 +22805,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     dailyMenuId?: StringFieldUpdateOperationsInput | string
     locationId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
     amount?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -22767,6 +22822,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     dailyMenuId?: StringFieldUpdateOperationsInput | string
     locationId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
     amount?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -22780,6 +22836,7 @@ export namespace Prisma {
 
   export type OrderUpdateWithoutPlacedByInput = {
     id?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
     amount?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -22799,6 +22856,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     dailyMenuId?: StringFieldUpdateOperationsInput | string
     locationId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
     amount?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -22815,6 +22873,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     dailyMenuId?: StringFieldUpdateOperationsInput | string
     locationId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
     amount?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -22950,6 +23009,7 @@ export namespace Prisma {
     id?: string
     userId: string
     dailyMenuId: string
+    quantity?: number
     amount: number
     note?: string | null
     status?: $Enums.OrderStatus
@@ -23146,6 +23206,7 @@ export namespace Prisma {
 
   export type OrderUpdateWithoutLocationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
     amount?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -23164,6 +23225,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     dailyMenuId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
     amount?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -23180,6 +23242,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     dailyMenuId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
     amount?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -23385,6 +23448,7 @@ export namespace Prisma {
     id?: string
     userId: string
     locationId: string
+    quantity?: number
     amount: number
     note?: string | null
     status?: $Enums.OrderStatus
@@ -23398,6 +23462,7 @@ export namespace Prisma {
 
   export type OrderUpdateWithoutDailyMenuInput = {
     id?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
     amount?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -23416,6 +23481,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     locationId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
     amount?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
@@ -23432,6 +23498,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     locationId?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
     amount?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus

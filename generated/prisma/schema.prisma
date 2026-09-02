@@ -226,6 +226,8 @@ model Order {
   userId        String
   dailyMenuId   String
   locationId    String
+  /// Number of meals in this order (unit price × quantity = amount)
+  quantity      Int           @default(1)
   amount        Int
   note          String?
   status        OrderStatus   @default(PLACED)

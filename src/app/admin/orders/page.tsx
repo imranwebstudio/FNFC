@@ -26,6 +26,7 @@ import {
   formatTaka,
   todayDateString,
 } from "~/lib/datetime";
+import { MAX_ORDER_QUANTITY } from "~/lib/order-quantity";
 import { api } from "~/trpc/react";
 import { showSuccess } from "~/lib/swal";
 
@@ -40,6 +41,7 @@ export default function AdminOrdersPage() {
   const [behalfDate, setBehalfDate] = useState(todayDateString());
   const [behalfUserId, setBehalfUserId] = useState("");
   const [behalfMenuId, setBehalfMenuId] = useState("");
+  const [behalfQuantity, setBehalfQuantity] = useState(1);
   const [behalfNote, setBehalfNote] = useState("Phone order");
   const [behalfMsg, setBehalfMsg] = useState<string | null>(null);
   const [behalfOk, setBehalfOk] = useState(false);
@@ -88,6 +90,7 @@ export default function AdminOrdersPage() {
       setBehalfOk(true);
       setBehalfMsg(`Order placed for ${formatMenuDateLabel(behalfDate)}`);
       setBehalfMenuId("");
+      setBehalfQuantity(1);
       setBehalfNote("Phone order");
       await utils.order.listForAdmin.invalidate();
       await utils.admin.listUsers.invalidate();
@@ -157,6 +160,7 @@ export default function AdminOrdersPage() {
             createForUser.mutate({
               userId: behalfUserId,
               dailyMenuId: behalfMenuId,
+              quantity: behalfQuantity,
               note: behalfNote.trim() || undefined,
             });
           }}
@@ -249,6 +253,26 @@ export default function AdminOrdersPage() {
               </p>
             ) : null}
           </div>
+          <div>
+            <Label>Quantity</Label>
+            <Input
+              type="number"
+              min={1}
+              max={MAX_ORDER_QUANTITY}
+              value={behalfQuantity}
+              onChange={(e) => {
+                const parsed = Number(e.target.value);
+                if (!Number.isFinite(parsed)) return;
+                setBehalfQuantity(
+                  Math.min(
+                    MAX_ORDER_QUANTITY,
+                    Math.max(1, Math.floor(parsed)),
+                  ),
+                );
+              }}
+              required
+            />
+          </div>
           <div className="sm:col-span-2">
             <Label>Note</Label>
             <Input
@@ -325,6 +349,7 @@ export default function AdminOrdersPage() {
                   {o.location.name} · Bldg {o.user.buildingNumber} · Fl{" "}
                   {o.user.floorNumber} · Desk {o.user.deskNumber} ·{" "}
                   {o.dailyMenu.slot} · {o.dailyMenu.title}
+                  {o.quantity > 1 ? ` ×${o.quantity}` : ""}
                 </p>
                 {o.placedBy ? (
                   <p className="mt-1 text-[11px] text-ink-muted">

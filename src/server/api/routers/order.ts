@@ -20,12 +20,21 @@ import {
   shouldChargeWallet,
 } from "~/server/order-payment";
 import { deleteOrderRecord } from "~/server/delete-order";
+import { orderQuantitySchema } from "~/lib/order-quantity";
+
+const quantityInput = z
+  .number()
+  .int()
+  .min(orderQuantitySchema.min)
+  .max(orderQuantitySchema.max)
+  .default(1);
 
 export const orderRouter = createTRPCRouter({
   create: protectedProcedure
     .input(
       z.object({
         dailyMenuId: z.string().cuid(),
+        quantity: quantityInput,
         note: z.string().max(300).optional(),
       }),
     )
@@ -85,23 +94,18 @@ export const orderRouter = createTRPCRouter({
       const existing = await ctx.db.order.findFirst({
         where: {
           userId: user.id,
+          dailyMenuId: menu.id,
           status: { not: "CANCELLED" },
-          dailyMenu: {
-            locationId: menu.locationId,
-            date: menu.date,
-            slot: menu.slot,
-          },
         },
       });
       if (existing) {
         throw new TRPCError({
           code: "CONFLICT",
-          message:
-            existing.dailyMenuId === menu.id
-              ? "You already ordered this meal"
-              : `You already ordered a ${menu.slot.toLowerCase()} for this day — cancel it first to switch`,
+          message: "You already ordered this meal",
         });
       }
+
+      const totalAmount = menu.price * input.quantity;
 
       return ctx.db.$transaction(async (tx) => {
         if (shouldChargeWallet(user)) {
@@ -110,7 +114,8 @@ export const orderRouter = createTRPCRouter({
               userId: user.id,
               dailyMenuId: menu.id,
               locationId: menu.locationId,
-              amount: menu.price,
+              quantity: input.quantity,
+              amount: totalAmount,
               note: input.note,
               status: "PLACED",
               paymentStatus: "WALLET_CHARGED",
@@ -118,9 +123,9 @@ export const orderRouter = createTRPCRouter({
           });
           await chargeWalletForOrder(tx, {
             userId: user.id,
-            amount: menu.price,
+            amount: totalAmount,
             orderId: order.id,
-            note: `Order: ${menu.title}`,
+            note: `Order: ${menu.title}${input.quantity > 1 ? ` ×${input.quantity}` : ""}`,
           });
           return order;
         }
@@ -130,7 +135,8 @@ export const orderRouter = createTRPCRouter({
             userId: user.id,
             dailyMenuId: menu.id,
             locationId: menu.locationId,
-            amount: menu.price,
+            quantity: input.quantity,
+            amount: totalAmount,
             note: input.note,
             status: "PLACED",
             paymentStatus: "UNPAID",
@@ -145,6 +151,7 @@ export const orderRouter = createTRPCRouter({
       z.object({
         userId: z.string().cuid(),
         dailyMenuId: z.string().cuid(),
+        quantity: quantityInput,
         note: z.string().max(300).optional(),
       }),
     )
@@ -205,21 +212,14 @@ export const orderRouter = createTRPCRouter({
       const existing = await ctx.db.order.findFirst({
         where: {
           userId: target.id,
+          dailyMenuId: menu.id,
           status: { not: "CANCELLED" },
-          dailyMenu: {
-            locationId: menu.locationId,
-            date: menu.date,
-            slot: menu.slot,
-          },
         },
       });
       if (existing) {
         throw new TRPCError({
           code: "CONFLICT",
-          message:
-            existing.dailyMenuId === menu.id
-              ? "Member already ordered this meal"
-              : `Member already ordered a ${menu.slot.toLowerCase()} for this day`,
+          message: "Member already ordered this meal",
         });
       }
 
@@ -227,6 +227,7 @@ export const orderRouter = createTRPCRouter({
       const note =
         input.note?.trim() ||
         undefined;
+      const totalAmount = menu.price * input.quantity;
 
       return ctx.db.$transaction(async (tx) => {
         if (shouldChargeWallet(target)) {
@@ -235,7 +236,8 @@ export const orderRouter = createTRPCRouter({
               userId: target.id,
               dailyMenuId: menu.id,
               locationId: menu.locationId,
-              amount: menu.price,
+              quantity: input.quantity,
+              amount: totalAmount,
               note,
               status: "PLACED",
               paymentStatus: "WALLET_CHARGED",
@@ -244,10 +246,10 @@ export const orderRouter = createTRPCRouter({
           });
           await chargeWalletForOrder(tx, {
             userId: target.id,
-            amount: menu.price,
+            amount: totalAmount,
             orderId: order.id,
             createdById: placedById,
-            note: `Admin order: ${menu.title}`,
+            note: `Admin order: ${menu.title}${input.quantity > 1 ? ` ×${input.quantity}` : ""}`,
           });
           return order;
         }
@@ -257,7 +259,8 @@ export const orderRouter = createTRPCRouter({
             userId: target.id,
             dailyMenuId: menu.id,
             locationId: menu.locationId,
-            amount: menu.price,
+            quantity: input.quantity,
+            amount: totalAmount,
             note,
             status: "PLACED",
             paymentStatus: "UNPAID",

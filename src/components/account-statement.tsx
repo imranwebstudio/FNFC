@@ -84,6 +84,11 @@ function EntryRow({
               <div>
                 <p className="font-semibold tracking-tight text-ink">
                   {entry.mealTitle}
+                  {entry.quantity > 1 ? (
+                    <span className="ml-1.5 text-sm font-medium text-ink-muted">
+                      ×{entry.quantity}
+                    </span>
+                  ) : null}
                 </p>
                 <p className="mt-0.5 text-xs text-ink-muted">
                   {entry.mealSlot} · {entry.locationName} · meal day{" "}
