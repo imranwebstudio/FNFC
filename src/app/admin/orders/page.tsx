@@ -8,6 +8,7 @@ import {
   ClipboardList,
   PackageCheck,
   Phone,
+  Plus,
 } from "lucide-react";
 
 import { FoodPlateLoader } from "~/components/food-plate-loader";
@@ -45,6 +46,7 @@ export default function AdminOrdersPage() {
   const [behalfNote, setBehalfNote] = useState("Phone order");
   const [behalfMsg, setBehalfMsg] = useState<string | null>(null);
   const [behalfOk, setBehalfOk] = useState(false);
+  const [showBehalfForm, setShowBehalfForm] = useState(false);
 
   const minMealDate = todayDateString();
   const maxMealDate = addDaysToDateString(minMealDate, 42);
@@ -62,12 +64,12 @@ export default function AdminOrdersPage() {
 
   const members = api.admin.listUsers.useQuery(
     { locationId: behalfLocationId },
-    { enabled: Boolean(behalfLocationId) },
+    { enabled: Boolean(behalfLocationId && showBehalfForm) },
   );
 
   const mealOptions = api.menu.optionsForLocation.useQuery(
     { locationId: behalfLocationId, date: behalfDate },
-    { enabled: Boolean(behalfLocationId && behalfDate) },
+    { enabled: Boolean(behalfLocationId && behalfDate && showBehalfForm) },
   );
 
   const deliver = api.order.markDelivered.useMutation({
@@ -122,12 +124,42 @@ export default function AdminOrdersPage() {
         subtitle="Mark delivered when food is handed over. Confirm cash paid separately when the customer pays. Place phone orders for members below — including future days from the weekly schedule."
       />
 
-      <Panel className="mb-6">
-        <div className="mb-3 flex flex-wrap items-center gap-2">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
           <Phone className="h-4 w-4 text-leaf" strokeWidth={2.25} />
-          <h2 className="font-display text-base font-semibold">
+          <div>
+            <h2 className="font-display text-base font-semibold">
+              Order for member
+            </h2>
+            <p className="text-xs text-ink-muted">
+              Place a phone order under a member&apos;s account.
+            </p>
+          </div>
+        </div>
+        {!showBehalfForm ? (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              setShowBehalfForm(true);
+              setBehalfMsg(null);
+            }}
+          >
+            <Plus className="h-4 w-4" />
             Order for member
-          </h2>
+          </Button>
+        ) : null}
+      </div>
+
+      {showBehalfForm ? (
+      <Panel className="mb-6">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Phone className="h-4 w-4 text-leaf" strokeWidth={2.25} />
+            <h2 className="font-display text-base font-semibold">
+              Order for member
+            </h2>
+          </div>
         </div>
         <p className="mb-4 text-xs text-ink-muted">
           Record a meal under a member&apos;s account (e.g. after a phone call).
@@ -282,13 +314,28 @@ export default function AdminOrdersPage() {
               maxLength={300}
             />
           </div>
-          <div className="sm:col-span-2">
+          <div className="flex flex-wrap gap-2 sm:col-span-2">
             <Button type="submit" disabled={createForUser.isPending}>
               {createForUser.isPending ? "Placing…" : "Place order for member"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setShowBehalfForm(false);
+                setBehalfMsg(null);
+                setBehalfUserId("");
+                setBehalfMenuId("");
+                setBehalfQuantity(1);
+                setBehalfNote("Phone order");
+              }}
+            >
+              Cancel
             </Button>
           </div>
         </form>
       </Panel>
+      ) : null}
 
       <div className="mb-5 grid max-w-lg gap-3 sm:grid-cols-2">
         <div>

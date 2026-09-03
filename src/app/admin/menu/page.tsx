@@ -52,6 +52,7 @@ export default function AdminMenuPage() {
   const [date, setDate] = useState(todayDateString());
   const [endDate, setEndDate] = useState(todayDateString());
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showDatedForm, setShowDatedForm] = useState(false);
   const [msg, setMsg] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [showArchived, setShowArchived] = useState(false);
@@ -205,15 +206,25 @@ export default function AdminMenuPage() {
       setEditingId(null);
       if (!editingId) {
         setForm((f) => ({ ...emptyForm, slot: f.slot }));
+        setShowDatedForm(false);
       }
     },
     onError: (e) => setMsg(e.message),
   });
 
+  function openDatedAdd() {
+    setWeekEdit(null);
+    setEditingId(null);
+    setForm(emptyForm);
+    setShowDatedForm(true);
+    setMsg("");
+  }
+
   function openWeekAdd(weekday: WeekdayCode, slot: "LUNCH" | "DINNER") {
     setWeekEdit({ weekday, slot });
     setWeekForm(emptyWeekForm);
     setEditingId(null);
+    setShowDatedForm(false);
     setMsg("");
   }
 
@@ -231,6 +242,7 @@ export default function AdminMenuPage() {
       catalogItemId: meal.catalogItemId ?? "",
     });
     setEditingId(null);
+    setShowDatedForm(false);
     setMsg("");
   }
 
@@ -263,6 +275,7 @@ export default function AdminMenuPage() {
       return;
     }
     setEditingId(null);
+    setShowDatedForm(true);
     setForm((f) => ({
       ...f,
       catalogItemId: c.id,
@@ -279,6 +292,7 @@ export default function AdminMenuPage() {
   function startEdit(m: NonNullable<typeof daily.data>[number]) {
     setWeekEdit(null);
     setEditingId(m.id);
+    setShowDatedForm(true);
     setForm({
       slot: m.slot,
       title: m.title,
@@ -295,6 +309,7 @@ export default function AdminMenuPage() {
 
   function resetForm() {
     setEditingId(null);
+    setShowDatedForm(false);
     setForm(emptyForm);
     setMsg("");
   }
@@ -659,8 +674,26 @@ export default function AdminMenuPage() {
           </p>
         ) : null}
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Panel>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h3 className="font-display text-lg font-semibold">
+            On {date}
+            {selectedLoc ? (
+              <span className="text-sm font-normal text-ink-muted">
+                {" "}
+                · {selectedLoc.name}
+              </span>
+            ) : null}
+          </h3>
+          {!showDatedForm ? (
+            <Button type="button" variant="secondary" onClick={openDatedAdd}>
+              <Plus className="h-4 w-4" />
+              Add option
+            </Button>
+          ) : null}
+        </div>
+
+        {showDatedForm ? (
+          <Panel className="mb-6">
             <div className="mb-4 flex items-center justify-between gap-2">
               <h3 className="font-display text-lg font-semibold">
                 {editingId ? "Edit scheduled meal" : "New dated meal"}
@@ -765,25 +798,15 @@ export default function AdminMenuPage() {
                       ? "Update"
                       : "Publish"}
                 </Button>
-                {editingId ? (
-                  <Button type="button" variant="ghost" onClick={resetForm}>
-                    Cancel
-                  </Button>
-                ) : null}
+                <Button type="button" variant="ghost" onClick={resetForm}>
+                  Cancel
+                </Button>
               </div>
             </form>
           </Panel>
+        ) : null}
 
-          <div>
-            <h3 className="mb-3 font-display text-lg font-semibold">
-              On {date}
-              {selectedLoc ? (
-                <span className="text-sm font-normal text-ink-muted">
-                  {" "}
-                  · {selectedLoc.name}
-                </span>
-              ) : null}
-            </h3>
+        <div>
             {daily.isLoading ? (
               <FoodPlateLoader size="inline" label="Loading day's meals…" />
             ) : null}
@@ -858,7 +881,6 @@ export default function AdminMenuPage() {
               ))
                 : null}
             </ul>
-          </div>
         </div>
       </section>
 

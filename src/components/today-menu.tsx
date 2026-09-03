@@ -237,26 +237,24 @@ export function TodayMenu() {
                             <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
                               Quantity
                             </span>
-                            <div className="flex items-center gap-2">
-                              <Button
+                            <div className="flex items-center gap-2 rounded-2xl border border-line bg-sand/80 p-1">
+                              <button
                                 type="button"
-                                variant="ghost"
-                                className="h-9 w-9 rounded-xl px-0"
+                                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-rice text-ink transition hover:border-leaf/40 hover:bg-leaf/15 hover:text-leaf disabled:cursor-not-allowed disabled:opacity-40"
                                 disabled={quantity <= 1}
                                 onClick={() =>
                                   setQuantity((q) => Math.max(1, q - 1))
                                 }
                                 aria-label="Decrease quantity"
                               >
-                                <Minus className="h-4 w-4" />
-                              </Button>
-                              <span className="min-w-[2ch] text-center text-sm font-bold tabular-nums text-ink">
+                                <Minus className="h-5 w-5" strokeWidth={2.5} />
+                              </button>
+                              <span className="min-w-[2.5rem] text-center text-base font-bold tabular-nums text-ink">
                                 {quantity}
                               </span>
-                              <Button
+                              <button
                                 type="button"
-                                variant="ghost"
-                                className="h-9 w-9 rounded-xl px-0"
+                                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-rice text-ink transition hover:border-leaf/40 hover:bg-leaf/15 hover:text-leaf disabled:cursor-not-allowed disabled:opacity-40"
                                 disabled={quantity >= MAX_ORDER_QUANTITY}
                                 onClick={() =>
                                   setQuantity((q) =>
@@ -265,8 +263,8 @@ export function TodayMenu() {
                                 }
                                 aria-label="Increase quantity"
                               >
-                                <Plus className="h-4 w-4" />
-                              </Button>
+                                <Plus className="h-5 w-5" strokeWidth={2.5} />
+                              </button>
                             </div>
                           </div>
                           <p className="mb-3 text-xs text-ink-muted">
