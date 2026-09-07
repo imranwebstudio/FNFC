@@ -127,11 +127,14 @@ async function ensureMenusForDate(
   if (locations.length === 0) return;
 
   const ids = locations.map((l) => l.id);
-  const cutoffByLoc = new Map(
-    locations.map((l) => [l.id, normalizeCutoffTime(l.defaultCutoffTime)]),
-  );
   const dinnerByLoc = new Map(
     locations.map((l) => [l.id, l.dinnerEnabled]),
+  );
+  const cutoffAtByLoc = new Map(
+    locations.map((l) => [
+      l.id,
+      dayArchiveAt(dateStr, normalizeCutoffTime(l.defaultCutoffTime)),
+    ]),
   );
 
   const [existing, templates] = await Promise.all([
@@ -158,12 +161,15 @@ async function ensureMenusForDate(
       .filter((id): id is string => Boolean(id)),
   );
 
-  for (const t of templates) {
-    if (already.has(t.id)) continue;
-    if (t.slot === "DINNER" && !dinnerByLoc.get(t.locationId)) continue;
-    await saveDailyMenu(db, {
+  const rows = templates
+    .filter((t) => {
+      if (already.has(t.id)) return false;
+      if (t.slot === "DINNER" && !dinnerByLoc.get(t.locationId)) return false;
+      return true;
+    })
+    .map((t) => ({
       locationId: t.locationId,
-      date: dateStr,
+      date,
       slot: t.slot,
       title: t.title,
       description: t.description,
@@ -171,10 +177,59 @@ async function ensureMenusForDate(
       imageUrl: t.imageUrl,
       catalogItemId: t.catalogItemId,
       isPublished: true,
-      cutoffTime: cutoffByLoc.get(t.locationId),
+      skipped: false,
+      cutoffAt: cutoffAtByLoc.get(t.locationId) ?? dayArchiveAt(dateStr),
       sourceWeekdayMenuId: t.id,
-    });
+    }));
+
+  if (rows.length > 0) {
+    await db.dailyMenu.createMany({ data: rows, skipDuplicates: true });
   }
+}
+
+/** Push weekday template edits onto already-materialized daily rows (today+). */
+async function syncWeekdayToDailyMenus(
+  db: Db,
+  weekdayMenuId: string,
+  data: {
+    slot: "LUNCH" | "DINNER";
+    title: string;
+    description?: string | null;
+    price: number;
+    imageUrl?: string | null;
+    catalogItemId?: string | null;
+    isActive: boolean;
+  },
+) {
+  const fromDate = dhakaDateOnly(todayDateString());
+  if (!data.isActive) {
+    await db.dailyMenu.updateMany({
+      where: {
+        sourceWeekdayMenuId: weekdayMenuId,
+        date: { gte: fromDate },
+        skipped: false,
+      },
+      data: { skipped: true, isPublished: false },
+    });
+    return;
+  }
+
+  await db.dailyMenu.updateMany({
+    where: {
+      sourceWeekdayMenuId: weekdayMenuId,
+      date: { gte: fromDate },
+      skipped: false,
+    },
+    data: {
+      slot: data.slot,
+      title: data.title,
+      description: data.description,
+      price: data.price,
+      imageUrl: data.imageUrl,
+      catalogItemId: data.catalogItemId,
+      isPublished: true,
+    },
+  });
 }
 
 export const menuRouter = createTRPCRouter({
@@ -285,7 +340,7 @@ export const menuRouter = createTRPCRouter({
         if (!existing || existing.locationId !== input.locationId) {
           throw new TRPCError({ code: "NOT_FOUND" });
         }
-        return ctx.db.weekdayMenu.update({
+        const updated = await ctx.db.weekdayMenu.update({
           where: { id: input.id },
           data: {
             weekday: input.weekday,
@@ -298,6 +353,16 @@ export const menuRouter = createTRPCRouter({
             isActive: input.isActive,
           },
         });
+        await syncWeekdayToDailyMenus(ctx.db, updated.id, {
+          slot: input.slot,
+          title: input.title,
+          description: input.description,
+          price: input.price,
+          imageUrl: input.imageUrl,
+          catalogItemId: input.catalogItemId,
+          isActive: input.isActive,
+        });
+        return updated;
       }
 
       return ctx.db.weekdayMenu.create({
@@ -332,6 +397,8 @@ export const menuRouter = createTRPCRouter({
         input.locationId,
       );
 
+      const fromDate = dhakaDateOnly(todayDateString());
+
       if (input.id) {
         const existing = await ctx.db.weekdayMenu.findUnique({
           where: { id: input.id },
@@ -339,6 +406,13 @@ export const menuRouter = createTRPCRouter({
         if (!existing || existing.locationId !== input.locationId) {
           throw new TRPCError({ code: "NOT_FOUND" });
         }
+        await ctx.db.dailyMenu.updateMany({
+          where: {
+            sourceWeekdayMenuId: existing.id,
+            date: { gte: fromDate },
+          },
+          data: { skipped: true, isPublished: false },
+        });
         await ctx.db.weekdayMenu.delete({ where: { id: input.id } });
         return { ok: true as const };
       }
@@ -350,6 +424,24 @@ export const menuRouter = createTRPCRouter({
         });
       }
 
+      const templates = await ctx.db.weekdayMenu.findMany({
+        where: {
+          locationId: input.locationId,
+          weekday: input.weekday,
+          slot: input.slot,
+        },
+        select: { id: true },
+      });
+      const templateIds = templates.map((t) => t.id);
+      if (templateIds.length > 0) {
+        await ctx.db.dailyMenu.updateMany({
+          where: {
+            sourceWeekdayMenuId: { in: templateIds },
+            date: { gte: fromDate },
+          },
+          data: { skipped: true, isPublished: false },
+        });
+      }
       await ctx.db.weekdayMenu.deleteMany({
         where: {
           locationId: input.locationId,
@@ -454,6 +546,7 @@ export const menuRouter = createTRPCRouter({
           locationId: loc.id,
           date,
           isPublished: true,
+          skipped: false,
           ...(loc.dinnerEnabled ? {} : { slot: { not: "DINNER" as const } }),
         },
         include: {
@@ -522,6 +615,7 @@ export const menuRouter = createTRPCRouter({
         where: {
           locationId: input.locationId,
           date: dhakaDateOnly(dateStr),
+          skipped: false,
         },
         include: {
           _count: {
@@ -683,7 +777,17 @@ export const menuRouter = createTRPCRouter({
           message: "Cannot delete a meal that already has orders — unpublish instead",
         });
       }
-      await ctx.db.dailyMenu.delete({ where: { id: input.id } });
+
+      // Weekday-sourced rows are recreated by ensureMenusForDate unless we keep
+      // a skipped placeholder for that template+date.
+      if (existing.sourceWeekdayMenuId) {
+        await ctx.db.dailyMenu.update({
+          where: { id: input.id },
+          data: { skipped: true, isPublished: false },
+        });
+      } else {
+        await ctx.db.dailyMenu.delete({ where: { id: input.id } });
+      }
       return { ok: true as const };
     }),
 
@@ -732,6 +836,7 @@ export const menuRouter = createTRPCRouter({
           locationId: input.locationId,
           date: dhakaDateOnly(dateStr),
           isPublished: true,
+          skipped: false,
           ...(loc.dinnerEnabled ? {} : { slot: { not: "DINNER" as const } }),
         },
         orderBy: [{ slot: "asc" }, { createdAt: "asc" }],

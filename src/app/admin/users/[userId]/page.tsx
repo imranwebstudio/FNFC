@@ -10,7 +10,7 @@ import {
 } from "~/components/account-statement";
 import { FoodPlateLoader } from "~/components/food-plate-loader";
 import { Badge, Button, PageTitle, Panel } from "~/components/ui";
-import { formatTaka } from "~/lib/datetime";
+import { formatBalanceLabel, formatTaka } from "~/lib/datetime";
 import { confirmAction, promptBalanceEdit, promptPhoneEdit, showSuccess } from "~/lib/swal";
 import { api } from "~/trpc/react";
 
@@ -167,11 +167,26 @@ export default function AdminUserStatementPage({
               ) : null}
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Badge>{statement.data.user.paymentMode}</Badge>
-              <Badge tone="neutral">
-                Bal {formatTaka(statement.data.user.balance)}
+              <Badge
+                tone={
+                  statement.data.user.customerType === "REGULAR"
+                    ? "good"
+                    : "neutral"
+                }
+              >
+                {statement.data.user.customerType === "REGULAR"
+                  ? "Regular"
+                  : "One-time"}
               </Badge>
-              {user ? (
+              {(() => {
+                const bal = formatBalanceLabel(statement.data.user.balance);
+                return (
+                  <Badge tone={bal.isDue ? "bad" : "neutral"}>
+                    {bal.isDue ? bal.text : `Bal ${bal.text}`}
+                  </Badge>
+                );
+              })()}
+              {user && user.customerType === "REGULAR" ? (
                 <Button
                   type="button"
                   variant="secondary"

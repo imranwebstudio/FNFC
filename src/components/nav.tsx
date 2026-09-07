@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 import { SignOutButton } from "~/components/sign-out-button";
-import { formatTaka } from "~/lib/datetime";
+import { formatBalanceLabel } from "~/lib/datetime";
 
 type NavUser = {
   name?: string | null;
@@ -33,7 +33,7 @@ export function AppNav({
   appName: string;
 }) {
   const pathname = usePathname();
-  const due = Math.max(0, -user.balance);
+  const balanceLabel = formatBalanceLabel(user.balance);
   const isAdmin = user.role === "ADMIN" || user.role === "SUPER_ADMIN";
 
   const navLinks: NavLink[] = isAdmin
@@ -88,10 +88,12 @@ export function AppNav({
           {user.profileComplete ? (
             <div className="hidden text-right text-xs sm:block">
               <div className="font-semibold text-ink">{user.name}</div>
-              <div className="text-ink-muted">
-                {due > 0
-                  ? `Due ${formatTaka(due)}`
-                  : `Bal ${formatTaka(user.balance)}`}
+              <div
+                className={
+                  balanceLabel.isDue ? "font-semibold text-red-400" : "text-ink-muted"
+                }
+              >
+                {balanceLabel.text}
               </div>
             </div>
           ) : null}

@@ -90,6 +90,14 @@ export const PaymentMode: {
 export type PaymentMode = (typeof PaymentMode)[keyof typeof PaymentMode]
 
 
+export const CustomerType: {
+  REGULAR: 'REGULAR',
+  ONE_TIME: 'ONE_TIME'
+};
+
+export type CustomerType = (typeof CustomerType)[keyof typeof CustomerType]
+
+
 export const MealSlot: {
   LUNCH: 'LUNCH',
   DINNER: 'DINNER'
@@ -110,7 +118,8 @@ export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus]
 export const PaymentStatus: {
   UNPAID: 'UNPAID',
   PAID: 'PAID',
-  WALLET_CHARGED: 'WALLET_CHARGED'
+  WALLET_CHARGED: 'WALLET_CHARGED',
+  DUE: 'DUE'
 };
 
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus]
@@ -147,6 +156,10 @@ export const Role: typeof $Enums.Role
 export type PaymentMode = $Enums.PaymentMode
 
 export const PaymentMode: typeof $Enums.PaymentMode
+
+export type CustomerType = $Enums.CustomerType
+
+export const CustomerType: typeof $Enums.CustomerType
 
 export type MealSlot = $Enums.MealSlot
 
@@ -5402,6 +5415,7 @@ export namespace Prisma {
     floorNumber: string | null
     locationId: string | null
     paymentMode: $Enums.PaymentMode | null
+    customerType: $Enums.CustomerType | null
     balance: number | null
     profileComplete: boolean | null
     isBanned: boolean | null
@@ -5423,6 +5437,7 @@ export namespace Prisma {
     floorNumber: string | null
     locationId: string | null
     paymentMode: $Enums.PaymentMode | null
+    customerType: $Enums.CustomerType | null
     balance: number | null
     profileComplete: boolean | null
     isBanned: boolean | null
@@ -5444,6 +5459,7 @@ export namespace Prisma {
     floorNumber: number
     locationId: number
     paymentMode: number
+    customerType: number
     balance: number
     profileComplete: number
     isBanned: number
@@ -5475,6 +5491,7 @@ export namespace Prisma {
     floorNumber?: true
     locationId?: true
     paymentMode?: true
+    customerType?: true
     balance?: true
     profileComplete?: true
     isBanned?: true
@@ -5496,6 +5513,7 @@ export namespace Prisma {
     floorNumber?: true
     locationId?: true
     paymentMode?: true
+    customerType?: true
     balance?: true
     profileComplete?: true
     isBanned?: true
@@ -5517,6 +5535,7 @@ export namespace Prisma {
     floorNumber?: true
     locationId?: true
     paymentMode?: true
+    customerType?: true
     balance?: true
     profileComplete?: true
     isBanned?: true
@@ -5625,6 +5644,7 @@ export namespace Prisma {
     floorNumber: string | null
     locationId: string | null
     paymentMode: $Enums.PaymentMode
+    customerType: $Enums.CustomerType
     balance: number
     profileComplete: boolean
     isBanned: boolean
@@ -5665,6 +5685,7 @@ export namespace Prisma {
     floorNumber?: boolean
     locationId?: boolean
     paymentMode?: boolean
+    customerType?: boolean
     balance?: boolean
     profileComplete?: boolean
     isBanned?: boolean
@@ -5695,6 +5716,7 @@ export namespace Prisma {
     floorNumber?: boolean
     locationId?: boolean
     paymentMode?: boolean
+    customerType?: boolean
     balance?: boolean
     profileComplete?: boolean
     isBanned?: boolean
@@ -5717,6 +5739,7 @@ export namespace Prisma {
     floorNumber?: boolean
     locationId?: boolean
     paymentMode?: boolean
+    customerType?: boolean
     balance?: boolean
     profileComplete?: boolean
     isBanned?: boolean
@@ -5739,6 +5762,7 @@ export namespace Prisma {
     floorNumber?: boolean
     locationId?: boolean
     paymentMode?: boolean
+    customerType?: boolean
     balance?: boolean
     profileComplete?: boolean
     isBanned?: boolean
@@ -5746,7 +5770,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "role" | "employeeId" | "phoneNumber" | "deskNumber" | "buildingNumber" | "floorNumber" | "locationId" | "paymentMode" | "balance" | "profileComplete" | "isBanned" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "role" | "employeeId" | "phoneNumber" | "deskNumber" | "buildingNumber" | "floorNumber" | "locationId" | "paymentMode" | "customerType" | "balance" | "profileComplete" | "isBanned" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     location?: boolean | User$locationArgs<ExtArgs>
     accounts?: boolean | User$accountsArgs<ExtArgs>
@@ -5791,6 +5815,7 @@ export namespace Prisma {
       floorNumber: string | null
       locationId: string | null
       paymentMode: $Enums.PaymentMode
+      customerType: $Enums.CustomerType
       /**
        * Balance in integer taka; may be negative (due)
        */
@@ -6243,6 +6268,7 @@ export namespace Prisma {
     readonly floorNumber: FieldRef<"User", 'String'>
     readonly locationId: FieldRef<"User", 'String'>
     readonly paymentMode: FieldRef<"User", 'PaymentMode'>
+    readonly customerType: FieldRef<"User", 'CustomerType'>
     readonly balance: FieldRef<"User", 'Int'>
     readonly profileComplete: FieldRef<"User", 'Boolean'>
     readonly isBanned: FieldRef<"User", 'Boolean'>
@@ -11560,6 +11586,7 @@ export namespace Prisma {
     sourceWeekdayMenuId: string | null
     cutoffAt: Date | null
     isPublished: boolean | null
+    skipped: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -11577,6 +11604,7 @@ export namespace Prisma {
     sourceWeekdayMenuId: string | null
     cutoffAt: Date | null
     isPublished: boolean | null
+    skipped: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -11594,6 +11622,7 @@ export namespace Prisma {
     sourceWeekdayMenuId: number
     cutoffAt: number
     isPublished: number
+    skipped: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -11621,6 +11650,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: true
     cutoffAt?: true
     isPublished?: true
+    skipped?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -11638,6 +11668,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: true
     cutoffAt?: true
     isPublished?: true
+    skipped?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -11655,6 +11686,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: true
     cutoffAt?: true
     isPublished?: true
+    skipped?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -11759,6 +11791,7 @@ export namespace Prisma {
     sourceWeekdayMenuId: string | null
     cutoffAt: Date | null
     isPublished: boolean
+    skipped: boolean
     createdAt: Date
     updatedAt: Date
     _count: DailyMenuCountAggregateOutputType | null
@@ -11795,6 +11828,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: boolean
     cutoffAt?: boolean
     isPublished?: boolean
+    skipped?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     location?: boolean | LocationDefaultArgs<ExtArgs>
@@ -11817,6 +11851,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: boolean
     cutoffAt?: boolean
     isPublished?: boolean
+    skipped?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     location?: boolean | LocationDefaultArgs<ExtArgs>
@@ -11837,6 +11872,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: boolean
     cutoffAt?: boolean
     isPublished?: boolean
+    skipped?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     location?: boolean | LocationDefaultArgs<ExtArgs>
@@ -11857,11 +11893,12 @@ export namespace Prisma {
     sourceWeekdayMenuId?: boolean
     cutoffAt?: boolean
     isPublished?: boolean
+    skipped?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type DailyMenuOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "locationId" | "date" | "slot" | "title" | "description" | "price" | "imageUrl" | "catalogItemId" | "sourceWeekdayMenuId" | "cutoffAt" | "isPublished" | "createdAt" | "updatedAt", ExtArgs["result"]["dailyMenu"]>
+  export type DailyMenuOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "locationId" | "date" | "slot" | "title" | "description" | "price" | "imageUrl" | "catalogItemId" | "sourceWeekdayMenuId" | "cutoffAt" | "isPublished" | "skipped" | "createdAt" | "updatedAt", ExtArgs["result"]["dailyMenu"]>
   export type DailyMenuInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     location?: boolean | LocationDefaultArgs<ExtArgs>
     catalogItem?: boolean | DailyMenu$catalogItemArgs<ExtArgs>
@@ -11907,6 +11944,10 @@ export namespace Prisma {
        */
       cutoffAt: Date | null
       isPublished: boolean
+      /**
+       * Hidden for this date only (keeps weekday template from regenerating the row)
+       */
+      skipped: boolean
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["dailyMenu"]>
@@ -12348,6 +12389,7 @@ export namespace Prisma {
     readonly sourceWeekdayMenuId: FieldRef<"DailyMenu", 'String'>
     readonly cutoffAt: FieldRef<"DailyMenu", 'DateTime'>
     readonly isPublished: FieldRef<"DailyMenu", 'Boolean'>
+    readonly skipped: FieldRef<"DailyMenu", 'Boolean'>
     readonly createdAt: FieldRef<"DailyMenu", 'DateTime'>
     readonly updatedAt: FieldRef<"DailyMenu", 'DateTime'>
   }
@@ -15389,6 +15431,7 @@ export namespace Prisma {
     floorNumber: 'floorNumber',
     locationId: 'locationId',
     paymentMode: 'paymentMode',
+    customerType: 'customerType',
     balance: 'balance',
     profileComplete: 'profileComplete',
     isBanned: 'isBanned',
@@ -15467,6 +15510,7 @@ export namespace Prisma {
     sourceWeekdayMenuId: 'sourceWeekdayMenuId',
     cutoffAt: 'cutoffAt',
     isPublished: 'isPublished',
+    skipped: 'skipped',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -15605,6 +15649,20 @@ export namespace Prisma {
    * Reference to a field of type 'PaymentMode[]'
    */
   export type ListEnumPaymentModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentMode[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'CustomerType'
+   */
+  export type EnumCustomerTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CustomerType'>
+    
+
+
+  /**
+   * Reference to a field of type 'CustomerType[]'
+   */
+  export type ListEnumCustomerTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CustomerType[]'>
     
 
 
@@ -15910,6 +15968,7 @@ export namespace Prisma {
     floorNumber?: StringNullableFilter<"User"> | string | null
     locationId?: StringNullableFilter<"User"> | string | null
     paymentMode?: EnumPaymentModeFilter<"User"> | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFilter<"User"> | $Enums.CustomerType
     balance?: IntFilter<"User"> | number
     profileComplete?: BoolFilter<"User"> | boolean
     isBanned?: BoolFilter<"User"> | boolean
@@ -15939,6 +15998,7 @@ export namespace Prisma {
     floorNumber?: SortOrderInput | SortOrder
     locationId?: SortOrderInput | SortOrder
     paymentMode?: SortOrder
+    customerType?: SortOrder
     balance?: SortOrder
     profileComplete?: SortOrder
     isBanned?: SortOrder
@@ -15971,6 +16031,7 @@ export namespace Prisma {
     floorNumber?: StringNullableFilter<"User"> | string | null
     locationId?: StringNullableFilter<"User"> | string | null
     paymentMode?: EnumPaymentModeFilter<"User"> | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFilter<"User"> | $Enums.CustomerType
     balance?: IntFilter<"User"> | number
     profileComplete?: BoolFilter<"User"> | boolean
     isBanned?: BoolFilter<"User"> | boolean
@@ -16000,6 +16061,7 @@ export namespace Prisma {
     floorNumber?: SortOrderInput | SortOrder
     locationId?: SortOrderInput | SortOrder
     paymentMode?: SortOrder
+    customerType?: SortOrder
     balance?: SortOrder
     profileComplete?: SortOrder
     isBanned?: SortOrder
@@ -16029,6 +16091,7 @@ export namespace Prisma {
     floorNumber?: StringNullableWithAggregatesFilter<"User"> | string | null
     locationId?: StringNullableWithAggregatesFilter<"User"> | string | null
     paymentMode?: EnumPaymentModeWithAggregatesFilter<"User"> | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeWithAggregatesFilter<"User"> | $Enums.CustomerType
     balance?: IntWithAggregatesFilter<"User"> | number
     profileComplete?: BoolWithAggregatesFilter<"User"> | boolean
     isBanned?: BoolWithAggregatesFilter<"User"> | boolean
@@ -16356,6 +16419,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: StringNullableFilter<"DailyMenu"> | string | null
     cutoffAt?: DateTimeNullableFilter<"DailyMenu"> | Date | string | null
     isPublished?: BoolFilter<"DailyMenu"> | boolean
+    skipped?: BoolFilter<"DailyMenu"> | boolean
     createdAt?: DateTimeFilter<"DailyMenu"> | Date | string
     updatedAt?: DateTimeFilter<"DailyMenu"> | Date | string
     location?: XOR<LocationScalarRelationFilter, LocationWhereInput>
@@ -16377,6 +16441,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: SortOrderInput | SortOrder
     cutoffAt?: SortOrderInput | SortOrder
     isPublished?: SortOrder
+    skipped?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     location?: LocationOrderByWithRelationInput
@@ -16402,6 +16467,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: StringNullableFilter<"DailyMenu"> | string | null
     cutoffAt?: DateTimeNullableFilter<"DailyMenu"> | Date | string | null
     isPublished?: BoolFilter<"DailyMenu"> | boolean
+    skipped?: BoolFilter<"DailyMenu"> | boolean
     createdAt?: DateTimeFilter<"DailyMenu"> | Date | string
     updatedAt?: DateTimeFilter<"DailyMenu"> | Date | string
     location?: XOR<LocationScalarRelationFilter, LocationWhereInput>
@@ -16423,6 +16489,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: SortOrderInput | SortOrder
     cutoffAt?: SortOrderInput | SortOrder
     isPublished?: SortOrder
+    skipped?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: DailyMenuCountOrderByAggregateInput
@@ -16448,6 +16515,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: StringNullableWithAggregatesFilter<"DailyMenu"> | string | null
     cutoffAt?: DateTimeNullableWithAggregatesFilter<"DailyMenu"> | Date | string | null
     isPublished?: BoolWithAggregatesFilter<"DailyMenu"> | boolean
+    skipped?: BoolWithAggregatesFilter<"DailyMenu"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"DailyMenu"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"DailyMenu"> | Date | string
   }
@@ -16863,6 +16931,7 @@ export namespace Prisma {
     buildingNumber?: string | null
     floorNumber?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -16892,6 +16961,7 @@ export namespace Prisma {
     floorNumber?: string | null
     locationId?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -16919,6 +16989,7 @@ export namespace Prisma {
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -16948,6 +17019,7 @@ export namespace Prisma {
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     locationId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -16976,6 +17048,7 @@ export namespace Prisma {
     floorNumber?: string | null
     locationId?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -16996,6 +17069,7 @@ export namespace Prisma {
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -17017,6 +17091,7 @@ export namespace Prisma {
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     locationId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -17363,6 +17438,7 @@ export namespace Prisma {
     imageUrl?: string | null
     cutoffAt?: Date | string | null
     isPublished?: boolean
+    skipped?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     location: LocationCreateNestedOneWithoutDailyMenusInput
@@ -17384,6 +17460,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: string | null
     cutoffAt?: Date | string | null
     isPublished?: boolean
+    skipped?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutDailyMenuInput
@@ -17399,6 +17476,7 @@ export namespace Prisma {
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     cutoffAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
+    skipped?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     location?: LocationUpdateOneRequiredWithoutDailyMenusNestedInput
@@ -17420,6 +17498,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: NullableStringFieldUpdateOperationsInput | string | null
     cutoffAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
+    skipped?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutDailyMenuNestedInput
@@ -17438,6 +17517,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: string | null
     cutoffAt?: Date | string | null
     isPublished?: boolean
+    skipped?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -17452,6 +17532,7 @@ export namespace Prisma {
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     cutoffAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
+    skipped?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -17469,6 +17550,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: NullableStringFieldUpdateOperationsInput | string | null
     cutoffAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
+    skipped?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -17933,6 +18015,13 @@ export namespace Prisma {
     not?: NestedEnumPaymentModeFilter<$PrismaModel> | $Enums.PaymentMode
   }
 
+  export type EnumCustomerTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.CustomerType | EnumCustomerTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CustomerType[] | ListEnumCustomerTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CustomerType[] | ListEnumCustomerTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCustomerTypeFilter<$PrismaModel> | $Enums.CustomerType
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -18018,6 +18107,7 @@ export namespace Prisma {
     floorNumber?: SortOrder
     locationId?: SortOrder
     paymentMode?: SortOrder
+    customerType?: SortOrder
     balance?: SortOrder
     profileComplete?: SortOrder
     isBanned?: SortOrder
@@ -18043,6 +18133,7 @@ export namespace Prisma {
     floorNumber?: SortOrder
     locationId?: SortOrder
     paymentMode?: SortOrder
+    customerType?: SortOrder
     balance?: SortOrder
     profileComplete?: SortOrder
     isBanned?: SortOrder
@@ -18064,6 +18155,7 @@ export namespace Prisma {
     floorNumber?: SortOrder
     locationId?: SortOrder
     paymentMode?: SortOrder
+    customerType?: SortOrder
     balance?: SortOrder
     profileComplete?: SortOrder
     isBanned?: SortOrder
@@ -18107,6 +18199,16 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumPaymentModeFilter<$PrismaModel>
     _max?: NestedEnumPaymentModeFilter<$PrismaModel>
+  }
+
+  export type EnumCustomerTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.CustomerType | EnumCustomerTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CustomerType[] | ListEnumCustomerTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CustomerType[] | ListEnumCustomerTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCustomerTypeWithAggregatesFilter<$PrismaModel> | $Enums.CustomerType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumCustomerTypeFilter<$PrismaModel>
+    _max?: NestedEnumCustomerTypeFilter<$PrismaModel>
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -18380,6 +18482,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: SortOrder
     cutoffAt?: SortOrder
     isPublished?: SortOrder
+    skipped?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -18401,6 +18504,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: SortOrder
     cutoffAt?: SortOrder
     isPublished?: SortOrder
+    skipped?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -18418,6 +18522,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: SortOrder
     cutoffAt?: SortOrder
     isPublished?: SortOrder
+    skipped?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -18761,6 +18866,10 @@ export namespace Prisma {
 
   export type EnumPaymentModeFieldUpdateOperationsInput = {
     set?: $Enums.PaymentMode
+  }
+
+  export type EnumCustomerTypeFieldUpdateOperationsInput = {
+    set?: $Enums.CustomerType
   }
 
   export type IntFieldUpdateOperationsInput = {
@@ -19790,6 +19899,13 @@ export namespace Prisma {
     not?: NestedEnumPaymentModeFilter<$PrismaModel> | $Enums.PaymentMode
   }
 
+  export type NestedEnumCustomerTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.CustomerType | EnumCustomerTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CustomerType[] | ListEnumCustomerTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CustomerType[] | ListEnumCustomerTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCustomerTypeFilter<$PrismaModel> | $Enums.CustomerType
+  }
+
   export type NestedBoolFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel>
     not?: NestedBoolFilter<$PrismaModel> | boolean
@@ -19827,6 +19943,16 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumPaymentModeFilter<$PrismaModel>
     _max?: NestedEnumPaymentModeFilter<$PrismaModel>
+  }
+
+  export type NestedEnumCustomerTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.CustomerType | EnumCustomerTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.CustomerType[] | ListEnumCustomerTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.CustomerType[] | ListEnumCustomerTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumCustomerTypeWithAggregatesFilter<$PrismaModel> | $Enums.CustomerType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumCustomerTypeFilter<$PrismaModel>
+    _max?: NestedEnumCustomerTypeFilter<$PrismaModel>
   }
 
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
@@ -19962,6 +20088,7 @@ export namespace Prisma {
     buildingNumber?: string | null
     floorNumber?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -19990,6 +20117,7 @@ export namespace Prisma {
     floorNumber?: string | null
     locationId?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -20032,6 +20160,7 @@ export namespace Prisma {
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -20060,6 +20189,7 @@ export namespace Prisma {
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     locationId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -20086,6 +20216,7 @@ export namespace Prisma {
     buildingNumber?: string | null
     floorNumber?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -20114,6 +20245,7 @@ export namespace Prisma {
     floorNumber?: string | null
     locationId?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -20156,6 +20288,7 @@ export namespace Prisma {
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -20184,6 +20317,7 @@ export namespace Prisma {
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     locationId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -20705,6 +20839,7 @@ export namespace Prisma {
     buildingNumber?: string | null
     floorNumber?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -20732,6 +20867,7 @@ export namespace Prisma {
     buildingNumber?: string | null
     floorNumber?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -20786,6 +20922,7 @@ export namespace Prisma {
     imageUrl?: string | null
     cutoffAt?: Date | string | null
     isPublished?: boolean
+    skipped?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     catalogItem?: MealCatalogCreateNestedOneWithoutDailyMenusInput
@@ -20805,6 +20942,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: string | null
     cutoffAt?: Date | string | null
     isPublished?: boolean
+    skipped?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutDailyMenuInput
@@ -20937,6 +21075,7 @@ export namespace Prisma {
     floorNumber?: StringNullableFilter<"User"> | string | null
     locationId?: StringNullableFilter<"User"> | string | null
     paymentMode?: EnumPaymentModeFilter<"User"> | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFilter<"User"> | $Enums.CustomerType
     balance?: IntFilter<"User"> | number
     profileComplete?: BoolFilter<"User"> | boolean
     isBanned?: BoolFilter<"User"> | boolean
@@ -20992,6 +21131,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: StringNullableFilter<"DailyMenu"> | string | null
     cutoffAt?: DateTimeNullableFilter<"DailyMenu"> | Date | string | null
     isPublished?: BoolFilter<"DailyMenu"> | boolean
+    skipped?: BoolFilter<"DailyMenu"> | boolean
     createdAt?: DateTimeFilter<"DailyMenu"> | Date | string
     updatedAt?: DateTimeFilter<"DailyMenu"> | Date | string
   }
@@ -21059,6 +21199,7 @@ export namespace Prisma {
     buildingNumber?: string | null
     floorNumber?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -21087,6 +21228,7 @@ export namespace Prisma {
     floorNumber?: string | null
     locationId?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -21164,6 +21306,7 @@ export namespace Prisma {
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -21192,6 +21335,7 @@ export namespace Prisma {
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     locationId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -21256,6 +21400,7 @@ export namespace Prisma {
     imageUrl?: string | null
     cutoffAt?: Date | string | null
     isPublished?: boolean
+    skipped?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     location: LocationCreateNestedOneWithoutDailyMenusInput
@@ -21275,6 +21420,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: string | null
     cutoffAt?: Date | string | null
     isPublished?: boolean
+    skipped?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutDailyMenuInput
@@ -21436,6 +21582,7 @@ export namespace Prisma {
     imageUrl?: string | null
     cutoffAt?: Date | string | null
     isPublished?: boolean
+    skipped?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     location: LocationCreateNestedOneWithoutDailyMenusInput
@@ -21455,6 +21602,7 @@ export namespace Prisma {
     catalogItemId?: string | null
     cutoffAt?: Date | string | null
     isPublished?: boolean
+    skipped?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     orders?: OrderUncheckedCreateNestedManyWithoutDailyMenuInput
@@ -21851,6 +21999,7 @@ export namespace Prisma {
     buildingNumber?: string | null
     floorNumber?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -21879,6 +22028,7 @@ export namespace Prisma {
     floorNumber?: string | null
     locationId?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -21910,6 +22060,7 @@ export namespace Prisma {
     buildingNumber?: string | null
     floorNumber?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -21938,6 +22089,7 @@ export namespace Prisma {
     floorNumber?: string | null
     locationId?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -21966,6 +22118,7 @@ export namespace Prisma {
     imageUrl?: string | null
     cutoffAt?: Date | string | null
     isPublished?: boolean
+    skipped?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     location: LocationCreateNestedOneWithoutDailyMenusInput
@@ -21986,6 +22139,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: string | null
     cutoffAt?: Date | string | null
     isPublished?: boolean
+    skipped?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -22086,6 +22240,7 @@ export namespace Prisma {
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -22114,6 +22269,7 @@ export namespace Prisma {
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     locationId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -22151,6 +22307,7 @@ export namespace Prisma {
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -22179,6 +22336,7 @@ export namespace Prisma {
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     locationId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -22213,6 +22371,7 @@ export namespace Prisma {
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     cutoffAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
+    skipped?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     location?: LocationUpdateOneRequiredWithoutDailyMenusNestedInput
@@ -22233,6 +22392,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: NullableStringFieldUpdateOperationsInput | string | null
     cutoffAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
+    skipped?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -22307,6 +22467,7 @@ export namespace Prisma {
     buildingNumber?: string | null
     floorNumber?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -22335,6 +22496,7 @@ export namespace Prisma {
     floorNumber?: string | null
     locationId?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -22405,6 +22567,7 @@ export namespace Prisma {
     buildingNumber?: string | null
     floorNumber?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -22433,6 +22596,7 @@ export namespace Prisma {
     floorNumber?: string | null
     locationId?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -22475,6 +22639,7 @@ export namespace Prisma {
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -22503,6 +22668,7 @@ export namespace Prisma {
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     locationId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -22585,6 +22751,7 @@ export namespace Prisma {
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -22613,6 +22780,7 @@ export namespace Prisma {
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     locationId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -22963,6 +23131,7 @@ export namespace Prisma {
     buildingNumber?: string | null
     floorNumber?: string | null
     paymentMode?: $Enums.PaymentMode
+    customerType?: $Enums.CustomerType
     balance?: number
     profileComplete?: boolean
     isBanned?: boolean
@@ -22987,6 +23156,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: string | null
     cutoffAt?: Date | string | null
     isPublished?: boolean
+    skipped?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -23034,6 +23204,7 @@ export namespace Prisma {
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -23061,6 +23232,7 @@ export namespace Prisma {
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -23088,6 +23260,7 @@ export namespace Prisma {
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
+    customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
     profileComplete?: BoolFieldUpdateOperationsInput | boolean
     isBanned?: BoolFieldUpdateOperationsInput | boolean
@@ -23120,6 +23293,7 @@ export namespace Prisma {
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     cutoffAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
+    skipped?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     catalogItem?: MealCatalogUpdateOneWithoutDailyMenusNestedInput
@@ -23139,6 +23313,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: NullableStringFieldUpdateOperationsInput | string | null
     cutoffAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
+    skipped?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutDailyMenuNestedInput
@@ -23156,6 +23331,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: NullableStringFieldUpdateOperationsInput | string | null
     cutoffAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
+    skipped?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -23266,6 +23442,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: string | null
     cutoffAt?: Date | string | null
     isPublished?: boolean
+    skipped?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -23294,6 +23471,7 @@ export namespace Prisma {
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     cutoffAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
+    skipped?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     location?: LocationUpdateOneRequiredWithoutDailyMenusNestedInput
@@ -23313,6 +23491,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: NullableStringFieldUpdateOperationsInput | string | null
     cutoffAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
+    skipped?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutDailyMenuNestedInput
@@ -23330,6 +23509,7 @@ export namespace Prisma {
     sourceWeekdayMenuId?: NullableStringFieldUpdateOperationsInput | string | null
     cutoffAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
+    skipped?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -23390,6 +23570,7 @@ export namespace Prisma {
     catalogItemId?: string | null
     cutoffAt?: Date | string | null
     isPublished?: boolean
+    skipped?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -23404,6 +23585,7 @@ export namespace Prisma {
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
     cutoffAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
+    skipped?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     location?: LocationUpdateOneRequiredWithoutDailyMenusNestedInput
@@ -23423,6 +23605,7 @@ export namespace Prisma {
     catalogItemId?: NullableStringFieldUpdateOperationsInput | string | null
     cutoffAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
+    skipped?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     orders?: OrderUncheckedUpdateManyWithoutDailyMenuNestedInput
@@ -23440,6 +23623,7 @@ export namespace Prisma {
     catalogItemId?: NullableStringFieldUpdateOperationsInput | string | null
     cutoffAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isPublished?: BoolFieldUpdateOperationsInput | boolean
+    skipped?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

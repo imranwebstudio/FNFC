@@ -5,7 +5,15 @@ type Tx = Omit<
   "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
 >;
 
-/** Charge wallet when on WALLET mode, or when the member has prepaid balance. */
+export function isRegularCustomer(user: { customerType: string }): boolean {
+  return user.customerType === "REGULAR";
+}
+
+export function isOneTimeCustomer(user: { customerType: string }): boolean {
+  return user.customerType === "ONE_TIME";
+}
+
+/** @deprecated Prefer customerType; kept for legacy repair helpers. */
 export function shouldChargeWallet(user: {
   paymentMode: string;
   balance: number;

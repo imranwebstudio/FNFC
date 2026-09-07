@@ -142,7 +142,9 @@ export function buildAccountStatement(input: {
     .filter((t) => t.type === "DUE_PAYMENT")
     .reduce((s, t) => s + t.amount, 0);
 
-  const unpaidCash = activeOrders.filter((o) => o.paymentStatus === "UNPAID");
+  const unpaidCash = activeOrders.filter(
+    (o) => o.paymentStatus === "UNPAID" || o.paymentStatus === "DUE",
+  );
   const due = dueFromBalance(input.balance);
   const unpaidCashTotal = unpaidCash.reduce((s, o) => s + o.amount, 0);
 

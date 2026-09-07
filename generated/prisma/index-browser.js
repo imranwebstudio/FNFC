@@ -164,6 +164,7 @@ exports.Prisma.UserScalarFieldEnum = {
   floorNumber: 'floorNumber',
   locationId: 'locationId',
   paymentMode: 'paymentMode',
+  customerType: 'customerType',
   balance: 'balance',
   profileComplete: 'profileComplete',
   isBanned: 'isBanned',
@@ -227,6 +228,7 @@ exports.Prisma.DailyMenuScalarFieldEnum = {
   sourceWeekdayMenuId: 'sourceWeekdayMenuId',
   cutoffAt: 'cutoffAt',
   isPublished: 'isPublished',
+  skipped: 'skipped',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -285,6 +287,11 @@ exports.PaymentMode = exports.$Enums.PaymentMode = {
   WALLET: 'WALLET'
 };
 
+exports.CustomerType = exports.$Enums.CustomerType = {
+  REGULAR: 'REGULAR',
+  ONE_TIME: 'ONE_TIME'
+};
+
 exports.Weekday = exports.$Enums.Weekday = {
   SAT: 'SAT',
   SUN: 'SUN',
@@ -309,7 +316,8 @@ exports.OrderStatus = exports.$Enums.OrderStatus = {
 exports.PaymentStatus = exports.$Enums.PaymentStatus = {
   UNPAID: 'UNPAID',
   PAID: 'PAID',
-  WALLET_CHARGED: 'WALLET_CHARGED'
+  WALLET_CHARGED: 'WALLET_CHARGED',
+  DUE: 'DUE'
 };
 
 exports.WalletTxType = exports.$Enums.WalletTxType = {

@@ -29,6 +29,7 @@ function paymentTone(
   status: string,
 ): "good" | "warn" | "neutral" | "bad" {
   if (status === "PAID" || status === "WALLET_CHARGED") return "good";
+  if (status === "DUE") return "bad";
   if (status === "UNPAID") return "warn";
   return "neutral";
 }

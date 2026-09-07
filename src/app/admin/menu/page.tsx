@@ -18,9 +18,11 @@ import {
 import {
   formatCutoffHm,
   formatTaka,
+  getOrderWindow,
   todayDateString,
   WEEKDAY_LABELS,
   WEEKDAYS,
+  weekdayFromDateString,
   type WeekdayCode,
 } from "~/lib/datetime";
 import { showSuccess } from "~/lib/swal";
@@ -53,6 +55,7 @@ export default function AdminMenuPage() {
   const [endDate, setEndDate] = useState(todayDateString());
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showDatedForm, setShowDatedForm] = useState(false);
+  const [deletingDailyId, setDeletingDailyId] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [showArchived, setShowArchived] = useState(false);
@@ -190,7 +193,18 @@ export default function AdminMenuPage() {
       if (editingId) resetForm();
     },
     onError: (e) => setMsg(e.message),
+    onSettled: () => setDeletingDailyId(null),
   });
+
+  const orderWindow = useMemo(() => {
+    const cutoff = selectedLoc?.defaultCutoffTime ?? "14:00";
+    return getOrderWindow(new Date(), cutoff);
+  }, [selectedLoc?.defaultCutoffTime]);
+
+  const activeOrderWeekday = useMemo(
+    () => weekdayFromDateString(orderWindow.orderDate),
+    [orderWindow.orderDate],
+  );
 
   const upsert = api.menu.upsertDaily.useMutation({
     onSuccess: async (res) => {
@@ -467,16 +481,40 @@ export default function AdminMenuPage() {
         <p className="mb-4 text-xs text-ink-muted">
           Add several lunch (or dinner) options per weekday for{" "}
           <strong className="text-ink">{selectedLoc?.name ?? "this office"}</strong>
-          . They repeat every matching day. Everyone picks one option.
+          . They repeat every matching day. Everyone picks one option. Highlighted
+          day is what employees order for now
+          {orderWindow.rolledOver
+            ? ` (after ${orderWindow.cutoffTime} — tomorrow)`
+            : ` (before ${orderWindow.cutoffTime} — today)`}
+          .
         </p>
 
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
           {WEEKDAYS.map((day) => {
+            const isActiveOrderDay = day === activeOrderWeekday;
             return (
-              <Panel key={day} className="p-3">
-                <p className="mb-2 text-center text-xs font-bold uppercase tracking-wide text-leaf">
-                  {WEEKDAY_LABELS[day].slice(0, 3)}
-                </p>
+              <Panel
+                key={day}
+                className={`p-3 ${
+                  isActiveOrderDay
+                    ? "!border-2 !border-leaf bg-leaf/10"
+                    : ""
+                }`}
+              >
+                <div className="mb-2 flex flex-col items-center gap-1.5">
+                  <p
+                    className={`text-xs font-bold uppercase tracking-wide ${
+                      isActiveOrderDay ? "text-leaf" : "text-ink-muted"
+                    }`}
+                  >
+                    {WEEKDAY_LABELS[day].slice(0, 3)}
+                  </p>
+                  {isActiveOrderDay ? (
+                    <Badge tone="good">
+                      {orderWindow.rolledOver ? "Ordering now" : "Today"}
+                    </Badge>
+                  ) : null}
+                </div>
                 <div className="space-y-2">
                   {mealSlots.map((slot) => {
                     const meals = weekBySlot.get(`${day}:${slot}`) ?? [];
@@ -869,12 +907,13 @@ export default function AdminMenuPage() {
                     <Button
                       type="button"
                       variant="danger"
-                      disabled={deleteDaily.isPending}
-                      onClick={() =>
-                        deleteDaily.mutate({ id: m.id, locationId })
-                      }
+                      disabled={deletingDailyId === m.id}
+                      onClick={() => {
+                        setDeletingDailyId(m.id);
+                        deleteDaily.mutate({ id: m.id, locationId });
+                      }}
                     >
-                      Remove
+                      {deletingDailyId === m.id ? "Removing…" : "Remove"}
                     </Button>
                   </div>
                 </Panel>

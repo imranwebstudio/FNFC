@@ -14,7 +14,7 @@ import {
   Panel,
   Select,
 } from "~/components/ui";
-import { formatTaka } from "~/lib/datetime";
+import { formatBalanceLabel, formatTaka } from "~/lib/datetime";
 import { promptBalanceEdit, showSuccess } from "~/lib/swal";
 import { api } from "~/trpc/react";
 
@@ -25,7 +25,7 @@ export default function AdminUsersPage() {
   const [depositUserId, setDepositUserId] = useState<string | null>(null);
   const [amount, setAmount] = useState(1000);
   const [note, setNote] = useState("");
-  const [modeError, setModeError] = useState<string | null>(null);
+  const [typeError, setTypeError] = useState<string | null>(null);
   const [balanceError, setBalanceError] = useState<string | null>(null);
   const utils = api.useUtils();
 
@@ -66,13 +66,21 @@ export default function AdminUsersPage() {
     },
   });
 
-  const setMode = api.wallet.setPaymentMode.useMutation({
-    onMutate: async ({ userId, paymentMode }) => {
-      setModeError(null);
+  const setCustomerType = api.admin.setCustomerType.useMutation({
+    onMutate: async ({ userId, customerType }) => {
+      setTypeError(null);
       await utils.admin.listUsers.cancel(listInput);
       const previous = utils.admin.listUsers.getData(listInput);
       utils.admin.listUsers.setData(listInput, (old) =>
-        old?.map((u) => (u.id === userId ? { ...u, paymentMode } : u)),
+        old?.map((u) =>
+          u.id === userId
+            ? {
+                ...u,
+                customerType,
+                paymentMode: customerType === "REGULAR" ? "WALLET" : "CASH",
+              }
+            : u,
+        ),
       );
       return { previous };
     },
@@ -80,18 +88,18 @@ export default function AdminUsersPage() {
       if (ctx?.previous) {
         utils.admin.listUsers.setData(listInput, ctx.previous);
       }
-      setModeError(err.message || "Could not change payment mode");
+      setTypeError(err.message || "Could not change customer type");
     },
     onSuccess: () => {
-      showSuccess("Payment mode updated");
+      showSuccess("Customer type updated");
     },
     onSettled: () => {
       void utils.admin.listUsers.invalidate();
     },
   });
 
-  const pendingModeUserId = setMode.isPending
-    ? setMode.variables?.userId
+  const pendingTypeUserId = setCustomerType.isPending
+    ? setCustomerType.variables?.userId
     : undefined;
   const pendingBalanceUserId = setBalance.isPending
     ? setBalance.variables?.userId
@@ -102,12 +110,12 @@ export default function AdminUsersPage() {
       <PageTitle
         icon={<Users className="h-5 w-5" strokeWidth={2.25} />}
         title="Users & deposits"
-        subtitle="Record wallet deposits / due payments. Switch cash vs wallet or edit balance per user."
+        subtitle="Set Regular / One-time. Deposit and edit balance for regular customers only."
       />
 
-      {modeError ? (
+      {typeError ? (
         <p className="mb-4 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-400">
-          {modeError}
+          {typeError}
         </p>
       ) : null}
 
@@ -148,9 +156,10 @@ export default function AdminUsersPage() {
       <ul className="space-y-2">
         {!users.isLoading
           ? users.data?.map((u) => {
-          const due = Math.max(0, -u.balance);
-          const nextMode = u.paymentMode === "CASH" ? "WALLET" : "CASH";
-          const modeBusy = pendingModeUserId === u.id;
+          const isRegular = u.customerType === "REGULAR";
+          const nextType = isRegular ? "ONE_TIME" : "REGULAR";
+          const balanceLabel = formatBalanceLabel(u.balance);
+          const typeBusy = pendingTypeUserId === u.id;
           const balanceBusy = pendingBalanceUserId === u.id;
           return (
             <Panel key={u.id} className="py-3">
@@ -165,18 +174,20 @@ export default function AdminUsersPage() {
                     {u.floorNumber} · Desk {u.deskNumber}
                   </p>
                   <p className="mt-1 text-sm">
-                    Bal {formatTaka(u.balance)}
-                    {due > 0 ? (
-                      <span className="text-spice-deep">
-                        {" "}
-                        · Due {formatTaka(due)}
-                      </span>
-                    ) : null}{" "}
-                    ·{" "}
-                    <Badge
-                      tone={u.paymentMode === "WALLET" ? "good" : "neutral"}
+                    <span
+                      className={
+                        balanceLabel.isDue
+                          ? "font-semibold text-spice-deep"
+                          : undefined
+                      }
                     >
-                      {u.paymentMode}
+                      {balanceLabel.isDue
+                        ? balanceLabel.text
+                        : `Bal ${balanceLabel.text}`}
+                    </span>{" "}
+                    ·{" "}
+                    <Badge tone={isRegular ? "good" : "neutral"}>
+                      {isRegular ? "Regular" : "One-time"}
                     </Badge>
                   </p>
                 </div>
@@ -191,59 +202,70 @@ export default function AdminUsersPage() {
                   <Button
                     type="button"
                     variant="secondary"
-                    disabled={modeBusy}
-                    aria-busy={modeBusy}
+                    disabled={typeBusy}
+                    aria-busy={typeBusy}
                     onClick={() =>
-                      setMode.mutate({
+                      setCustomerType.mutate({
                         userId: u.id,
-                        paymentMode: nextMode,
+                        customerType: nextType,
                       })
                     }
                   >
-                    {modeBusy ? (
+                    {typeBusy ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
                         Switching…
                       </>
                     ) : (
-                      <>Switch to {nextMode === "WALLET" ? "Wallet" : "Cash"}</>
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => setDepositUserId(u.id)}
-                  >
-                    Deposit
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    disabled={balanceBusy}
-                    aria-busy={balanceBusy}
-                    onClick={async () => {
-                      const newBalance = await promptBalanceEdit({
-                        title: "Edit balance",
-                        text: `Current balance: ${formatTaka(u.balance)}. Enter the new wallet balance.`,
-                        currentBalance: u.balance,
-                      });
-                      if (newBalance === null || newBalance === u.balance) return;
-                      setBalance.mutate({ userId: u.id, balance: newBalance });
-                    }}
-                  >
-                    {balanceBusy ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Saving…
+                        Switch to{" "}
+                        {nextType === "REGULAR" ? "Regular" : "One-time"}
                       </>
-                    ) : (
-                      "Edit balance"
                     )}
                   </Button>
+                  {isRegular ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => setDepositUserId(u.id)}
+                      >
+                        Deposit
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        disabled={balanceBusy}
+                        aria-busy={balanceBusy}
+                        onClick={async () => {
+                          const newBalance = await promptBalanceEdit({
+                            title: "Edit balance",
+                            text: `Current balance: ${formatTaka(u.balance)}. Enter the new wallet balance.`,
+                            currentBalance: u.balance,
+                          });
+                          if (newBalance === null || newBalance === u.balance)
+                            return;
+                          setBalance.mutate({
+                            userId: u.id,
+                            balance: newBalance,
+                          });
+                        }}
+                      >
+                        {balanceBusy ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Saving…
+                          </>
+                        ) : (
+                          "Edit balance"
+                        )}
+                      </Button>
+                    </>
+                  ) : null}
                 </div>
               </div>
 
-              {depositUserId === u.id ? (
+              {isRegular && depositUserId === u.id ? (
                 <form
                   className="mt-3 flex flex-wrap items-end gap-2 border-t border-line/50 pt-3"
                   onSubmit={(e) => {
@@ -252,7 +274,7 @@ export default function AdminUsersPage() {
                       userId: u.id,
                       amount,
                       note: note || undefined,
-                      asDuePayment: due > 0,
+                      asDuePayment: balanceLabel.isDue,
                     });
                   }}
                 >

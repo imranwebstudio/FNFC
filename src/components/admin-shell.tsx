@@ -16,7 +16,7 @@ import {
 import { useEffect, useState } from "react";
 
 import { SignOutButton } from "~/components/sign-out-button";
-import { formatTaka } from "~/lib/datetime";
+import { formatBalanceLabel } from "~/lib/datetime";
 
 type NavUser = {
   name?: string | null;
@@ -43,7 +43,7 @@ export function AdminShell({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const due = Math.max(0, -user.balance);
+  const balanceLabel = formatBalanceLabel(user.balance);
 
   const iconMap: Record<string, typeof LayoutGrid> = {
     Overview: LayoutGrid,
@@ -142,9 +142,13 @@ export function AdminShell({
             {user.name ?? "Admin"}
           </p>
           <p className="text-xs text-ink-muted">
-            {due > 0
-              ? `Due ${formatTaka(due)}`
-              : `Bal ${formatTaka(user.balance)}`}
+            <span
+              className={
+                balanceLabel.isDue ? "font-semibold text-spice-deep" : undefined
+              }
+            >
+              {balanceLabel.text}
+            </span>
           </p>
         </div>
         <SignOutButton />

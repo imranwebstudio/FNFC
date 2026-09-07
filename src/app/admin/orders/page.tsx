@@ -9,6 +9,7 @@ import {
   PackageCheck,
   Phone,
   Plus,
+  Wallet,
 } from "lucide-react";
 
 import { FoodPlateLoader } from "~/components/food-plate-loader";
@@ -23,6 +24,7 @@ import {
 } from "~/components/ui";
 import {
   addDaysToDateString,
+  formatBalanceLabel,
   formatMenuDateLabel,
   formatTaka,
   todayDateString,
@@ -86,6 +88,21 @@ export default function AdminOrdersPage() {
       await utils.account.userStatement.invalidate();
     },
   });
+  const chargeWallet = api.order.chargeWallet.useMutation({
+    onSuccess: async () => {
+      showSuccess("Wallet charged");
+      await utils.order.listForAdmin.invalidate();
+      await utils.account.userStatement.invalidate();
+      await utils.admin.listUsers.invalidate();
+    },
+  });
+  const markDue = api.order.markDue.useMutation({
+    onSuccess: async () => {
+      showSuccess("Marked as due");
+      await utils.order.listForAdmin.invalidate();
+      await utils.account.userStatement.invalidate();
+    },
+  });
   const createForUser = api.order.createForUser.useMutation({
     onSuccess: async (_data, vars) => {
       showSuccess("Order placed", `Order recorded for ${formatMenuDateLabel(behalfDate)}.`);
@@ -121,7 +138,7 @@ export default function AdminOrdersPage() {
       <PageTitle
         icon={<ClipboardList className="h-5 w-5" strokeWidth={2.25} />}
         title="Distribution board"
-        subtitle="Mark delivered when food is handed over. Confirm cash paid separately when the customer pays. Place phone orders for members below — including future days from the weekly schedule."
+        subtitle="Mark delivered when food is handed over. Regular: Charge Wallet after delivery. One-time: Cash Paid or Due. Place phone orders below."
       />
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -163,8 +180,8 @@ export default function AdminOrdersPage() {
         </div>
         <p className="mb-4 text-xs text-ink-muted">
           Record a meal under a member&apos;s account (e.g. after a phone call).
-          Pick any upcoming day — weekday templates load automatically. Uses
-          their cash/wallet mode. Cutoff is skipped for admins.
+          Pick any upcoming day — weekday templates load automatically. Orders
+          stay unpaid until settled after delivery. Cutoff is skipped for admins.
         </p>
 
         {behalfMsg ? (
@@ -243,8 +260,10 @@ export default function AdminOrdersPage() {
             </Select>
             {selectedMember ? (
               <p className="mt-1 text-[11px] text-ink-muted">
-                Pays with {selectedMember.paymentMode} · Bal{" "}
-                {formatTaka(selectedMember.balance)}
+                {selectedMember.customerType === "REGULAR"
+                  ? "Regular"
+                  : "One-time"}{" "}
+                · {formatBalanceLabel(selectedMember.balance).text}
               </p>
             ) : null}
           </div>
@@ -415,16 +434,27 @@ export default function AdminOrdersPage() {
                   </Badge>
                   <Badge
                     tone={
-                      o.paymentStatus === "UNPAID"
-                        ? "warn"
-                        : o.paymentStatus === "PAID"
-                          ? "good"
-                          : "neutral"
+                      o.paymentStatus === "DUE"
+                        ? "bad"
+                        : o.paymentStatus === "UNPAID"
+                          ? "warn"
+                          : o.paymentStatus === "PAID" ||
+                              o.paymentStatus === "WALLET_CHARGED"
+                            ? "good"
+                            : "neutral"
                     }
                   >
                     {o.paymentStatus}
                   </Badge>
-                  <Badge>{o.user.paymentMode}</Badge>
+                  <Badge
+                    tone={
+                      o.user.customerType === "REGULAR" ? "good" : "neutral"
+                    }
+                  >
+                    {o.user.customerType === "REGULAR"
+                      ? "Regular"
+                      : "One-time"}
+                  </Badge>
                   {o.placedBy ? <Badge tone="neutral">Admin order</Badge> : null}
                   <span className="text-xs font-bold tabular-nums">
                     {formatTaka(o.amount)}
@@ -443,14 +473,41 @@ export default function AdminOrdersPage() {
                     Mark delivered
                   </Button>
                 ) : null}
-                {o.paymentStatus === "UNPAID" ? (
+                {o.user.customerType === "REGULAR" &&
+                o.status === "DELIVERED" &&
+                o.paymentStatus === "UNPAID" ? (
+                  <Button
+                    type="button"
+                    disabled={chargeWallet.isPending}
+                    onClick={() => chargeWallet.mutate({ orderId: o.id })}
+                  >
+                    <Wallet className="h-4 w-4" />
+                    Charge Wallet
+                  </Button>
+                ) : null}
+                {o.user.customerType === "ONE_TIME" &&
+                o.status === "DELIVERED" &&
+                (o.paymentStatus === "UNPAID" ||
+                  o.paymentStatus === "DUE") ? (
                   <Button
                     type="button"
                     disabled={confirmPay.isPending}
                     onClick={() => confirmPay.mutate({ orderId: o.id })}
                   >
                     <Banknote className="h-4 w-4" />
-                    Confirm cash paid
+                    Cash Paid
+                  </Button>
+                ) : null}
+                {o.user.customerType === "ONE_TIME" &&
+                o.status === "DELIVERED" &&
+                o.paymentStatus === "UNPAID" ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={markDue.isPending}
+                    onClick={() => markDue.mutate({ orderId: o.id })}
+                  >
+                    Due
                   </Button>
                 ) : null}
               </div>

@@ -22,6 +22,11 @@ enum PaymentMode {
   WALLET
 }
 
+enum CustomerType {
+  REGULAR
+  ONE_TIME
+}
+
 enum MealSlot {
   LUNCH
   DINNER
@@ -37,6 +42,7 @@ enum PaymentStatus {
   UNPAID
   PAID
   WALLET_CHARGED
+  DUE
 }
 
 enum WalletTxType {
@@ -93,25 +99,26 @@ model VerificationToken {
 }
 
 model User {
-  id              String      @id @default(cuid())
+  id              String       @id @default(cuid())
   name            String?
-  email           String?     @unique
+  email           String?      @unique
   emailVerified   DateTime?
   image           String?
-  role            Role        @default(USER)
+  role            Role         @default(USER)
   employeeId      String?
   phoneNumber     String?
   deskNumber      String?
   buildingNumber  String?
   floorNumber     String?
   locationId      String?
-  paymentMode     PaymentMode @default(CASH)
+  paymentMode     PaymentMode  @default(CASH)
+  customerType    CustomerType @default(ONE_TIME)
   /// Balance in integer taka; may be negative (due)
-  balance         Int         @default(0)
-  profileComplete Boolean     @default(false)
-  isBanned        Boolean     @default(false)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  balance         Int          @default(0)
+  profileComplete Boolean      @default(false)
+  isBanned        Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   location            Location?           @relation(fields: [locationId], references: [id])
   accounts            Account[]
@@ -208,6 +215,8 @@ model DailyMenu {
   /// Absolute cutoff datetime (Asia/Dhaka resolved); null = use location default for that day
   cutoffAt            DateTime?
   isPublished         Boolean   @default(false)
+  /// Hidden for this date only (keeps weekday template from regenerating the row)
+  skipped             Boolean   @default(false)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 

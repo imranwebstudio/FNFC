@@ -8,18 +8,20 @@ import {
   createTRPCRouter,
   protectedProcedure,
 } from "~/server/api/trpc";
+import { isRegularCustomer } from "~/server/order-payment";
 
 export const walletRouter = createTRPCRouter({
   summary: protectedProcedure.query(async ({ ctx }) => {
     const user = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
-      select: { balance: true, paymentMode: true },
+      select: { balance: true, paymentMode: true, customerType: true },
     });
     if (!user) throw new TRPCError({ code: "NOT_FOUND" });
     return {
       balance: user.balance,
       due: dueFromBalance(user.balance),
       paymentMode: user.paymentMode,
+      customerType: user.customerType,
     };
   }),
 
@@ -48,6 +50,13 @@ export const walletRouter = createTRPCRouter({
       });
       if (!target) throw new TRPCError({ code: "NOT_FOUND" });
 
+      if (!isRegularCustomer(target)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Deposits are only for regular customers",
+        });
+      }
+
       if (ctx.session.user.role !== "SUPER_ADMIN") {
         if (!target.locationId) {
           throw new TRPCError({ code: "FORBIDDEN" });
@@ -66,6 +75,7 @@ export const walletRouter = createTRPCRouter({
           data: {
             balance: { increment: input.amount },
             paymentMode: "WALLET",
+            customerType: "REGULAR",
           },
         });
         return tx.walletTransaction.create({
@@ -105,7 +115,10 @@ export const walletRouter = createTRPCRouter({
 
       return ctx.db.user.update({
         where: { id: input.userId },
-        data: { paymentMode: input.paymentMode },
+        data: {
+          paymentMode: input.paymentMode,
+          customerType: input.paymentMode === "WALLET" ? "REGULAR" : "ONE_TIME",
+        },
       });
     }),
 
@@ -122,6 +135,13 @@ export const walletRouter = createTRPCRouter({
         where: { id: input.userId },
       });
       if (!target) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (!isRegularCustomer(target)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Balance edits are only for regular customers",
+        });
+      }
 
       if (target.balance === input.balance) {
         throw new TRPCError({

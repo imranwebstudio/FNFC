@@ -166,6 +166,16 @@ export function dueFromBalance(balance: number): number {
   return Math.max(0, -balance);
 }
 
+export function formatBalanceLabel(balance: number): {
+  text: string;
+  isDue: boolean;
+} {
+  if (balance < 0) {
+    return { text: `Due ${formatTaka(-balance)}`, isDue: true };
+  }
+  return { text: formatTaka(balance), isDue: false };
+}
+
 /** Format a Date as HH:mm in Asia/Dhaka (for cutoff inputs) */
 export function formatCutoffHm(date: Date | string | null | undefined): string {
   if (!date) return "";

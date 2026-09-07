@@ -17,7 +17,8 @@ import {
 } from "~/server/api/trpc";
 import {
   chargeWalletForOrder,
-  shouldChargeWallet,
+  isOneTimeCustomer,
+  isRegularCustomer,
 } from "~/server/order-payment";
 import { deleteOrderRecord } from "~/server/delete-order";
 import { orderQuantitySchema } from "~/lib/order-quantity";
@@ -107,41 +108,17 @@ export const orderRouter = createTRPCRouter({
 
       const totalAmount = menu.price * input.quantity;
 
-      return ctx.db.$transaction(async (tx) => {
-        if (shouldChargeWallet(user)) {
-          const order = await tx.order.create({
-            data: {
-              userId: user.id,
-              dailyMenuId: menu.id,
-              locationId: menu.locationId,
-              quantity: input.quantity,
-              amount: totalAmount,
-              note: input.note,
-              status: "PLACED",
-              paymentStatus: "WALLET_CHARGED",
-            },
-          });
-          await chargeWalletForOrder(tx, {
-            userId: user.id,
-            amount: totalAmount,
-            orderId: order.id,
-            note: `Order: ${menu.title}${input.quantity > 1 ? ` ×${input.quantity}` : ""}`,
-          });
-          return order;
-        }
-
-        return tx.order.create({
-          data: {
-            userId: user.id,
-            dailyMenuId: menu.id,
-            locationId: menu.locationId,
-            quantity: input.quantity,
-            amount: totalAmount,
-            note: input.note,
-            status: "PLACED",
-            paymentStatus: "UNPAID",
-          },
-        });
+      return ctx.db.order.create({
+        data: {
+          userId: user.id,
+          dailyMenuId: menu.id,
+          locationId: menu.locationId,
+          quantity: input.quantity,
+          amount: totalAmount,
+          note: input.note,
+          status: "PLACED",
+          paymentStatus: "UNPAID",
+        },
       });
     }),
 
@@ -224,49 +201,21 @@ export const orderRouter = createTRPCRouter({
       }
 
       const placedById = ctx.session.user.id;
-      const note =
-        input.note?.trim() ||
-        undefined;
+      const note = input.note?.trim() || undefined;
       const totalAmount = menu.price * input.quantity;
 
-      return ctx.db.$transaction(async (tx) => {
-        if (shouldChargeWallet(target)) {
-          const order = await tx.order.create({
-            data: {
-              userId: target.id,
-              dailyMenuId: menu.id,
-              locationId: menu.locationId,
-              quantity: input.quantity,
-              amount: totalAmount,
-              note,
-              status: "PLACED",
-              paymentStatus: "WALLET_CHARGED",
-              placedById,
-            },
-          });
-          await chargeWalletForOrder(tx, {
-            userId: target.id,
-            amount: totalAmount,
-            orderId: order.id,
-            createdById: placedById,
-            note: `Admin order: ${menu.title}${input.quantity > 1 ? ` ×${input.quantity}` : ""}`,
-          });
-          return order;
-        }
-
-        return tx.order.create({
-          data: {
-            userId: target.id,
-            dailyMenuId: menu.id,
-            locationId: menu.locationId,
-            quantity: input.quantity,
-            amount: totalAmount,
-            note,
-            status: "PLACED",
-            paymentStatus: "UNPAID",
-            placedById,
-          },
-        });
+      return ctx.db.order.create({
+        data: {
+          userId: target.id,
+          dailyMenuId: menu.id,
+          locationId: menu.locationId,
+          quantity: input.quantity,
+          amount: totalAmount,
+          note,
+          status: "PLACED",
+          paymentStatus: "UNPAID",
+          placedById,
+        },
       });
     }),
 
@@ -398,6 +347,7 @@ export const orderRouter = createTRPCRouter({
               buildingNumber: true,
               floorNumber: true,
               paymentMode: true,
+              customerType: true,
               balance: true,
             },
           },
@@ -446,7 +396,7 @@ export const orderRouter = createTRPCRouter({
       });
     }),
 
-  confirmCashPayment: adminProcedure
+  chargeWallet: adminProcedure
     .input(z.object({ orderId: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
       const order = await ctx.db.order.findUnique({
@@ -462,35 +412,122 @@ export const orderRouter = createTRPCRouter({
         order.locationId,
       );
 
+      if (!isRegularCustomer(order.user)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Charge Wallet is only for regular customers",
+        });
+      }
+      if (order.status !== "DELIVERED") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Deliver the order before charging the wallet",
+        });
+      }
       if (order.paymentStatus !== "UNPAID") {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Order is not unpaid cash",
+          message: "Order is not unpaid",
         });
       }
 
       return ctx.db.$transaction(async (tx) => {
-        if (shouldChargeWallet(order.user)) {
-          await chargeWalletForOrder(tx, {
-            userId: order.userId,
-            amount: order.amount,
-            orderId: order.id,
-            createdById: ctx.session.user.id,
-            note: `Order: ${order.dailyMenu.title}`,
-          });
-          return tx.order.update({
-            where: { id: order.id },
-            data: { paymentStatus: "WALLET_CHARGED" },
-          });
-        }
-
+        await chargeWalletForOrder(tx, {
+          userId: order.userId,
+          amount: order.amount,
+          orderId: order.id,
+          createdById: ctx.session.user.id,
+          note: `Order: ${order.dailyMenu.title}`,
+        });
         return tx.order.update({
           where: { id: order.id },
-          data: {
-            paymentStatus: "PAID",
-            paidAt: new Date(),
-          },
+          data: { paymentStatus: "WALLET_CHARGED" },
         });
+      });
+    }),
+
+  confirmCashPayment: adminProcedure
+    .input(z.object({ orderId: z.string().cuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const order = await ctx.db.order.findUnique({
+        where: { id: input.orderId },
+        include: { user: true },
+      });
+      if (!order) throw new TRPCError({ code: "NOT_FOUND" });
+
+      await assertLocationAccess(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        order.locationId,
+      );
+
+      if (!isOneTimeCustomer(order.user)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cash payment is only for one-time customers",
+        });
+      }
+      if (order.status !== "DELIVERED") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Deliver the order before confirming cash",
+        });
+      }
+      if (order.paymentStatus !== "UNPAID" && order.paymentStatus !== "DUE") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Order is not unpaid or due",
+        });
+      }
+
+      return ctx.db.order.update({
+        where: { id: order.id },
+        data: {
+          paymentStatus: "PAID",
+          paidAt: new Date(),
+        },
+      });
+    }),
+
+  markDue: adminProcedure
+    .input(z.object({ orderId: z.string().cuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const order = await ctx.db.order.findUnique({
+        where: { id: input.orderId },
+        include: { user: true },
+      });
+      if (!order) throw new TRPCError({ code: "NOT_FOUND" });
+
+      await assertLocationAccess(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        order.locationId,
+      );
+
+      if (!isOneTimeCustomer(order.user)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Due is only for one-time customers",
+        });
+      }
+      if (order.status !== "DELIVERED") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Deliver the order before marking due",
+        });
+      }
+      if (order.paymentStatus !== "UNPAID") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Order is not unpaid",
+        });
+      }
+
+      return ctx.db.order.update({
+        where: { id: order.id },
+        data: { paymentStatus: "DUE" },
       });
     }),
 

@@ -65,6 +65,7 @@ export const adminRouter = createTRPCRouter({
           floorNumber: true,
           locationId: true,
           paymentMode: true,
+          customerType: true,
           balance: true,
           profileComplete: true,
           isBanned: true,
@@ -75,6 +76,45 @@ export const adminRouter = createTRPCRouter({
         },
         orderBy: [{ floorNumber: "asc" }, { deskNumber: "asc" }],
         take: 200,
+      });
+    }),
+
+  setCustomerType: adminProcedure
+    .input(
+      z.object({
+        userId: z.string().cuid(),
+        customerType: z.enum(["REGULAR", "ONE_TIME"]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const target = await ctx.db.user.findUnique({
+        where: { id: input.userId },
+      });
+      if (!target) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (ctx.session.user.role !== "SUPER_ADMIN") {
+        if (!target.locationId) {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+        await assertLocationAccess(
+          ctx.db,
+          ctx.session.user.id,
+          ctx.session.user.role,
+          target.locationId,
+        );
+      }
+
+      return ctx.db.user.update({
+        where: { id: input.userId },
+        data: {
+          customerType: input.customerType,
+          paymentMode: input.customerType === "REGULAR" ? "WALLET" : "CASH",
+        },
+        select: {
+          id: true,
+          customerType: true,
+          paymentMode: true,
+        },
       });
     }),
 

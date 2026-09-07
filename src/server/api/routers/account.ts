@@ -23,7 +23,7 @@ const walletInclude = {
 async function fetchStatementForUser(db: typeof DbClient, userId: string) {
   const user = await db.user.findUnique({
     where: { id: userId },
-    select: { balance: true, paymentMode: true },
+    select: { balance: true, paymentMode: true, customerType: true },
   });
   if (!user) throw new TRPCError({ code: "NOT_FOUND" });
 
@@ -68,6 +68,7 @@ export const accountRouter = createTRPCRouter({
           phoneNumber: true,
           balance: true,
           paymentMode: true,
+          customerType: true,
           locationId: true,
           location: { select: { name: true } },
         },
