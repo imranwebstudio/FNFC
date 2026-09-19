@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { redirect } from "next/navigation";
 import { MapPinned } from "lucide-react";
+import Swal from "sweetalert2";
 
 import {
   Badge,
@@ -14,7 +15,7 @@ import {
   Select,
 } from "~/components/ui";
 import { FoodPlateLoader } from "~/components/food-plate-loader";
-import { showSuccess } from "~/lib/swal";
+import { showSuccess, confirmAction } from "~/lib/swal";
 import { api } from "~/trpc/react";
 
 export default function AdminTeamPage() {
@@ -52,6 +53,23 @@ export default function AdminTeamPage() {
     onSuccess: async () => {
       showSuccess("Location updated");
       await utils.location.list.invalidate();
+    },
+  });
+  const deleteLoc = api.location.delete.useMutation({
+    onSuccess: async (res) => {
+      showSuccess("Location deleted", `${res.name} was removed permanently.`);
+      await utils.location.list.invalidate();
+      await utils.admin.listUsers.invalidate();
+    },
+    onError: (err) => {
+      void Swal.fire({
+        icon: "error",
+        title: "Could not delete",
+        text: err.message,
+        background: "#1a2421",
+        color: "#eef3f0",
+        confirmButtonColor: "#2dd4bf",
+      });
     },
   });
   const setRole = api.admin.setRole.useMutation({
@@ -198,21 +216,44 @@ export default function AdminTeamPage() {
                       </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge tone={l.isActive ? "good" : "bad"}>
-                      {l.isActive ? "Active" : "Off"}
-                    </Badge>
-                    <Button
-                      type="button"
-                      variant={l.isActive ? "danger" : "secondary"}
-                      className="px-2.5 py-1.5 text-xs"
-                      disabled={setLocActive.isPending}
-                      onClick={() =>
-                        setLocActive.mutate({ id: l.id, isActive: !l.isActive })
-                      }
-                    >
-                      {l.isActive ? "Deactivate" : "Reactivate"}
-                    </Button>
+                  <div className="flex shrink-0 flex-col items-end gap-1.5">
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      <Badge tone={l.isActive ? "good" : "bad"}>
+                        {l.isActive ? "Active" : "Off"}
+                      </Badge>
+                      <Button
+                        type="button"
+                        variant={l.isActive ? "danger" : "secondary"}
+                        className="px-2.5 py-1.5 text-xs"
+                        disabled={setLocActive.isPending || deleteLoc.isPending}
+                        onClick={() =>
+                          setLocActive.mutate({
+                            id: l.id,
+                            isActive: !l.isActive,
+                          })
+                        }
+                      >
+                        {l.isActive ? "Deactivate" : "Reactivate"}
+                      </Button>
+                    </div>
+                    {!l.isActive ? (
+                      <Button
+                        type="button"
+                        variant="danger"
+                        className="px-2.5 py-1.5 text-xs"
+                        disabled={deleteLoc.isPending}
+                        onClick={async () => {
+                          const ok = await confirmAction({
+                            title: `Delete “${l.name}”?`,
+                            text: "This permanently removes the office, its menus, and related orders. Users assigned here will lose their office link.",
+                            confirmText: "Delete forever",
+                          });
+                          if (ok) deleteLoc.mutate({ id: l.id });
+                        }}
+                      >
+                        {deleteLoc.isPending ? "Deleting…" : "Delete forever"}
+                      </Button>
+                    ) : null}
                   </div>
                 </li>
               );

@@ -1,6 +1,24 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const LEGACY_SESSION_COOKIES = [
+  "authjs.session-token",
+  "__Secure-authjs.session-token",
+  "next-auth.session-token",
+  "__Secure-next-auth.session-token",
+] as const;
+
+const SESSION_COOKIES = [
+  "fnfc.session-token",
+  "__Secure-fnfc.session-token",
+] as const;
+
+function clearLegacyCookies(res: NextResponse) {
+  for (const name of LEGACY_SESSION_COOKIES) {
+    res.cookies.set(name, "", { path: "/", maxAge: 0 });
+  }
+}
+
 /**
  * Edge-safe cookie gate only. Do NOT redirect /login → /app based on cookie
  * presence — layouts use full auth() and may send users to /onboarding or
@@ -8,11 +26,13 @@ import type { NextRequest } from "next/server";
  */
 export function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
-  const sessionToken =
-    req.cookies.get("authjs.session-token")?.value ??
-    req.cookies.get("__Secure-authjs.session-token")?.value;
+  const hasSessionCookie = SESSION_COOKIES.some((name) =>
+    Boolean(req.cookies.get(name)?.value),
+  );
+  const hasLegacyCookie = LEGACY_SESSION_COOKIES.some((name) =>
+    Boolean(req.cookies.get(name)?.value),
+  );
 
-  const hasSessionCookie = Boolean(sessionToken);
   const isProtected =
     path === "/app" ||
     path.startsWith("/app/") ||
@@ -26,10 +46,14 @@ export function middleware(req: NextRequest) {
   if (isProtected && !hasSessionCookie) {
     const url = new URL("/", req.url);
     url.searchParams.set("callbackUrl", path);
-    return NextResponse.redirect(url);
+    const res = NextResponse.redirect(url);
+    if (hasLegacyCookie) clearLegacyCookies(res);
+    return res;
   }
 
-  return NextResponse.next();
+  const res = NextResponse.next();
+  if (hasLegacyCookie) clearLegacyCookies(res);
+  return res;
 }
 
 export const config = {

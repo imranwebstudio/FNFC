@@ -1,5 +1,6 @@
 "use client";
 
+import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
 import { Combobox } from "~/components/combobox";
@@ -25,11 +26,13 @@ export function ProfileForm({
   submitLabel: string;
   onSuccess?: () => void;
 }) {
+  const { update } = useSession();
   const options = api.user.onboardingOptions.useQuery();
   const utils = api.useUtils();
   const save = api.user.completeProfile.useMutation({
     onSuccess: async () => {
       showSuccess("Profile saved", "Your details were updated successfully.");
+      await update();
       await Promise.all([
         utils.user.me.invalidate(),
         utils.menu.todayForUser.invalidate(),

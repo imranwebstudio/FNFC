@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { FoodPlateLoader } from "~/components/food-plate-loader";
+import { SearchSelect } from "~/components/combobox";
 import {
   Badge,
   Button,
@@ -243,21 +244,30 @@ export default function AdminOrdersPage() {
             </p>
           </div>
           <div>
-            <Label>Member</Label>
-            <Select
-              value={behalfUserId}
-              onChange={(e) => setBehalfUserId(e.target.value)}
+            <SearchSelect
+              label="Member"
               required
-            >
-              <option value="">Select member…</option>
-              {members.data?.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name ?? u.email}
-                  {u.employeeId ? ` · ${u.employeeId}` : ""}
-                  {u.deskNumber ? ` · Desk ${u.deskNumber}` : ""}
-                </option>
-              ))}
-            </Select>
+              value={behalfUserId}
+              onChange={setBehalfUserId}
+              placeholder="Search name, email, ID, desk…"
+              emptyText={
+                members.isLoading ? "Loading members…" : "No members match"
+              }
+              options={
+                members.data?.map((u) => ({
+                  value: u.id,
+                  label: u.name ?? u.email ?? "Unknown",
+                  keywords: [
+                    u.email,
+                    u.employeeId,
+                    u.deskNumber ? `Desk ${u.deskNumber}` : null,
+                    u.phoneNumber,
+                  ]
+                    .filter(Boolean)
+                    .join(" · "),
+                })) ?? []
+              }
+            />
             {selectedMember ? (
               <p className="mt-1 text-[11px] text-ink-muted">
                 {selectedMember.customerType === "REGULAR"

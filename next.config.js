@@ -12,6 +12,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /** @type {import("next").NextConfig} */
 const config = {
   outputFileTracingRoot: path.join(__dirname),
+  experimental: {
+    optimizePackageImports: ["lucide-react", "framer-motion", "date-fns"],
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },

@@ -140,4 +140,32 @@ export const locationRouter = createTRPCRouter({
         data: { dinnerEnabled: input.dinnerEnabled },
       });
     }),
+
+  /** Permanently remove a deactivated office and its menus/orders. */
+  delete: superAdminProcedure
+    .input(z.object({ id: z.string().cuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const location = await ctx.db.location.findUnique({
+        where: { id: input.id },
+        select: { id: true, name: true, isActive: true },
+      });
+      if (!location) throw new TRPCError({ code: "NOT_FOUND" });
+      if (location.isActive) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Deactivate the location before deleting it",
+        });
+      }
+
+      await ctx.db.$transaction(async (tx) => {
+        // User.locationId has no onDelete — clear home-office links first.
+        await tx.user.updateMany({
+          where: { locationId: input.id },
+          data: { locationId: null },
+        });
+        await tx.location.delete({ where: { id: input.id } });
+      });
+
+      return { ok: true as const, name: location.name };
+    }),
 });

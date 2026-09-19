@@ -532,37 +532,59 @@ export const menuRouter = createTRPCRouter({
             },
           });
 
-    // Each office may roll over at a different time — materialize the
-    // orderable date for that office, then fetch only matching menus.
-    const menusByLoc = [];
-
+    // Group by orderable date so we materialize once per date, then fetch
+    // all locations in parallel (sequential Neon RTT was killing Vercel TTFB).
+    const nowForWindow = new Date();
+    const locsByOrderDate = new Map<string, typeof locations>();
     for (const loc of locations) {
       const cutoffHm = normalizeCutoffTime(loc.defaultCutoffTime);
-      const window = getOrderWindow(new Date(), cutoffHm);
-      await ensureMenusForDate(ctx.db, [loc.id], window.orderDate);
-      const date = dhakaDateOnly(window.orderDate);
-      const rows = await ctx.db.dailyMenu.findMany({
-        where: {
-          locationId: loc.id,
-          date,
-          isPublished: true,
-          skipped: false,
-          ...(loc.dinnerEnabled ? {} : { slot: { not: "DINNER" as const } }),
-        },
-        include: {
-          location: true,
-          orders: {
-            where: {
-              userId: user.id,
-              status: { not: "CANCELLED" },
-            },
-            take: 1,
-          },
-        },
-        orderBy: { slot: "asc" },
-      });
-      menusByLoc.push(...rows);
+      const { orderDate } = getOrderWindow(nowForWindow, cutoffHm);
+      const group = locsByOrderDate.get(orderDate) ?? [];
+      group.push(loc);
+      locsByOrderDate.set(orderDate, group);
     }
+
+    await Promise.all(
+      [...locsByOrderDate.entries()].map(([orderDate, locs]) =>
+        ensureMenusForDate(
+          ctx.db,
+          locs.map((l) => l.id),
+          orderDate,
+        ),
+      ),
+    );
+
+    const menusByLoc = (
+      await Promise.all(
+        locations.map(async (loc) => {
+          const cutoffHm = normalizeCutoffTime(loc.defaultCutoffTime);
+          const { orderDate } = getOrderWindow(nowForWindow, cutoffHm);
+          const date = dhakaDateOnly(orderDate);
+          return ctx.db.dailyMenu.findMany({
+            where: {
+              locationId: loc.id,
+              date,
+              isPublished: true,
+              skipped: false,
+              ...(loc.dinnerEnabled
+                ? {}
+                : { slot: { not: "DINNER" as const } }),
+            },
+            include: {
+              location: true,
+              orders: {
+                where: {
+                  userId: user.id,
+                  status: { not: "CANCELLED" },
+                },
+                take: 1,
+              },
+            },
+            orderBy: { slot: "asc" },
+          });
+        }),
+      )
+    ).flat();
 
     menusByLoc.sort((a, b) => {
       const byName = a.location.name.localeCompare(b.location.name);
