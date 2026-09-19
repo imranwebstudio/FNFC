@@ -813,26 +813,17 @@ export const menuRouter = createTRPCRouter({
     let locationIds: string[] | "all" = [];
     let scope: "own" | "admin" | "all" = "own";
 
-    // Prefer the member's home office for Today so multi-office publishes
-    // don't list the same meal N times. Admins without a home office still
-    // see every office they manage.
     if (user.locationId) {
+      // Assigned zone → menus for that zone only
       locationIds = [user.locationId];
       scope = "own";
-    } else if (user.role === "SUPER_ADMIN") {
-      locationIds = "all";
-      scope = "all";
-    } else if (user.role === "ADMIN") {
+    } else if (user.role === "ADMIN" && user.adminLocations.length > 0) {
       locationIds = user.adminLocations.map((a) => a.locationId);
       scope = "admin";
     } else {
-      return {
-        menus: [],
-        locationName: null,
-        locationId: null,
-        scope: "none" as const,
-        window: ownWindow,
-      };
+      // No zone yet → every active office's menu (can order from any)
+      locationIds = "all";
+      scope = "all";
     }
 
     const locations =
@@ -914,6 +905,25 @@ export const menuRouter = createTRPCRouter({
       return a.slot.localeCompare(b.slot);
     });
 
+    // Unassigned members see every zone's menus — collapse identical
+    // title+slot copies so they aren't flooded after multi-office sync.
+    let menusForUser = menusByLoc;
+    if (!user.locationId && scope === "all") {
+      menusForUser = [...menusByLoc].sort((a, b) => {
+        const aOrdered = a.orders.length > 0 ? 0 : 1;
+        const bOrdered = b.orders.length > 0 ? 0 : 1;
+        return aOrdered - bOrdered;
+      });
+      const seen = new Set<string>();
+      menusForUser = menusForUser.filter((m) => {
+        const key = `${m.slot}|${m.title.trim().toLowerCase()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      menusForUser.sort((a, b) => a.slot.localeCompare(b.slot));
+    }
+
     const now = new Date();
 
     return {
@@ -921,7 +931,7 @@ export const menuRouter = createTRPCRouter({
       locationId: user.locationId,
       scope,
       window: ownWindow,
-      menus: menusByLoc.map((m) => {
+      menus: menusForUser.map((m) => {
         const menuDateStr = formatInTimeZone(m.date, "UTC", "yyyy-MM-dd");
         const locCutoff = normalizeCutoffTime(m.location.defaultCutoffTime);
         const cutoff =

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Loader2, ScrollText, Users } from "lucide-react";
 
 import { FoodPlateLoader } from "~/components/food-plate-loader";
@@ -20,7 +20,7 @@ import { api } from "~/trpc/react";
 
 export default function AdminUsersPage() {
   const locations = api.location.list.useQuery();
-  const [locationId, setLocationId] = useState("");
+  const [locationId, setLocationId] = useState("all");
   const [search, setSearch] = useState("");
   const [depositUserId, setDepositUserId] = useState<string | null>(null);
   const [amount, setAmount] = useState(1000);
@@ -29,21 +29,16 @@ export default function AdminUsersPage() {
   const [balanceError, setBalanceError] = useState<string | null>(null);
   const utils = api.useUtils();
 
-  useEffect(() => {
-    if (!locationId && locations.data?.[0]) {
-      setLocationId(locations.data[0].id);
-    }
-  }, [locations.data, locationId]);
-
   const listInput = {
-    locationId,
+    locationId:
+      locationId === "all" || locationId === "unassigned"
+        ? undefined
+        : locationId,
+    unassignedOnly: locationId === "unassigned" ? true : undefined,
     search: search || undefined,
   };
 
-  const users = api.admin.listUsers.useQuery(listInput, {
-    enabled: Boolean(locationId),
-  });
-
+  const users = api.admin.listUsers.useQuery(listInput);
   const deposit = api.wallet.deposit.useMutation({
     onSuccess: async (_data, vars) => {
       showSuccess("Deposit recorded");
@@ -98,6 +93,14 @@ export default function AdminUsersPage() {
     },
   });
 
+  const setUserZone = api.admin.setUserZone.useMutation({
+    onSuccess: async () => {
+      showSuccess("Zone updated");
+      await utils.admin.listUsers.invalidate();
+    },
+    onError: (err) => setTypeError(err.message || "Could not assign zone"),
+  });
+
   const pendingTypeUserId = setCustomerType.isPending
     ? setCustomerType.variables?.userId
     : undefined;
@@ -110,7 +113,7 @@ export default function AdminUsersPage() {
       <PageTitle
         icon={<Users className="h-5 w-5" strokeWidth={2.25} />}
         title="Users & deposits"
-        subtitle="Set Regular / One-time. Deposit and edit balance for regular customers only."
+        subtitle="Assign catering zones. Set Regular / One-time. Deposit and edit balance for regular customers only."
       />
 
       {typeError ? (
@@ -127,11 +130,13 @@ export default function AdminUsersPage() {
 
       <div className="mb-4 grid gap-3 sm:grid-cols-2">
         <div>
-          <Label>Location</Label>
+          <Label>Zone</Label>
           <Select
             value={locationId}
             onChange={(e) => setLocationId(e.target.value)}
           >
+            <option value="all">All zones</option>
+            <option value="unassigned">Unassigned (no zone)</option>
             {locations.data?.map((l) => (
               <option key={l.id} value={l.id}>
                 {l.name}
@@ -170,6 +175,20 @@ export default function AdminUsersPage() {
                     <Badge tone="neutral">{u.role}</Badge>
                   </p>
                   <p className="text-xs text-ink-muted">
+                    {u.locationLabel ? (
+                      <>
+                        Wrote: {u.locationLabel}
+                        {" · "}
+                      </>
+                    ) : null}
+                    {u.location?.name ? (
+                      <>
+                        Zone: {u.location.name}
+                        {" · "}
+                      </>
+                    ) : (
+                      <span className="text-spice">No zone · </span>
+                    )}
                     {u.employeeId} · Bldg {u.buildingNumber} · Fl{" "}
                     {u.floorNumber} · Desk {u.deskNumber}
                   </p>
@@ -190,6 +209,26 @@ export default function AdminUsersPage() {
                       {isRegular ? "Regular" : "One-time"}
                     </Badge>
                   </p>
+                  <div className="mt-2 max-w-xs">
+                    <Label>Assign zone</Label>
+                    <Select
+                      value={u.locationId ?? ""}
+                      disabled={setUserZone.isPending}
+                      onChange={(e) =>
+                        setUserZone.mutate({
+                          userId: u.id,
+                          locationId: e.target.value || null,
+                        })
+                      }
+                    >
+                      <option value="">Unassigned</option>
+                      {locations.data?.map((l) => (
+                        <option key={l.id} value={l.id}>
+                          {l.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Link

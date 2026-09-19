@@ -110,6 +110,9 @@ model User {
   deskNumber      String?
   buildingNumber  String?
   floorNumber     String?
+  /// Free-text office / address the member typed (not a catering zone)
+  locationLabel   String?
+  /// Catering zone assigned by an admin (menus / orders)
   locationId      String?
   paymentMode     PaymentMode  @default(CASH)
   customerType    CustomerType @default(ONE_TIME)

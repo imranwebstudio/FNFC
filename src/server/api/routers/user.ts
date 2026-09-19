@@ -30,31 +30,28 @@ export const userRouter = createTRPCRouter({
     return {
       ...user,
       due: Math.max(0, -user.balance),
+      /** True once an admin has assigned a catering zone */
+      zoneAssigned: Boolean(user.locationId),
     };
   }),
 
   onboardingOptions: protectedProcedure.query(async ({ ctx }) => {
-    const [locations, users] = await Promise.all([
-      ctx.db.location.findMany({
-        where: { isActive: true },
-        select: { name: true },
-        orderBy: { name: "asc" },
-      }),
-      ctx.db.user.findMany({
-        where: { profileComplete: true },
-        select: {
-          employeeId: true,
-          phoneNumber: true,
-          deskNumber: true,
-          buildingNumber: true,
-          floorNumber: true,
-        },
-        take: 500,
-      }),
-    ]);
+    const users = await ctx.db.user.findMany({
+      where: { profileComplete: true },
+      select: {
+        employeeId: true,
+        phoneNumber: true,
+        deskNumber: true,
+        buildingNumber: true,
+        floorNumber: true,
+        locationLabel: true,
+      },
+      take: 500,
+    });
 
     return {
-      locations: uniqueSorted(locations.map((l) => l.name)),
+      /** Suggestions only — free-text location is never forced to a zone */
+      locations: uniqueSorted(users.map((u) => u.locationLabel)),
       employeeIds: uniqueSorted(users.map((u) => u.employeeId)),
       phoneNumbers: uniqueSorted(users.map((u) => u.phoneNumber)),
       deskNumbers: uniqueSorted(users.map((u) => u.deskNumber)),
@@ -71,29 +68,13 @@ export const userRouter = createTRPCRouter({
         deskNumber: z.string().min(1).max(32),
         buildingNumber: z.string().min(1).max(64),
         floorNumber: z.string().min(1).max(32),
-        /** Office / site name — select existing or type a new one */
+        /** Free-text office / address — admin assigns the catering zone later */
         locationName: z.string().min(1).max(120),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const locationName = input.locationName.trim();
+      const locationLabel = input.locationName.trim();
       const phoneNumber = parsePhoneForStorage(input.phoneNumber);
-
-      let location = await ctx.db.location.findFirst({
-        where: {
-          isActive: true,
-          name: { equals: locationName, mode: "insensitive" },
-        },
-      });
-
-      if (!location) {
-        location = await ctx.db.location.create({
-          data: {
-            name: locationName,
-            defaultCutoffTime: "14:00",
-          },
-        });
-      }
 
       return ctx.db.user.update({
         where: { id: ctx.session.user.id },
@@ -103,7 +84,8 @@ export const userRouter = createTRPCRouter({
           deskNumber: input.deskNumber.trim(),
           buildingNumber: input.buildingNumber.trim(),
           floorNumber: input.floorNumber.trim(),
-          locationId: location.id,
+          locationLabel,
+          // Do not auto-create Location / assign zone — admin does that
           profileComplete: true,
         },
       });

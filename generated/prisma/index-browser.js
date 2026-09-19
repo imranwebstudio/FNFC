@@ -162,6 +162,7 @@ exports.Prisma.UserScalarFieldEnum = {
   deskNumber: 'deskNumber',
   buildingNumber: 'buildingNumber',
   floorNumber: 'floorNumber',
+  locationLabel: 'locationLabel',
   locationId: 'locationId',
   paymentMode: 'paymentMode',
   customerType: 'customerType',

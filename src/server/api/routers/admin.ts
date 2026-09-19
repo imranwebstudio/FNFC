@@ -15,30 +15,49 @@ export const adminRouter = createTRPCRouter({
       z
         .object({
           locationId: z.string().cuid().optional(),
+          /** Members not yet assigned to a catering zone */
+          unassignedOnly: z.boolean().optional(),
           search: z.string().max(80).optional(),
         })
         .optional(),
     )
     .query(async ({ ctx, input }) => {
       const locationId = input?.locationId;
+      const unassignedOnly = input?.unassignedOnly === true;
 
-      if (locationId) {
+      let locationFilter:
+        | { locationId: string }
+        | { locationId: null }
+        | { locationId: { in: string[] } }
+        | Record<string, never> = {};
+
+      if (unassignedOnly) {
+        locationFilter = { locationId: null };
+      } else if (locationId) {
         await assertLocationAccess(
           ctx.db,
           ctx.session.user.id,
           ctx.session.user.role,
           locationId,
         );
-      } else if (ctx.session.user.role !== "SUPER_ADMIN") {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "locationId required",
+        locationFilter = { locationId };
+      } else if (ctx.session.user.role === "SUPER_ADMIN") {
+        locationFilter = {};
+      } else {
+        const links = await ctx.db.adminLocation.findMany({
+          where: { userId: ctx.session.user.id },
+          select: { locationId: true },
         });
+        const ids = links.map((l) => l.locationId);
+        if (ids.length === 0) {
+          return [];
+        }
+        locationFilter = { locationId: { in: ids } };
       }
 
       return ctx.db.user.findMany({
         where: {
-          ...(locationId ? { locationId } : {}),
+          ...locationFilter,
           ...(input?.search
             ? {
                 OR: [
@@ -46,6 +65,12 @@ export const adminRouter = createTRPCRouter({
                   { email: { contains: input.search, mode: "insensitive" } },
                   {
                     employeeId: {
+                      contains: input.search,
+                      mode: "insensitive",
+                    },
+                  },
+                  {
+                    locationLabel: {
                       contains: input.search,
                       mode: "insensitive",
                     },
@@ -64,6 +89,7 @@ export const adminRouter = createTRPCRouter({
           deskNumber: true,
           buildingNumber: true,
           floorNumber: true,
+          locationLabel: true,
           locationId: true,
           paymentMode: true,
           customerType: true,
@@ -76,7 +102,54 @@ export const adminRouter = createTRPCRouter({
           },
         },
         orderBy: [{ floorNumber: "asc" }, { deskNumber: "asc" }],
-        take: 200,
+        take: 500,
+      });
+    }),
+
+  /** Assign (or clear) a member's catering zone. Free-text locationLabel is unchanged. */
+  setUserZone: adminProcedure
+    .input(
+      z.object({
+        userId: z.string().cuid(),
+        locationId: z.string().cuid().nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const target = await ctx.db.user.findUnique({
+        where: { id: input.userId },
+        select: { id: true, locationId: true },
+      });
+      if (!target) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (input.locationId) {
+        await assertLocationAccess(
+          ctx.db,
+          ctx.session.user.id,
+          ctx.session.user.role,
+          input.locationId,
+        );
+      } else if (ctx.session.user.role !== "SUPER_ADMIN") {
+        // Office admins may only clear zone if they manage the current one
+        if (!target.locationId) {
+          throw new TRPCError({ code: "FORBIDDEN" });
+        }
+        await assertLocationAccess(
+          ctx.db,
+          ctx.session.user.id,
+          ctx.session.user.role,
+          target.locationId,
+        );
+      }
+
+      return ctx.db.user.update({
+        where: { id: input.userId },
+        data: { locationId: input.locationId },
+        select: {
+          id: true,
+          locationId: true,
+          locationLabel: true,
+          location: { select: { id: true, name: true } },
+        },
       });
     }),
 

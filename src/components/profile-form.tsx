@@ -129,12 +129,12 @@ export function ProfileForm({
       />
       <Combobox
         id="location"
-        label="Office location"
+        label="Your office / address"
         required
-        placeholder="e.g. Gulshan Office"
+        placeholder="Type your office or building name"
         value={form.locationName}
         options={options.data?.locations ?? []}
-        allowCustomHint="New office? Type the name — we’ll add it."
+        allowCustomHint="Type any address — you can order now; an admin assigns your zone later."
         onChange={(locationName) => setForm((f) => ({ ...f, locationName }))}
       />
       {save.error ? (

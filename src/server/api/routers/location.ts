@@ -89,30 +89,39 @@ export const locationRouter = createTRPCRouter({
       const cutoffTime = normalizeCutoffTime(input.defaultCutoffTime);
       const today = todayDateString();
 
-      return ctx.db.$transaction(async (tx) => {
-        const location = await tx.location.update({
-          where: { id: input.locationId },
-          data: { defaultCutoffTime: cutoffTime },
-        });
-
-        // Keep today's and future menu cutoffs in sync with the office setting
-        const menus = await tx.dailyMenu.findMany({
-          where: {
-            locationId: input.locationId,
-            date: { gte: dhakaDateOnly(today) },
-          },
-          select: { id: true, date: true },
-        });
-        for (const m of menus) {
-          const dateStr = formatInTimeZone(m.date, "UTC", "yyyy-MM-dd");
-          await tx.dailyMenu.update({
-            where: { id: m.id },
-            data: { cutoffAt: dayArchiveAt(dateStr, cutoffTime) },
-          });
-        }
-
-        return location;
+      const location = await ctx.db.location.update({
+        where: { id: input.locationId },
+        data: { defaultCutoffTime: cutoffTime },
       });
+
+      // Group by calendar day so we can updateMany (avoids long interactive
+      // transactions that time out on Neon when many future menus exist).
+      const menus = await ctx.db.dailyMenu.findMany({
+        where: {
+          locationId: input.locationId,
+          date: { gte: dhakaDateOnly(today) },
+        },
+        select: { id: true, date: true },
+      });
+
+      const idsByDate = new Map<string, string[]>();
+      for (const m of menus) {
+        const dateStr = formatInTimeZone(m.date, "UTC", "yyyy-MM-dd");
+        const list = idsByDate.get(dateStr) ?? [];
+        list.push(m.id);
+        idsByDate.set(dateStr, list);
+      }
+
+      await Promise.all(
+        [...idsByDate.entries()].map(([dateStr, ids]) =>
+          ctx.db.dailyMenu.updateMany({
+            where: { id: { in: ids } },
+            data: { cutoffAt: dayArchiveAt(dateStr, cutoffTime) },
+          }),
+        ),
+      );
+
+      return location;
     }),
 
   setDinnerEnabled: adminProcedure

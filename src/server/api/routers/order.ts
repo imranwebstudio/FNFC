@@ -43,7 +43,7 @@ export const orderRouter = createTRPCRouter({
       const user = await ctx.db.user.findUnique({
         where: { id: ctx.session.user.id },
       });
-      if (!user?.profileComplete || !user.locationId) {
+      if (!user?.profileComplete) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "Complete your profile first",
@@ -57,7 +57,8 @@ export const orderRouter = createTRPCRouter({
       if (!menu?.isPublished) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Menu not found" });
       }
-      if (menu.locationId !== user.locationId) {
+      // Assigned zone → only that zone's menus. Unassigned → any office.
+      if (user.locationId && menu.locationId !== user.locationId) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Menu is for another location",
@@ -136,19 +137,12 @@ export const orderRouter = createTRPCRouter({
       const target = await ctx.db.user.findUnique({
         where: { id: input.userId },
       });
-      if (!target?.profileComplete || !target.locationId) {
+      if (!target?.profileComplete) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "Member must complete their profile first",
         });
       }
-
-      await assertLocationAccess(
-        ctx.db,
-        ctx.session.user.id,
-        ctx.session.user.role,
-        target.locationId,
-      );
 
       const menu = await ctx.db.dailyMenu.findUnique({
         where: { id: input.dailyMenuId },
@@ -157,7 +151,15 @@ export const orderRouter = createTRPCRouter({
       if (!menu?.isPublished) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Menu not found" });
       }
-      if (menu.locationId !== target.locationId) {
+
+      await assertLocationAccess(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        menu.locationId,
+      );
+
+      if (target.locationId && menu.locationId !== target.locationId) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Meal is not for this member's office",

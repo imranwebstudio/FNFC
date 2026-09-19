@@ -7,7 +7,7 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 /** Bump when schema fields change so stale global clients are discarded in dev. */
-const PRISMA_SCHEMA_VERSION = "customer-type-settlement-v1";
+const PRISMA_SCHEMA_VERSION = "location-label-zones-v1";
 
 const createPrismaClient = () =>
   new PrismaClient({

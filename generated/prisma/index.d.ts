@@ -5413,6 +5413,7 @@ export namespace Prisma {
     deskNumber: string | null
     buildingNumber: string | null
     floorNumber: string | null
+    locationLabel: string | null
     locationId: string | null
     paymentMode: $Enums.PaymentMode | null
     customerType: $Enums.CustomerType | null
@@ -5435,6 +5436,7 @@ export namespace Prisma {
     deskNumber: string | null
     buildingNumber: string | null
     floorNumber: string | null
+    locationLabel: string | null
     locationId: string | null
     paymentMode: $Enums.PaymentMode | null
     customerType: $Enums.CustomerType | null
@@ -5457,6 +5459,7 @@ export namespace Prisma {
     deskNumber: number
     buildingNumber: number
     floorNumber: number
+    locationLabel: number
     locationId: number
     paymentMode: number
     customerType: number
@@ -5489,6 +5492,7 @@ export namespace Prisma {
     deskNumber?: true
     buildingNumber?: true
     floorNumber?: true
+    locationLabel?: true
     locationId?: true
     paymentMode?: true
     customerType?: true
@@ -5511,6 +5515,7 @@ export namespace Prisma {
     deskNumber?: true
     buildingNumber?: true
     floorNumber?: true
+    locationLabel?: true
     locationId?: true
     paymentMode?: true
     customerType?: true
@@ -5533,6 +5538,7 @@ export namespace Prisma {
     deskNumber?: true
     buildingNumber?: true
     floorNumber?: true
+    locationLabel?: true
     locationId?: true
     paymentMode?: true
     customerType?: true
@@ -5642,6 +5648,7 @@ export namespace Prisma {
     deskNumber: string | null
     buildingNumber: string | null
     floorNumber: string | null
+    locationLabel: string | null
     locationId: string | null
     paymentMode: $Enums.PaymentMode
     customerType: $Enums.CustomerType
@@ -5683,6 +5690,7 @@ export namespace Prisma {
     deskNumber?: boolean
     buildingNumber?: boolean
     floorNumber?: boolean
+    locationLabel?: boolean
     locationId?: boolean
     paymentMode?: boolean
     customerType?: boolean
@@ -5714,6 +5722,7 @@ export namespace Prisma {
     deskNumber?: boolean
     buildingNumber?: boolean
     floorNumber?: boolean
+    locationLabel?: boolean
     locationId?: boolean
     paymentMode?: boolean
     customerType?: boolean
@@ -5737,6 +5746,7 @@ export namespace Prisma {
     deskNumber?: boolean
     buildingNumber?: boolean
     floorNumber?: boolean
+    locationLabel?: boolean
     locationId?: boolean
     paymentMode?: boolean
     customerType?: boolean
@@ -5760,6 +5770,7 @@ export namespace Prisma {
     deskNumber?: boolean
     buildingNumber?: boolean
     floorNumber?: boolean
+    locationLabel?: boolean
     locationId?: boolean
     paymentMode?: boolean
     customerType?: boolean
@@ -5770,7 +5781,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "role" | "employeeId" | "phoneNumber" | "deskNumber" | "buildingNumber" | "floorNumber" | "locationId" | "paymentMode" | "customerType" | "balance" | "profileComplete" | "isBanned" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "role" | "employeeId" | "phoneNumber" | "deskNumber" | "buildingNumber" | "floorNumber" | "locationLabel" | "locationId" | "paymentMode" | "customerType" | "balance" | "profileComplete" | "isBanned" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     location?: boolean | User$locationArgs<ExtArgs>
     accounts?: boolean | User$accountsArgs<ExtArgs>
@@ -5813,6 +5824,13 @@ export namespace Prisma {
       deskNumber: string | null
       buildingNumber: string | null
       floorNumber: string | null
+      /**
+       * Free-text office / address the member typed (not a catering zone)
+       */
+      locationLabel: string | null
+      /**
+       * Catering zone assigned by an admin (menus / orders)
+       */
       locationId: string | null
       paymentMode: $Enums.PaymentMode
       customerType: $Enums.CustomerType
@@ -6266,6 +6284,7 @@ export namespace Prisma {
     readonly deskNumber: FieldRef<"User", 'String'>
     readonly buildingNumber: FieldRef<"User", 'String'>
     readonly floorNumber: FieldRef<"User", 'String'>
+    readonly locationLabel: FieldRef<"User", 'String'>
     readonly locationId: FieldRef<"User", 'String'>
     readonly paymentMode: FieldRef<"User", 'PaymentMode'>
     readonly customerType: FieldRef<"User", 'CustomerType'>
@@ -15429,6 +15448,7 @@ export namespace Prisma {
     deskNumber: 'deskNumber',
     buildingNumber: 'buildingNumber',
     floorNumber: 'floorNumber',
+    locationLabel: 'locationLabel',
     locationId: 'locationId',
     paymentMode: 'paymentMode',
     customerType: 'customerType',
@@ -15966,6 +15986,7 @@ export namespace Prisma {
     deskNumber?: StringNullableFilter<"User"> | string | null
     buildingNumber?: StringNullableFilter<"User"> | string | null
     floorNumber?: StringNullableFilter<"User"> | string | null
+    locationLabel?: StringNullableFilter<"User"> | string | null
     locationId?: StringNullableFilter<"User"> | string | null
     paymentMode?: EnumPaymentModeFilter<"User"> | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFilter<"User"> | $Enums.CustomerType
@@ -15996,6 +16017,7 @@ export namespace Prisma {
     deskNumber?: SortOrderInput | SortOrder
     buildingNumber?: SortOrderInput | SortOrder
     floorNumber?: SortOrderInput | SortOrder
+    locationLabel?: SortOrderInput | SortOrder
     locationId?: SortOrderInput | SortOrder
     paymentMode?: SortOrder
     customerType?: SortOrder
@@ -16029,6 +16051,7 @@ export namespace Prisma {
     deskNumber?: StringNullableFilter<"User"> | string | null
     buildingNumber?: StringNullableFilter<"User"> | string | null
     floorNumber?: StringNullableFilter<"User"> | string | null
+    locationLabel?: StringNullableFilter<"User"> | string | null
     locationId?: StringNullableFilter<"User"> | string | null
     paymentMode?: EnumPaymentModeFilter<"User"> | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFilter<"User"> | $Enums.CustomerType
@@ -16059,6 +16082,7 @@ export namespace Prisma {
     deskNumber?: SortOrderInput | SortOrder
     buildingNumber?: SortOrderInput | SortOrder
     floorNumber?: SortOrderInput | SortOrder
+    locationLabel?: SortOrderInput | SortOrder
     locationId?: SortOrderInput | SortOrder
     paymentMode?: SortOrder
     customerType?: SortOrder
@@ -16089,6 +16113,7 @@ export namespace Prisma {
     deskNumber?: StringNullableWithAggregatesFilter<"User"> | string | null
     buildingNumber?: StringNullableWithAggregatesFilter<"User"> | string | null
     floorNumber?: StringNullableWithAggregatesFilter<"User"> | string | null
+    locationLabel?: StringNullableWithAggregatesFilter<"User"> | string | null
     locationId?: StringNullableWithAggregatesFilter<"User"> | string | null
     paymentMode?: EnumPaymentModeWithAggregatesFilter<"User"> | $Enums.PaymentMode
     customerType?: EnumCustomerTypeWithAggregatesFilter<"User"> | $Enums.CustomerType
@@ -16930,6 +16955,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
     balance?: number
@@ -16959,6 +16985,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     locationId?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
@@ -16988,6 +17015,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
@@ -17017,6 +17045,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     locationId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
@@ -17046,6 +17075,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     locationId?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
@@ -17068,6 +17098,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
@@ -17089,6 +17120,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     locationId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
@@ -18105,6 +18137,7 @@ export namespace Prisma {
     deskNumber?: SortOrder
     buildingNumber?: SortOrder
     floorNumber?: SortOrder
+    locationLabel?: SortOrder
     locationId?: SortOrder
     paymentMode?: SortOrder
     customerType?: SortOrder
@@ -18131,6 +18164,7 @@ export namespace Prisma {
     deskNumber?: SortOrder
     buildingNumber?: SortOrder
     floorNumber?: SortOrder
+    locationLabel?: SortOrder
     locationId?: SortOrder
     paymentMode?: SortOrder
     customerType?: SortOrder
@@ -18153,6 +18187,7 @@ export namespace Prisma {
     deskNumber?: SortOrder
     buildingNumber?: SortOrder
     floorNumber?: SortOrder
+    locationLabel?: SortOrder
     locationId?: SortOrder
     paymentMode?: SortOrder
     customerType?: SortOrder
@@ -20087,6 +20122,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
     balance?: number
@@ -20115,6 +20151,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     locationId?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
@@ -20159,6 +20196,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
@@ -20187,6 +20225,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     locationId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
@@ -20215,6 +20254,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
     balance?: number
@@ -20243,6 +20283,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     locationId?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
@@ -20287,6 +20328,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
@@ -20315,6 +20357,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     locationId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
@@ -20838,6 +20881,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
     balance?: number
@@ -20866,6 +20910,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
     balance?: number
@@ -21073,6 +21118,7 @@ export namespace Prisma {
     deskNumber?: StringNullableFilter<"User"> | string | null
     buildingNumber?: StringNullableFilter<"User"> | string | null
     floorNumber?: StringNullableFilter<"User"> | string | null
+    locationLabel?: StringNullableFilter<"User"> | string | null
     locationId?: StringNullableFilter<"User"> | string | null
     paymentMode?: EnumPaymentModeFilter<"User"> | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFilter<"User"> | $Enums.CustomerType
@@ -21198,6 +21244,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
     balance?: number
@@ -21226,6 +21273,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     locationId?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
@@ -21305,6 +21353,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
@@ -21333,6 +21382,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     locationId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
@@ -21998,6 +22048,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
     balance?: number
@@ -22026,6 +22077,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     locationId?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
@@ -22059,6 +22111,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
     balance?: number
@@ -22087,6 +22140,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     locationId?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
@@ -22239,6 +22293,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
@@ -22267,6 +22322,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     locationId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
@@ -22306,6 +22362,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
@@ -22334,6 +22391,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     locationId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
@@ -22466,6 +22524,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
     balance?: number
@@ -22494,6 +22553,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     locationId?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
@@ -22566,6 +22626,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
     balance?: number
@@ -22594,6 +22655,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     locationId?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
@@ -22638,6 +22700,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
@@ -22666,6 +22729,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     locationId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
@@ -22750,6 +22814,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
@@ -22778,6 +22843,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     locationId?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
@@ -23130,6 +23196,7 @@ export namespace Prisma {
     deskNumber?: string | null
     buildingNumber?: string | null
     floorNumber?: string | null
+    locationLabel?: string | null
     paymentMode?: $Enums.PaymentMode
     customerType?: $Enums.CustomerType
     balance?: number
@@ -23203,6 +23270,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
@@ -23231,6 +23299,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number
@@ -23259,6 +23328,7 @@ export namespace Prisma {
     deskNumber?: NullableStringFieldUpdateOperationsInput | string | null
     buildingNumber?: NullableStringFieldUpdateOperationsInput | string | null
     floorNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    locationLabel?: NullableStringFieldUpdateOperationsInput | string | null
     paymentMode?: EnumPaymentModeFieldUpdateOperationsInput | $Enums.PaymentMode
     customerType?: EnumCustomerTypeFieldUpdateOperationsInput | $Enums.CustomerType
     balance?: IntFieldUpdateOperationsInput | number

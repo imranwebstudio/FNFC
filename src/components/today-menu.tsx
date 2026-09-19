@@ -153,7 +153,7 @@ export function TodayMenu() {
   }
 
   const locationLine = [
-    me.data?.location?.name ?? today.data?.locationName,
+    me.data?.location?.name ?? me.data?.locationLabel ?? today.data?.locationName,
     me.data?.floorNumber ? `${me.data.floorNumber} Floor` : null,
     me.data?.deskNumber ? `Desk ${me.data.deskNumber}` : null,
   ]
@@ -161,6 +161,8 @@ export function TodayMenu() {
     .join(", ");
 
   const firstName = me.data?.name?.split(" ")[0] ?? "there";
+  const showAllZones =
+    Boolean(me.data?.profileComplete) && !me.data?.locationId;
 
   return (
     <div className="pb-28 sm:pb-8">
@@ -186,7 +188,7 @@ export function TodayMenu() {
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-leaf" />
               <div className="min-w-0">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-leaf">
-                  Your location
+                  {me.data?.locationId ? "Your zone" : "Your location"}
                 </p>
                 <p className="break-words text-sm font-medium leading-snug text-ink">
                   {locationLine}
@@ -248,6 +250,16 @@ export function TodayMenu() {
 
       {today.isLoading ? (
         <FoodPlateLoader label="Checking today's menu…" />
+      ) : null}
+
+      {showAllZones && !today.isLoading ? (
+        <Panel className="mb-6 border-leaf/25 bg-leaf/5 py-3">
+          <p className="text-sm text-ink-muted">
+            No catering zone yet — showing menus from all offices. After an
+            admin assigns your zone, you&apos;ll only see that office&apos;s
+            meals.
+          </p>
+        </Panel>
       ) : null}
 
       {/* Already ordered */}

@@ -8,20 +8,46 @@ import {
   ClipboardList,
   ShoppingBag,
   Users,
+  X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { FoodPlateLoader } from "~/components/food-plate-loader";
-import { Label, Panel, Select, StatCard } from "~/components/ui";
+import { Badge, Button, Label, Panel, Select, StatCard } from "~/components/ui";
 import { formatTaka } from "~/lib/datetime";
 import { api } from "~/trpc/react";
+
+type PackSelection = { title: string; slot: "LUNCH" | "DINNER" };
 
 export default function AdminOverviewPage() {
   const locations = api.location.list.useQuery();
   const [locationId, setLocationId] = useState<string>("");
+  const [selected, setSelected] = useState<PackSelection | null>(null);
   const overview = api.analytics.overview.useQuery(
     locationId ? { locationId } : undefined,
   );
+  const packOrders = api.analytics.packItemOrders.useQuery(
+    {
+      title: selected?.title ?? "",
+      slot: selected?.slot ?? "LUNCH",
+      locationId: locationId || undefined,
+    },
+    { enabled: Boolean(selected) },
+  );
+
+  useEffect(() => {
+    if (!selected) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setSelected(null);
+    }
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [selected]);
 
   const d = overview.data;
 
@@ -30,6 +56,11 @@ export default function AdminOverviewPage() {
       label: "Today's Orders",
       value: d?.ordersToday ?? "—",
       icon: <ShoppingBag className="h-4 w-4" strokeWidth={2.25} />,
+    },
+    {
+      label: "Portions to pack",
+      value: d?.portionsToday ?? "—",
+      icon: <ClipboardList className="h-4 w-4" strokeWidth={2.25} />,
     },
     {
       label: "Delivered",
@@ -107,7 +138,10 @@ export default function AdminOverviewPage() {
           <Label>Location</Label>
           <Select
             value={locationId}
-            onChange={(e) => setLocationId(e.target.value)}
+            onChange={(e) => {
+              setLocationId(e.target.value);
+              setSelected(null);
+            }}
           >
             <option value="">All my locations</option>
             {locations.data?.map((l) => (
@@ -141,7 +175,7 @@ export default function AdminOverviewPage() {
             </Panel>
           ) : null}
 
-          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
             {primaryStats.map((s) => (
               <StatCard
                 key={s.label}
@@ -187,48 +221,190 @@ export default function AdminOverviewPage() {
 
           <div>
             <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="font-display text-lg font-bold tracking-tight">
-                Today&apos;s menus
-              </h2>
+              <div>
+                <h2 className="font-display text-lg font-bold tracking-tight">
+                  Pack by item
+                </h2>
+                <p className="text-xs text-ink-muted">
+                  Tap a dish to see who ordered it and their zone
+                </p>
+              </div>
               <Link
-                href="/admin/menu"
+                href="/admin/orders"
                 className="text-xs font-semibold text-leaf hover:underline"
               >
-                Manage
+                Orders
               </Link>
             </div>
             <ul className="space-y-2">
-              {(d?.menusToday.length ?? 0) === 0 ? (
+              {(d?.packByItem.length ?? 0) === 0 ? (
                 <Panel className="py-4">
                   <p className="text-sm text-ink-muted">
                     No menus published for today yet.
                   </p>
                 </Panel>
               ) : (
-                d?.menusToday.map((m) => (
-                  <Panel
-                    key={m.id}
-                    className="flex items-center justify-between gap-3 py-3.5"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold tracking-tight">
-                        {m.title}
-                      </p>
-                      <p className="mt-0.5 text-xs text-ink-muted">
-                        {m.slot} · {m.locationName}
-                      </p>
-                    </div>
-                    <p className="shrink-0 text-sm font-semibold tabular-nums text-ink-muted">
-                      {m.orderCount} · {formatTaka(m.price)}
-                    </p>
-                  </Panel>
-                ))
+                d?.packByItem.map((m) => {
+                  const isOpen =
+                    selected?.title === m.title && selected.slot === m.slot;
+                  return (
+                    <button
+                      key={`${m.slot}-${m.title}`}
+                      type="button"
+                      onClick={() =>
+                        setSelected({
+                          title: m.title,
+                          slot: m.slot as "LUNCH" | "DINNER",
+                        })
+                      }
+                      className="w-full text-left cursor-pointer"
+                    >
+                      <Panel
+                        className={`flex items-center justify-between gap-3 py-3.5 transition hover:border-leaf/30 ${
+                          isOpen ? "ring-2 ring-leaf/40" : ""
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold tracking-tight">
+                            {m.title}
+                          </p>
+                          <p className="mt-0.5 text-xs text-ink-muted">
+                            {m.slot}
+                            {m.locations.length === 1
+                              ? ` · ${m.locations[0]}`
+                              : m.locations.length > 1
+                                ? ` · ${m.locations.length} offices`
+                                : ""}
+                            {m.orderCount > 0
+                              ? ` · ${m.orderCount} order${m.orderCount === 1 ? "" : "s"}`
+                              : ""}
+                          </p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className="text-xl font-bold tabular-nums text-leaf">
+                            {m.quantity}
+                          </p>
+                          <p className="text-[11px] text-ink-muted">
+                            portions · {formatTaka(m.price)}
+                          </p>
+                        </div>
+                      </Panel>
+                    </button>
+                  );
+                })
               )}
             </ul>
           </div>
         </>
       )}
+
+      {selected ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pack-item-title"
+          onClick={() => setSelected(null)}
+        >
+          <div
+            className="surface-card flex max-h-[90vh] w-full max-w-lg flex-col rounded-t-3xl p-5 sm:rounded-3xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex shrink-0 flex-wrap items-start justify-between gap-2 border-b border-line/50 pb-3">
+              <div className="min-w-0">
+                <h3
+                  id="pack-item-title"
+                  className="font-display text-lg font-semibold"
+                >
+                  {selected.title}
+                </h3>
+                <p className="text-xs text-ink-muted">
+                  {selected.slot}
+                  {packOrders.data
+                    ? ` · ${packOrders.data.totalPortions} portions · ${packOrders.data.orders.length} people`
+                    : ""}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                className="px-2 py-1.5"
+                onClick={() => setSelected(null)}
+              >
+                <X className="h-4 w-4" />
+                Close
+              </Button>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto pt-3">
+              {packOrders.isLoading ? (
+                <FoodPlateLoader size="inline" label="Loading orderers…" />
+              ) : null}
+
+              {packOrders.data && packOrders.data.orders.length === 0 ? (
+                <p className="text-sm text-ink-muted">
+                  No orders for this dish yet.
+                </p>
+              ) : null}
+
+              {packOrders.data && packOrders.data.orders.length > 0 ? (
+                <ul className="divide-y divide-line/60">
+                  {packOrders.data.orders.map((o) => (
+                    <li
+                      key={o.id}
+                      className="flex flex-wrap items-start justify-between gap-2 py-2.5 first:pt-0 last:pb-0"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-semibold text-ink">
+                          {o.user.name ?? o.user.email ?? "Member"}
+                          {o.user.employeeId ? (
+                            <span className="ml-1.5 text-xs font-normal text-ink-muted">
+                              · {o.user.employeeId}
+                            </span>
+                          ) : null}
+                        </p>
+                        <p className="mt-0.5 text-xs text-ink-muted">
+                          Zone:{" "}
+                          <span className="font-medium text-ink">
+                            {o.user.zoneName ?? o.zoneName}
+                          </span>
+                          {o.user.locationLabel &&
+                          o.user.locationLabel !==
+                            (o.user.zoneName ?? o.zoneName)
+                            ? ` · Wrote: ${o.user.locationLabel}`
+                            : null}
+                        </p>
+                        <p className="text-xs text-ink-muted">
+                          {[
+                            o.user.buildingNumber
+                              ? `Bldg ${o.user.buildingNumber}`
+                              : null,
+                            o.user.floorNumber
+                              ? `Fl ${o.user.floorNumber}`
+                              : null,
+                            o.user.deskNumber
+                              ? `Desk ${o.user.deskNumber}`
+                              : null,
+                            o.user.phoneNumber,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <Badge tone="good">×{o.quantity}</Badge>
+                        <span className="text-[11px] text-ink-muted">
+                          {o.status === "DELIVERED" ? "Delivered" : "Pending"}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
-
