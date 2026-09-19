@@ -4,6 +4,7 @@ import { APP_TIMEZONE } from "~/lib/constants";
 
 /** Fallback when a location has no cutoff set */
 export const DEFAULT_CUTOFF_TIME = "14:00";
+export const DEFAULT_DINNER_CUTOFF_TIME = "20:00";
 /** @deprecated use DEFAULT_CUTOFF_TIME */
 export const ORDER_ROLLOVER_TIME = DEFAULT_CUTOFF_TIME;
 export const ORDER_ROLLOVER_HOUR = 14;
@@ -13,6 +14,29 @@ const CUTOFF_HM = /^([01]\d|2[0-3]):([0-5]\d)$/;
 export function normalizeCutoffTime(hhmm: string | null | undefined): string {
   if (hhmm && CUTOFF_HM.test(hhmm)) return hhmm;
   return DEFAULT_CUTOFF_TIME;
+}
+
+export function normalizeDinnerCutoffTime(
+  hhmm: string | null | undefined,
+): string {
+  if (hhmm && CUTOFF_HM.test(hhmm)) return hhmm;
+  return DEFAULT_DINNER_CUTOFF_TIME;
+}
+
+/** Lunch vs dinner cutoff for a location */
+export function locationCutoffForSlot(
+  location: {
+    defaultCutoffTime: string;
+    dinnerCutoffTime?: string | null;
+  },
+  slot: "LUNCH" | "DINNER",
+): string {
+  if (slot === "DINNER") {
+    return normalizeDinnerCutoffTime(
+      location.dinnerCutoffTime ?? location.defaultCutoffTime,
+    );
+  }
+  return normalizeCutoffTime(location.defaultCutoffTime);
 }
 
 function cutoffHourMinute(hhmm: string): { hour: number; minute: number } {

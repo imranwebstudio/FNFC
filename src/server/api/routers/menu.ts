@@ -8,6 +8,7 @@ import {
   dhakaDateOnly,
   enumerateDateRange,
   getOrderWindow,
+  locationCutoffForSlot,
   normalizeCutoffTime,
   todayDateString,
   weekdayFromDateString,
@@ -30,17 +31,26 @@ async function resolveCutoff(
   db: Db,
   locationId: string,
   dateStr: string,
+  slot: "LUNCH" | "DINNER" = "LUNCH",
   cutoffTime?: string,
 ) {
-  const cutoffHm =
-    cutoffTime ??
-    (
-      await db.location.findUnique({
-        where: { id: locationId },
-        select: { defaultCutoffTime: true },
-      })
-    )?.defaultCutoffTime;
-  return dayArchiveAt(dateStr, normalizeCutoffTime(cutoffHm));
+  if (cutoffTime) {
+    return dayArchiveAt(dateStr, normalizeCutoffTime(cutoffTime));
+  }
+  const loc = await db.location.findUnique({
+    where: { id: locationId },
+    select: { defaultCutoffTime: true, dinnerCutoffTime: true },
+  });
+  return dayArchiveAt(
+    dateStr,
+    locationCutoffForSlot(
+      {
+        defaultCutoffTime: loc?.defaultCutoffTime ?? "14:00",
+        dinnerCutoffTime: loc?.dinnerCutoffTime,
+      },
+      slot,
+    ),
+  );
 }
 
 /** Create a new daily meal option, or update an existing one by id. */
@@ -66,6 +76,7 @@ async function saveDailyMenu(
     db,
     input.locationId,
     input.date,
+    input.slot,
     input.cutoffTime,
   );
 
@@ -118,11 +129,21 @@ async function ensureMenusForDate(
     locationIds === "all"
       ? await db.location.findMany({
           where: { isActive: true },
-          select: { id: true, defaultCutoffTime: true, dinnerEnabled: true },
+          select: {
+            id: true,
+            defaultCutoffTime: true,
+            dinnerCutoffTime: true,
+            dinnerEnabled: true,
+          },
         })
       : await db.location.findMany({
           where: { id: { in: locationIds } },
-          select: { id: true, defaultCutoffTime: true, dinnerEnabled: true },
+          select: {
+            id: true,
+            defaultCutoffTime: true,
+            dinnerCutoffTime: true,
+            dinnerEnabled: true,
+          },
         });
 
   if (locations.length === 0) return;
@@ -131,12 +152,7 @@ async function ensureMenusForDate(
   const dinnerByLoc = new Map(
     locations.map((l) => [l.id, l.dinnerEnabled]),
   );
-  const cutoffAtByLoc = new Map(
-    locations.map((l) => [
-      l.id,
-      dayArchiveAt(dateStr, normalizeCutoffTime(l.defaultCutoffTime)),
-    ]),
-  );
+  const locById = new Map(locations.map((l) => [l.id, l]));
 
   const [existing, templates] = await Promise.all([
     db.dailyMenu.findMany({
@@ -168,20 +184,26 @@ async function ensureMenusForDate(
       if (t.slot === "DINNER" && !dinnerByLoc.get(t.locationId)) return false;
       return true;
     })
-    .map((t) => ({
-      locationId: t.locationId,
-      date,
-      slot: t.slot,
-      title: t.title,
-      description: t.description,
-      price: t.price,
-      imageUrl: t.imageUrl,
-      catalogItemId: t.catalogItemId,
-      isPublished: true,
-      skipped: false,
-      cutoffAt: cutoffAtByLoc.get(t.locationId) ?? dayArchiveAt(dateStr),
-      sourceWeekdayMenuId: t.id,
-    }));
+    .map((t) => {
+      const loc = locById.get(t.locationId);
+      const cutoffHm = loc
+        ? locationCutoffForSlot(loc, t.slot)
+        : normalizeCutoffTime(undefined);
+      return {
+        locationId: t.locationId,
+        date,
+        slot: t.slot,
+        title: t.title,
+        description: t.description,
+        price: t.price,
+        imageUrl: t.imageUrl,
+        catalogItemId: t.catalogItemId,
+        isPublished: true,
+        skipped: false,
+        cutoffAt: dayArchiveAt(dateStr, cutoffHm),
+        sourceWeekdayMenuId: t.id,
+      };
+    });
 
   if (rows.length > 0) {
     await db.dailyMenu.createMany({ data: rows, skipDuplicates: true });
@@ -715,6 +737,7 @@ export const menuRouter = createTRPCRouter({
           name: true,
           dinnerEnabled: true,
           defaultCutoffTime: true,
+          dinnerCutoffTime: true,
         },
       });
       const locById = new Map(locRows.map((l) => [l.id, l]));
@@ -759,7 +782,7 @@ export const menuRouter = createTRPCRouter({
             imageUrl: src.imageUrl,
             catalogItemId: src.catalogItemId,
             isPublished: src.isPublished,
-            cutoffTime: normalizeCutoffTime(office.defaultCutoffTime),
+            cutoffTime: locationCutoffForSlot(office, src.slot),
             // Don't link to source weekday template — this is a dated copy
             sourceWeekdayMenuId: null,
           });
@@ -779,12 +802,27 @@ export const menuRouter = createTRPCRouter({
   orderWindow: protectedProcedure.query(async ({ ctx }) => {
     const user = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
-      include: { location: { select: { defaultCutoffTime: true } } },
+      include: {
+        location: {
+          select: { defaultCutoffTime: true, dinnerCutoffTime: true },
+        },
+      },
     });
-    return getOrderWindow(
-      new Date(),
-      normalizeCutoffTime(user?.location?.defaultCutoffTime),
+    const lunchCutoff = normalizeCutoffTime(user?.location?.defaultCutoffTime);
+    const dinnerCutoff = locationCutoffForSlot(
+      {
+        defaultCutoffTime: lunchCutoff,
+        dinnerCutoffTime: user?.location?.dinnerCutoffTime,
+      },
+      "DINNER",
     );
+    const lunch = getOrderWindow(new Date(), lunchCutoff);
+    const dinner = getOrderWindow(new Date(), dinnerCutoff);
+    return {
+      ...lunch,
+      dinnerCutoffTime: dinnerCutoff,
+      dinnerWindow: dinner,
+    };
   }),
 
   todayForUser: protectedProcedure.query(async ({ ctx }) => {
@@ -792,14 +830,27 @@ export const menuRouter = createTRPCRouter({
       where: { id: ctx.session.user.id },
       include: {
         location: {
-          select: { id: true, name: true, defaultCutoffTime: true },
+          select: {
+            id: true,
+            name: true,
+            defaultCutoffTime: true,
+            dinnerCutoffTime: true,
+          },
         },
         adminLocations: { select: { locationId: true } },
       },
     });
 
     const ownCutoff = normalizeCutoffTime(user?.location?.defaultCutoffTime);
+    const ownDinnerCutoff = locationCutoffForSlot(
+      {
+        defaultCutoffTime: ownCutoff,
+        dinnerCutoffTime: user?.location?.dinnerCutoffTime,
+      },
+      "DINNER",
+    );
     const ownWindow = getOrderWindow(new Date(), ownCutoff);
+    const ownDinnerWindow = getOrderWindow(new Date(), ownDinnerCutoff);
 
     if (!user?.profileComplete) {
       return {
@@ -808,6 +859,7 @@ export const menuRouter = createTRPCRouter({
         locationId: null as string | null,
         scope: "none" as const,
         window: ownWindow,
+        dinnerWindow: ownDinnerWindow,
         dayOff: null as null | { active: true; message: string; date: string },
       };
     }
@@ -820,6 +872,7 @@ export const menuRouter = createTRPCRouter({
         locationId: user.locationId,
         scope: "own" as const,
         window: ownWindow,
+        dinnerWindow: ownDinnerWindow,
         dayOff: {
           active: true as const,
           message: dayOff.message,
@@ -832,14 +885,12 @@ export const menuRouter = createTRPCRouter({
     let scope: "own" | "admin" | "all" = "own";
 
     if (user.locationId) {
-      // Assigned zone → menus for that zone only
       locationIds = [user.locationId];
       scope = "own";
     } else if (user.role === "ADMIN" && user.adminLocations.length > 0) {
       locationIds = user.adminLocations.map((a) => a.locationId);
       scope = "admin";
     } else {
-      // No zone yet → every active office's menu (can order from any)
       locationIds = "all";
       scope = "all";
     }
@@ -851,6 +902,7 @@ export const menuRouter = createTRPCRouter({
             select: {
               id: true,
               defaultCutoffTime: true,
+              dinnerCutoffTime: true,
               dinnerEnabled: true,
             },
           })
@@ -859,27 +911,27 @@ export const menuRouter = createTRPCRouter({
             select: {
               id: true,
               defaultCutoffTime: true,
+              dinnerCutoffTime: true,
               dinnerEnabled: true,
             },
           });
 
-    // Group by orderable date so we materialize once per date, then fetch
-    // all locations in parallel (sequential Neon RTT was killing Vercel TTFB).
     const nowForWindow = new Date();
-    const locsByOrderDate = new Map<string, typeof locations>();
+    const datesToEnsure = new Set<string>();
     for (const loc of locations) {
-      const cutoffHm = normalizeCutoffTime(loc.defaultCutoffTime);
-      const { orderDate } = getOrderWindow(nowForWindow, cutoffHm);
-      const group = locsByOrderDate.get(orderDate) ?? [];
-      group.push(loc);
-      locsByOrderDate.set(orderDate, group);
+      const lunchHm = normalizeCutoffTime(loc.defaultCutoffTime);
+      const dinnerHm = locationCutoffForSlot(loc, "DINNER");
+      datesToEnsure.add(getOrderWindow(nowForWindow, lunchHm).orderDate);
+      if (loc.dinnerEnabled) {
+        datesToEnsure.add(getOrderWindow(nowForWindow, dinnerHm).orderDate);
+      }
     }
 
     await Promise.all(
-      [...locsByOrderDate.entries()].map(([orderDate, locs]) =>
+      [...datesToEnsure].map((orderDate) =>
         ensureMenusForDate(
           ctx.db,
-          locs.map((l) => l.id),
+          locations.map((l) => l.id),
           orderDate,
         ),
       ),
@@ -888,18 +940,18 @@ export const menuRouter = createTRPCRouter({
     const menusByLoc = (
       await Promise.all(
         locations.map(async (loc) => {
-          const cutoffHm = normalizeCutoffTime(loc.defaultCutoffTime);
-          const { orderDate } = getOrderWindow(nowForWindow, cutoffHm);
-          const date = dhakaDateOnly(orderDate);
-          return ctx.db.dailyMenu.findMany({
+          const lunchHm = normalizeCutoffTime(loc.defaultCutoffTime);
+          const dinnerHm = locationCutoffForSlot(loc, "DINNER");
+          const lunchDate = getOrderWindow(nowForWindow, lunchHm).orderDate;
+          const dinnerDate = getOrderWindow(nowForWindow, dinnerHm).orderDate;
+
+          const lunchMenus = await ctx.db.dailyMenu.findMany({
             where: {
               locationId: loc.id,
-              date,
+              date: dhakaDateOnly(lunchDate),
+              slot: "LUNCH",
               isPublished: true,
               skipped: false,
-              ...(loc.dinnerEnabled
-                ? {}
-                : { slot: { not: "DINNER" as const } }),
             },
             include: {
               location: true,
@@ -911,8 +963,31 @@ export const menuRouter = createTRPCRouter({
                 take: 1,
               },
             },
-            orderBy: { slot: "asc" },
           });
+
+          if (!loc.dinnerEnabled) return lunchMenus;
+
+          const dinnerMenus = await ctx.db.dailyMenu.findMany({
+            where: {
+              locationId: loc.id,
+              date: dhakaDateOnly(dinnerDate),
+              slot: "DINNER",
+              isPublished: true,
+              skipped: false,
+            },
+            include: {
+              location: true,
+              orders: {
+                where: {
+                  userId: user.id,
+                  status: { not: "CANCELLED" },
+                },
+                take: 1,
+              },
+            },
+          });
+
+          return [...lunchMenus, ...dinnerMenus];
         }),
       )
     ).flat();
@@ -923,8 +998,6 @@ export const menuRouter = createTRPCRouter({
       return a.slot.localeCompare(b.slot);
     });
 
-    // Unassigned members see every zone's menus — collapse identical
-    // title+slot copies so they aren't flooded after multi-office sync.
     let menusForUser = menusByLoc;
     if (!user.locationId && scope === "all") {
       menusForUser = [...menusByLoc].sort((a, b) => {
@@ -949,12 +1022,12 @@ export const menuRouter = createTRPCRouter({
       locationId: user.locationId,
       scope,
       window: ownWindow,
+      dinnerWindow: ownDinnerWindow,
       dayOff: null as null | { active: true; message: string; date: string },
       menus: menusForUser.map((m) => {
         const menuDateStr = formatInTimeZone(m.date, "UTC", "yyyy-MM-dd");
-        const locCutoff = normalizeCutoffTime(m.location.defaultCutoffTime);
-        const cutoff =
-          m.cutoffAt ?? dayArchiveAt(menuDateStr, locCutoff);
+        const locCutoff = locationCutoffForSlot(m.location, m.slot);
+        const cutoff = m.cutoffAt ?? dayArchiveAt(menuDateStr, locCutoff);
         return {
           ...m,
           menuDate: menuDateStr,
@@ -1033,7 +1106,11 @@ export const menuRouter = createTRPCRouter({
 
       const loc = await ctx.db.location.findUnique({
         where: { id: input.locationId },
-        select: { defaultCutoffTime: true, dinnerEnabled: true },
+        select: {
+          defaultCutoffTime: true,
+          dinnerCutoffTime: true,
+          dinnerEnabled: true,
+        },
       });
       if (input.slot === "DINNER" && !loc?.dinnerEnabled) {
         throw new TRPCError({
@@ -1044,7 +1121,10 @@ export const menuRouter = createTRPCRouter({
       }
 
       const cutoffTime = normalizeCutoffTime(
-        input.cutoffTime ?? loc?.defaultCutoffTime,
+        input.cutoffTime ??
+          (loc
+            ? locationCutoffForSlot(loc, input.slot)
+            : undefined),
       );
 
       // Update a single existing meal option
@@ -1114,6 +1194,7 @@ export const menuRouter = createTRPCRouter({
           id: true,
           name: true,
           defaultCutoffTime: true,
+          dinnerCutoffTime: true,
           dinnerEnabled: true,
         },
       });
@@ -1129,7 +1210,7 @@ export const menuRouter = createTRPCRouter({
           continue;
         }
         const officeCutoff = normalizeCutoffTime(
-          input.cutoffTime ?? office.defaultCutoffTime,
+          input.cutoffTime ?? locationCutoffForSlot(office, input.slot),
         );
         for (const d of dates) {
           results.push(

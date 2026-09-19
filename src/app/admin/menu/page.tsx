@@ -150,7 +150,8 @@ export default function AdminMenuPage() {
   const [msg, setMsg] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [showArchived, setShowArchived] = useState(false);
-  const [cutoffDraft, setCutoffDraft] = useState("");
+  const [lunchCutoffDraft, setLunchCutoffDraft] = useState("");
+  const [dinnerCutoffDraft, setDinnerCutoffDraft] = useState("");
 
   const [weekEdit, setWeekEdit] = useState<{
     weekday: WeekdayCode;
@@ -181,16 +182,23 @@ export default function AdminMenuPage() {
 
   useEffect(() => {
     if (selectedLoc) {
-      setCutoffDraft(selectedLoc.defaultCutoffTime);
+      setLunchCutoffDraft(selectedLoc.defaultCutoffTime);
+      setDinnerCutoffDraft(
+        selectedLoc.dinnerCutoffTime ?? selectedLoc.defaultCutoffTime,
+      );
     }
-  }, [selectedLoc?.id, selectedLoc?.defaultCutoffTime]);
+  }, [
+    selectedLoc?.id,
+    selectedLoc?.defaultCutoffTime,
+    selectedLoc?.dinnerCutoffTime,
+  ]);
 
   const setCutoff = api.location.setCutoff.useMutation({
     onSuccess: async () => {
       await utils.location.list.invalidate();
       await utils.menu.listDaily.invalidate();
       await utils.menu.todayForUser.invalidate();
-      showSuccess("Order cutoff updated");
+      showSuccess("Order cutoffs updated");
     },
   });
 
@@ -551,7 +559,7 @@ export default function AdminMenuPage() {
       <PageTitle
         icon={<BookOpen className="h-5 w-5" strokeWidth={2.25} />}
         title="Menu"
-        subtitle="Set weekday templates (every Sunday, etc.) or publish specific dates. Order cutoff is per office (Asia/Dhaka)."
+        subtitle="Set weekday templates (every Sunday, etc.) or publish specific dates. Lunch and dinner cutoffs are per office (Asia/Dhaka)."
       />
 
       {msg ? (
@@ -560,8 +568,8 @@ export default function AdminMenuPage() {
         </p>
       ) : null}
 
-      <div className="mb-6 flex flex-wrap items-end gap-4">
-        <div className="max-w-xs flex-1">
+      <div className="mb-6 space-y-3">
+        <div className="w-full max-w-md">
           <Label>Office</Label>
           <Select
             value={locationId}
@@ -581,41 +589,69 @@ export default function AdminMenuPage() {
         {locationId ? (
           <>
             <form
-              className="flex flex-wrap items-end gap-2"
+              className="space-y-3"
               onSubmit={(e) => {
                 e.preventDefault();
-                if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(cutoffDraft)) {
-                  setMsg("Cutoff must be HH:mm (24h)");
+                if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(lunchCutoffDraft)) {
+                  setMsg("Lunch cutoff must be HH:mm (24h)");
+                  return;
+                }
+                if (
+                  dinnerEnabled &&
+                  !/^([01]\d|2[0-3]):([0-5]\d)$/.test(dinnerCutoffDraft)
+                ) {
+                  setMsg("Dinner cutoff must be HH:mm (24h)");
                   return;
                 }
                 setCutoff.mutate({
                   locationId,
-                  defaultCutoffTime: cutoffDraft,
+                  defaultCutoffTime: lunchCutoffDraft,
+                  dinnerCutoffTime: dinnerEnabled
+                    ? dinnerCutoffDraft
+                    : undefined,
                 });
               }}
             >
-              <div>
-                <Label>Order cutoff (Asia/Dhaka)</Label>
-                <Input
-                  type="time"
-                  required
-                  value={cutoffDraft}
-                  onChange={(e) => setCutoffDraft(e.target.value)}
-                  className="w-[9.5rem]"
-                />
+              <div className="flex flex-wrap items-end gap-2">
+                <div className="min-w-0 flex-1 sm:flex-none">
+                  <Label>Lunch cutoff (Asia/Dhaka)</Label>
+                  <Input
+                    type="time"
+                    required
+                    value={lunchCutoffDraft}
+                    onChange={(e) => setLunchCutoffDraft(e.target.value)}
+                    className="w-full sm:w-[9.5rem]"
+                  />
+                </div>
+                {dinnerEnabled ? (
+                  <div className="min-w-0 flex-1 sm:flex-none">
+                    <Label>Dinner cutoff (Asia/Dhaka)</Label>
+                    <Input
+                      type="time"
+                      required
+                      value={dinnerCutoffDraft}
+                      onChange={(e) => setDinnerCutoffDraft(e.target.value)}
+                      className="w-full sm:w-[9.5rem]"
+                    />
+                  </div>
+                ) : null}
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  disabled={
+                    setCutoff.isPending ||
+                    (lunchCutoffDraft === selectedLoc?.defaultCutoffTime &&
+                      (!dinnerEnabled ||
+                        dinnerCutoffDraft ===
+                          (selectedLoc?.dinnerCutoffTime ??
+                            selectedLoc?.defaultCutoffTime)))
+                  }
+                >
+                  {setCutoff.isPending ? "Saving…" : "Save cutoffs"}
+                </Button>
               </div>
-              <Button
-                type="submit"
-                variant="secondary"
-                disabled={
-                  setCutoff.isPending ||
-                  cutoffDraft === selectedLoc?.defaultCutoffTime
-                }
-              >
-                {setCutoff.isPending ? "Saving…" : "Save cutoff"}
-              </Button>
             </form>
-            <label className="mb-0.5 flex cursor-pointer items-center gap-2.5 rounded-2xl bg-sand/60 px-3.5 py-2.5 text-sm">
+            <label className="flex cursor-pointer items-center gap-2.5 rounded-2xl bg-sand/60 px-3.5 py-2.5 text-sm">
               <input
                 type="checkbox"
                 className="h-4 w-4 accent-leaf"
@@ -1120,7 +1156,11 @@ export default function AdminMenuPage() {
                 onClear={() => setForm((f) => ({ ...f, imageUrl: "" }))}
               />
               <p className="text-[11px] text-ink-muted">
-                Daily close: {selectedLoc?.defaultCutoffTime ?? "—"} Asia/Dhaka
+                Daily close: lunch {selectedLoc?.defaultCutoffTime ?? "—"}
+                {dinnerEnabled
+                  ? ` · dinner ${selectedLoc?.dinnerCutoffTime ?? "—"}`
+                  : ""}{" "}
+                Asia/Dhaka
                 (edit above)
               </p>
               <label className="flex items-center gap-2 text-sm">

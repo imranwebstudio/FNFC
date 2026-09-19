@@ -302,14 +302,14 @@ export default function AdminUsersPage() {
                         </label>
                       </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-5">
                       <button
                         type="button"
                         title={`Switch to ${nextType === "REGULAR" ? "Regular" : "One-time"}`}
                         aria-label={`Switch to ${nextType === "REGULAR" ? "Regular" : "One-time"}`}
                         aria-busy={typeBusy}
                         disabled={typeBusy || u.isBanned}
-                        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-line bg-sand/80 text-leaf transition hover:border-leaf/40 hover:bg-leaf/10 disabled:opacity-50"
+                        className="inline-flex h-10 w-10 shrink-0 gap-2 items-center justify-center rounded-xl border border-line bg-sand/80 text-leaf transition hover:border-leaf/40 hover:bg-leaf/10 disabled:opacity-50"
                         onClick={() =>
                           setCustomerType.mutate({
                             userId: u.id,
@@ -329,7 +329,7 @@ export default function AdminUsersPage() {
                           title="Deposit to wallet"
                           aria-label="Deposit to wallet"
                           disabled={u.isBanned}
-                          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-line bg-sand/80 text-leaf transition hover:border-leaf/40 hover:bg-leaf/10 disabled:opacity-50"
+                          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line bg-sand/80 text-leaf transition hover:border-leaf/40 hover:bg-leaf/10 disabled:opacity-50"
                           onClick={() => setDepositUserId(u.id)}
                         >
                           <HandCoins className="h-4 w-4" strokeWidth={2.25} />
@@ -346,7 +346,7 @@ export default function AdminUsersPage() {
                             disabled={
                               setBanned.isPending || deleteUser.isPending
                             }
-                            className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-50 ${
+                            className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-50 ${
                               u.isBanned
                                 ? "border-line bg-sand/80 text-leaf hover:border-leaf/40 hover:bg-leaf/10"
                                 : "border-red-500/30 bg-red-600/15 text-red-300 hover:bg-red-600/25"
@@ -372,7 +372,7 @@ export default function AdminUsersPage() {
                             title="Delete account forever"
                             aria-label={`Delete ${u.name ?? u.email ?? "user"}`}
                             disabled={deleteUser.isPending}
-                            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-red-500/30 bg-red-600/15 text-red-300 transition hover:bg-red-600/25 disabled:opacity-50"
+                            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-red-500/30 bg-red-600/15 text-red-300 transition hover:bg-red-600/25 disabled:opacity-50"
                             onClick={async () => {
                               const ok = await confirmAction({
                                 title: `Delete “${u.name ?? u.email}”?`,

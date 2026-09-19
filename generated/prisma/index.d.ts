@@ -7000,6 +7000,7 @@ export namespace Prisma {
     name: string | null
     address: string | null
     defaultCutoffTime: string | null
+    dinnerCutoffTime: string | null
     dinnerEnabled: boolean | null
     isActive: boolean | null
     createdAt: Date | null
@@ -7011,6 +7012,7 @@ export namespace Prisma {
     name: string | null
     address: string | null
     defaultCutoffTime: string | null
+    dinnerCutoffTime: string | null
     dinnerEnabled: boolean | null
     isActive: boolean | null
     createdAt: Date | null
@@ -7022,6 +7024,7 @@ export namespace Prisma {
     name: number
     address: number
     defaultCutoffTime: number
+    dinnerCutoffTime: number
     dinnerEnabled: number
     isActive: number
     createdAt: number
@@ -7035,6 +7038,7 @@ export namespace Prisma {
     name?: true
     address?: true
     defaultCutoffTime?: true
+    dinnerCutoffTime?: true
     dinnerEnabled?: true
     isActive?: true
     createdAt?: true
@@ -7046,6 +7050,7 @@ export namespace Prisma {
     name?: true
     address?: true
     defaultCutoffTime?: true
+    dinnerCutoffTime?: true
     dinnerEnabled?: true
     isActive?: true
     createdAt?: true
@@ -7057,6 +7062,7 @@ export namespace Prisma {
     name?: true
     address?: true
     defaultCutoffTime?: true
+    dinnerCutoffTime?: true
     dinnerEnabled?: true
     isActive?: true
     createdAt?: true
@@ -7141,6 +7147,7 @@ export namespace Prisma {
     name: string
     address: string | null
     defaultCutoffTime: string
+    dinnerCutoffTime: string
     dinnerEnabled: boolean
     isActive: boolean
     createdAt: Date
@@ -7169,6 +7176,7 @@ export namespace Prisma {
     name?: boolean
     address?: boolean
     defaultCutoffTime?: boolean
+    dinnerCutoffTime?: boolean
     dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: boolean
@@ -7186,6 +7194,7 @@ export namespace Prisma {
     name?: boolean
     address?: boolean
     defaultCutoffTime?: boolean
+    dinnerCutoffTime?: boolean
     dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: boolean
@@ -7197,6 +7206,7 @@ export namespace Prisma {
     name?: boolean
     address?: boolean
     defaultCutoffTime?: boolean
+    dinnerCutoffTime?: boolean
     dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: boolean
@@ -7208,13 +7218,14 @@ export namespace Prisma {
     name?: boolean
     address?: boolean
     defaultCutoffTime?: boolean
+    dinnerCutoffTime?: boolean
     dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type LocationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "address" | "defaultCutoffTime" | "dinnerEnabled" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["location"]>
+  export type LocationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "address" | "defaultCutoffTime" | "dinnerCutoffTime" | "dinnerEnabled" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["location"]>
   export type LocationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     users?: boolean | Location$usersArgs<ExtArgs>
     adminLocations?: boolean | Location$adminLocationsArgs<ExtArgs>
@@ -7240,9 +7251,13 @@ export namespace Prisma {
       name: string
       address: string | null
       /**
-       * Order cutoff as "HH:mm" in Asia/Dhaka (e.g. "14:00")
+       * Lunch order cutoff as "HH:mm" in Asia/Dhaka (e.g. "14:00")
        */
       defaultCutoffTime: string
+      /**
+       * Dinner order cutoff as "HH:mm" in Asia/Dhaka (e.g. "20:00")
+       */
+      dinnerCutoffTime: string
       /**
        * When false, dinner menus are hidden from employees and admin meal UI
        */
@@ -7682,6 +7697,7 @@ export namespace Prisma {
     readonly name: FieldRef<"Location", 'String'>
     readonly address: FieldRef<"Location", 'String'>
     readonly defaultCutoffTime: FieldRef<"Location", 'String'>
+    readonly dinnerCutoffTime: FieldRef<"Location", 'String'>
     readonly dinnerEnabled: FieldRef<"Location", 'Boolean'>
     readonly isActive: FieldRef<"Location", 'Boolean'>
     readonly createdAt: FieldRef<"Location", 'DateTime'>
@@ -16540,6 +16556,7 @@ export namespace Prisma {
     name: 'name',
     address: 'address',
     defaultCutoffTime: 'defaultCutoffTime',
+    dinnerCutoffTime: 'dinnerCutoffTime',
     dinnerEnabled: 'dinnerEnabled',
     isActive: 'isActive',
     createdAt: 'createdAt',
@@ -17215,6 +17232,7 @@ export namespace Prisma {
     name?: StringFilter<"Location"> | string
     address?: StringNullableFilter<"Location"> | string | null
     defaultCutoffTime?: StringFilter<"Location"> | string
+    dinnerCutoffTime?: StringFilter<"Location"> | string
     dinnerEnabled?: BoolFilter<"Location"> | boolean
     isActive?: BoolFilter<"Location"> | boolean
     createdAt?: DateTimeFilter<"Location"> | Date | string
@@ -17231,6 +17249,7 @@ export namespace Prisma {
     name?: SortOrder
     address?: SortOrderInput | SortOrder
     defaultCutoffTime?: SortOrder
+    dinnerCutoffTime?: SortOrder
     dinnerEnabled?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
@@ -17250,6 +17269,7 @@ export namespace Prisma {
     name?: StringFilter<"Location"> | string
     address?: StringNullableFilter<"Location"> | string | null
     defaultCutoffTime?: StringFilter<"Location"> | string
+    dinnerCutoffTime?: StringFilter<"Location"> | string
     dinnerEnabled?: BoolFilter<"Location"> | boolean
     isActive?: BoolFilter<"Location"> | boolean
     createdAt?: DateTimeFilter<"Location"> | Date | string
@@ -17266,6 +17286,7 @@ export namespace Prisma {
     name?: SortOrder
     address?: SortOrderInput | SortOrder
     defaultCutoffTime?: SortOrder
+    dinnerCutoffTime?: SortOrder
     dinnerEnabled?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
@@ -17283,6 +17304,7 @@ export namespace Prisma {
     name?: StringWithAggregatesFilter<"Location"> | string
     address?: StringNullableWithAggregatesFilter<"Location"> | string | null
     defaultCutoffTime?: StringWithAggregatesFilter<"Location"> | string
+    dinnerCutoffTime?: StringWithAggregatesFilter<"Location"> | string
     dinnerEnabled?: BoolWithAggregatesFilter<"Location"> | boolean
     isActive?: BoolWithAggregatesFilter<"Location"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"Location"> | Date | string
@@ -18266,6 +18288,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerCutoffTime?: string
     dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
@@ -18282,6 +18305,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerCutoffTime?: string
     dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
@@ -18298,6 +18322,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerCutoffTime?: StringFieldUpdateOperationsInput | string
     dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18314,6 +18339,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerCutoffTime?: StringFieldUpdateOperationsInput | string
     dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18330,6 +18356,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerCutoffTime?: string
     dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
@@ -18341,6 +18368,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerCutoffTime?: StringFieldUpdateOperationsInput | string
     dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18352,6 +18380,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerCutoffTime?: StringFieldUpdateOperationsInput | string
     dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -19484,6 +19513,7 @@ export namespace Prisma {
     name?: SortOrder
     address?: SortOrder
     defaultCutoffTime?: SortOrder
+    dinnerCutoffTime?: SortOrder
     dinnerEnabled?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
@@ -19495,6 +19525,7 @@ export namespace Prisma {
     name?: SortOrder
     address?: SortOrder
     defaultCutoffTime?: SortOrder
+    dinnerCutoffTime?: SortOrder
     dinnerEnabled?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
@@ -19506,6 +19537,7 @@ export namespace Prisma {
     name?: SortOrder
     address?: SortOrder
     defaultCutoffTime?: SortOrder
+    dinnerCutoffTime?: SortOrder
     dinnerEnabled?: SortOrder
     isActive?: SortOrder
     createdAt?: SortOrder
@@ -21579,6 +21611,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerCutoffTime?: string
     dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
@@ -21594,6 +21627,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerCutoffTime?: string
     dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
@@ -21859,6 +21893,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerCutoffTime?: StringFieldUpdateOperationsInput | string
     dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -21874,6 +21909,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerCutoffTime?: StringFieldUpdateOperationsInput | string
     dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22500,6 +22536,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerCutoffTime?: string
     dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
@@ -22515,6 +22552,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerCutoffTime?: string
     dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
@@ -22615,6 +22653,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerCutoffTime?: StringFieldUpdateOperationsInput | string
     dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22630,6 +22669,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerCutoffTime?: StringFieldUpdateOperationsInput | string
     dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22763,6 +22803,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerCutoffTime?: string
     dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
@@ -22778,6 +22819,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerCutoffTime?: string
     dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
@@ -22884,6 +22926,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerCutoffTime?: StringFieldUpdateOperationsInput | string
     dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22899,6 +22942,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerCutoffTime?: StringFieldUpdateOperationsInput | string
     dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22965,6 +23009,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerCutoffTime?: string
     dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
@@ -22980,6 +23025,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerCutoffTime?: string
     dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
@@ -23119,6 +23165,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerCutoffTime?: StringFieldUpdateOperationsInput | string
     dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23134,6 +23181,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerCutoffTime?: StringFieldUpdateOperationsInput | string
     dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23408,6 +23456,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerCutoffTime?: string
     dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
@@ -23423,6 +23472,7 @@ export namespace Prisma {
     name: string
     address?: string | null
     defaultCutoffTime?: string
+    dinnerCutoffTime?: string
     dinnerEnabled?: boolean
     isActive?: boolean
     createdAt?: Date | string
@@ -23671,6 +23721,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerCutoffTime?: StringFieldUpdateOperationsInput | string
     dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23686,6 +23737,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     address?: NullableStringFieldUpdateOperationsInput | string | null
     defaultCutoffTime?: StringFieldUpdateOperationsInput | string
+    dinnerCutoffTime?: StringFieldUpdateOperationsInput | string
     dinnerEnabled?: BoolFieldUpdateOperationsInput | boolean
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string

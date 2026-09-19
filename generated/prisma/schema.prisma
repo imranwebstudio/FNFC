@@ -139,8 +139,10 @@ model Location {
   id                String   @id @default(cuid())
   name              String
   address           String?
-  /// Order cutoff as "HH:mm" in Asia/Dhaka (e.g. "14:00")
+  /// Lunch order cutoff as "HH:mm" in Asia/Dhaka (e.g. "14:00")
   defaultCutoffTime String   @default("14:00")
+  /// Dinner order cutoff as "HH:mm" in Asia/Dhaka (e.g. "20:00")
+  dinnerCutoffTime  String   @default("20:00")
   /// When false, dinner menus are hidden from employees and admin meal UI
   dinnerEnabled     Boolean  @default(false)
   isActive          Boolean  @default(true)

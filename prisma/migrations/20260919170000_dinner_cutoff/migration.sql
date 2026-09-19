@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Location" ADD COLUMN IF NOT EXISTS "dinnerCutoffTime" TEXT NOT NULL DEFAULT '20:00';

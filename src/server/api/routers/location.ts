@@ -6,6 +6,7 @@ import {
   dayArchiveAt,
   dhakaDateOnly,
   normalizeCutoffTime,
+  normalizeDinnerCutoffTime,
   todayDateString,
 } from "~/lib/datetime";
 import {
@@ -91,7 +92,10 @@ export const locationRouter = createTRPCRouter({
     .input(
       z.object({
         locationId: z.string().cuid(),
+        /** Lunch cutoff */
         defaultCutoffTime: z.string().regex(cutoffRegex),
+        /** Dinner cutoff — optional; keeps existing when omitted */
+        dinnerCutoffTime: z.string().regex(cutoffRegex).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -107,40 +111,59 @@ export const locationRouter = createTRPCRouter({
         if (!link) throw new TRPCError({ code: "FORBIDDEN" });
       }
 
-      const cutoffTime = normalizeCutoffTime(input.defaultCutoffTime);
+      const lunchCutoff = normalizeCutoffTime(input.defaultCutoffTime);
       const today = todayDateString();
+
+      const existing = await ctx.db.location.findUnique({
+        where: { id: input.locationId },
+        select: { dinnerCutoffTime: true },
+      });
+      if (!existing) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const dinnerCutoff = normalizeDinnerCutoffTime(
+        input.dinnerCutoffTime ?? existing.dinnerCutoffTime,
+      );
 
       const location = await ctx.db.location.update({
         where: { id: input.locationId },
-        data: { defaultCutoffTime: cutoffTime },
+        data: {
+          defaultCutoffTime: lunchCutoff,
+          dinnerCutoffTime: dinnerCutoff,
+        },
       });
 
-      // Group by calendar day so we can updateMany (avoids long interactive
-      // transactions that time out on Neon when many future menus exist).
       const menus = await ctx.db.dailyMenu.findMany({
         where: {
           locationId: input.locationId,
           date: { gte: dhakaDateOnly(today) },
         },
-        select: { id: true, date: true },
+        select: { id: true, date: true, slot: true },
       });
 
-      const idsByDate = new Map<string, string[]>();
+      const lunchByDate = new Map<string, string[]>();
+      const dinnerByDate = new Map<string, string[]>();
       for (const m of menus) {
         const dateStr = formatInTimeZone(m.date, "UTC", "yyyy-MM-dd");
-        const list = idsByDate.get(dateStr) ?? [];
+        const map = m.slot === "DINNER" ? dinnerByDate : lunchByDate;
+        const list = map.get(dateStr) ?? [];
         list.push(m.id);
-        idsByDate.set(dateStr, list);
+        map.set(dateStr, list);
       }
 
-      await Promise.all(
-        [...idsByDate.entries()].map(([dateStr, ids]) =>
+      await Promise.all([
+        ...[...lunchByDate.entries()].map(([dateStr, ids]) =>
           ctx.db.dailyMenu.updateMany({
             where: { id: { in: ids } },
-            data: { cutoffAt: dayArchiveAt(dateStr, cutoffTime) },
+            data: { cutoffAt: dayArchiveAt(dateStr, lunchCutoff) },
           }),
         ),
-      );
+        ...[...dinnerByDate.entries()].map(([dateStr, ids]) =>
+          ctx.db.dailyMenu.updateMany({
+            where: { id: { in: ids } },
+            data: { cutoffAt: dayArchiveAt(dateStr, dinnerCutoff) },
+          }),
+        ),
+      ]);
 
       return location;
     }),

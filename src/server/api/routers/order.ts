@@ -6,6 +6,7 @@ import {
   dayArchiveAt,
   dhakaDateOnly,
   getOrderWindow,
+  locationCutoffForSlot,
   normalizeCutoffTime,
   todayDateString,
 } from "~/lib/datetime";
@@ -73,7 +74,7 @@ export const orderRouter = createTRPCRouter({
         });
       }
 
-      const cutoffTime = normalizeCutoffTime(menu.location.defaultCutoffTime);
+      const cutoffTime = locationCutoffForSlot(menu.location, menu.slot);
       const window = getOrderWindow(new Date(), cutoffTime);
       const menuDate = formatInTimeZone(menu.date, "UTC", "yyyy-MM-dd");
       await assertNotDayOff(ctx.db, menuDate);
@@ -81,7 +82,7 @@ export const orderRouter = createTRPCRouter({
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: window.rolledOver
-            ? `Today's lunch closed at ${cutoffTime}. You can only order for tomorrow now.`
+            ? `Today's ${menu.slot.toLowerCase()} closed at ${cutoffTime}. You can only order for tomorrow now.`
             : "This menu is not available for ordering right now",
         });
       }
@@ -242,8 +243,9 @@ export const orderRouter = createTRPCRouter({
       }
 
       const menuDate = formatInTimeZone(order.dailyMenu.date, "UTC", "yyyy-MM-dd");
-      const cutoffTime = normalizeCutoffTime(
-        order.dailyMenu.location.defaultCutoffTime,
+      const cutoffTime = locationCutoffForSlot(
+        order.dailyMenu.location,
+        order.dailyMenu.slot,
       );
       const cutoff =
         order.dailyMenu.cutoffAt ?? dayArchiveAt(menuDate, cutoffTime);

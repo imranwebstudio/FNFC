@@ -178,6 +178,7 @@ exports.Prisma.LocationScalarFieldEnum = {
   name: 'name',
   address: 'address',
   defaultCutoffTime: 'defaultCutoffTime',
+  dinnerCutoffTime: 'dinnerCutoffTime',
   dinnerEnabled: 'dinnerEnabled',
   isActive: 'isActive',
   createdAt: 'createdAt',
