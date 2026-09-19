@@ -301,6 +301,8 @@ export const menuRouter = createTRPCRouter({
       z.object({
         id: z.string().cuid().optional(),
         locationId: z.string().cuid(),
+        /** When creating (no id), also create the same option at these offices. */
+        locationIds: z.array(z.string().cuid()).min(1).optional(),
         weekday: weekdayEnum,
         slot: z.enum(["LUNCH", "DINNER"]),
         title: z.string().min(1).max(160),
@@ -362,22 +364,72 @@ export const menuRouter = createTRPCRouter({
           catalogItemId: input.catalogItemId,
           isActive: input.isActive,
         });
-        return updated;
+        return { count: 1, menus: [updated] };
       }
 
-      return ctx.db.weekdayMenu.create({
-        data: {
-          locationId: input.locationId,
-          weekday: input.weekday,
-          slot: input.slot,
-          title: input.title,
-          description: input.description ?? undefined,
-          price: input.price,
-          imageUrl: input.imageUrl ?? undefined,
-          catalogItemId: input.catalogItemId ?? undefined,
-          isActive: input.isActive,
-        },
+      const targetIds = Array.from(
+        new Set(input.locationIds?.length ? input.locationIds : [input.locationId]),
+      );
+
+      for (const locId of targetIds) {
+        await assertLocationAccess(
+          ctx.db,
+          ctx.session.user.id,
+          ctx.session.user.role,
+          locId,
+        );
+      }
+
+      const locMeta = await ctx.db.location.findMany({
+        where: { id: { in: targetIds } },
+        select: { id: true, dinnerEnabled: true, isActive: true, name: true },
       });
+      const metaById = new Map(locMeta.map((l) => [l.id, l]));
+
+      const created = [];
+      const skipped: string[] = [];
+      for (const locId of targetIds) {
+        const meta = metaById.get(locId);
+        if (!meta) {
+          skipped.push(locId);
+          continue;
+        }
+        if (input.slot === "DINNER" && !meta.dinnerEnabled) {
+          skipped.push(meta.name);
+          continue;
+        }
+        created.push(
+          await ctx.db.weekdayMenu.create({
+            data: {
+              locationId: locId,
+              weekday: input.weekday,
+              slot: input.slot,
+              title: input.title,
+              description: input.description ?? undefined,
+              price: input.price,
+              imageUrl: input.imageUrl ?? undefined,
+              catalogItemId: input.catalogItemId ?? undefined,
+              isActive: input.isActive,
+            },
+          }),
+        );
+      }
+
+      if (created.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            input.slot === "DINNER"
+              ? "Dinner is off at the selected offices — enable Dinner first"
+              : "No offices to save to",
+        });
+      }
+
+      return {
+        count: created.length,
+        skippedDinner: skipped,
+        menus: created,
+      };
     }),
 
   weekdayClear: adminProcedure
@@ -452,6 +504,277 @@ export const menuRouter = createTRPCRouter({
       return { ok: true as const };
     }),
 
+  /**
+   * Copy existing weekday template(s) from one office onto other offices.
+   * Use for meals created before multi-location save existed.
+   */
+  weekdayCopyToLocations: adminProcedure
+    .input(
+      z.object({
+        sourceLocationId: z.string().cuid(),
+        /** Offices to receive a copy (source is ignored if included). */
+        locationIds: z.array(z.string().cuid()).min(1),
+        /** If set, copy only this template; otherwise the whole weekly schedule. */
+        weekdayMenuId: z.string().cuid().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertLocationAccess(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        input.sourceLocationId,
+      );
+
+      const targetIds = Array.from(
+        new Set(
+          input.locationIds.filter((id) => id !== input.sourceLocationId),
+        ),
+      );
+      if (targetIds.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Pick at least one other office",
+        });
+      }
+
+      for (const locId of targetIds) {
+        await assertLocationAccess(
+          ctx.db,
+          ctx.session.user.id,
+          ctx.session.user.role,
+          locId,
+        );
+      }
+
+      const sources = input.weekdayMenuId
+        ? await ctx.db.weekdayMenu.findMany({
+            where: {
+              id: input.weekdayMenuId,
+              locationId: input.sourceLocationId,
+            },
+          })
+        : await ctx.db.weekdayMenu.findMany({
+            where: { locationId: input.sourceLocationId, isActive: true },
+          });
+
+      if (sources.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: input.weekdayMenuId
+            ? "Menu option not found"
+            : "No weekly meals at this office to copy",
+        });
+      }
+
+      const locMeta = await ctx.db.location.findMany({
+        where: { id: { in: targetIds } },
+        select: { id: true, name: true, dinnerEnabled: true },
+      });
+      const metaById = new Map(locMeta.map((l) => [l.id, l]));
+
+      let created = 0;
+      let skippedExisting = 0;
+      const skippedDinner: string[] = [];
+
+      for (const src of sources) {
+        for (const locId of targetIds) {
+          const meta = metaById.get(locId);
+          if (!meta) continue;
+          if (src.slot === "DINNER" && !meta.dinnerEnabled) {
+            if (!skippedDinner.includes(meta.name)) {
+              skippedDinner.push(meta.name);
+            }
+            continue;
+          }
+
+          // Don't duplicate the same title on the same weekday+slot
+          const already = await ctx.db.weekdayMenu.findFirst({
+            where: {
+              locationId: locId,
+              weekday: src.weekday,
+              slot: src.slot,
+              title: { equals: src.title, mode: "insensitive" },
+              isActive: true,
+            },
+            select: { id: true },
+          });
+          if (already) {
+            skippedExisting += 1;
+            continue;
+          }
+
+          await ctx.db.weekdayMenu.create({
+            data: {
+              locationId: locId,
+              weekday: src.weekday,
+              slot: src.slot,
+              title: src.title,
+              description: src.description,
+              price: src.price,
+              imageUrl: src.imageUrl,
+              catalogItemId: src.catalogItemId,
+              isActive: src.isActive,
+            },
+          });
+          created += 1;
+        }
+      }
+
+      // Materialize for each office's current orderable day so Today updates now
+      const now = new Date();
+      await Promise.all(
+        targetIds.map(async (locId) => {
+          const meta = metaById.get(locId);
+          if (!meta) return;
+          const loc = await ctx.db.location.findUnique({
+            where: { id: locId },
+            select: { defaultCutoffTime: true },
+          });
+          const window = getOrderWindow(
+            now,
+            normalizeCutoffTime(loc?.defaultCutoffTime),
+          );
+          await ensureMenusForDate(ctx.db, [locId], window.orderDate);
+        }),
+      );
+
+      return {
+        created,
+        skippedExisting,
+        skippedDinner,
+        sourceCount: sources.length,
+        officeCount: targetIds.length,
+      };
+    }),
+
+  /**
+   * Copy published daily meals for a date from one office to others
+   * (one-offs that aren't weekday templates).
+   */
+  dailyCopyToLocations: adminProcedure
+    .input(
+      z.object({
+        sourceLocationId: z.string().cuid(),
+        locationIds: z.array(z.string().cuid()).min(1),
+        date: z.string().regex(dateRegex),
+        dailyMenuId: z.string().cuid().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertLocationAccess(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        input.sourceLocationId,
+      );
+
+      const targetIds = Array.from(
+        new Set(
+          input.locationIds.filter((id) => id !== input.sourceLocationId),
+        ),
+      );
+      if (targetIds.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Pick at least one other office",
+        });
+      }
+
+      for (const locId of targetIds) {
+        await assertLocationAccess(
+          ctx.db,
+          ctx.session.user.id,
+          ctx.session.user.role,
+          locId,
+        );
+      }
+
+      const date = dhakaDateOnly(input.date);
+      const sources = await ctx.db.dailyMenu.findMany({
+        where: {
+          locationId: input.sourceLocationId,
+          date,
+          skipped: false,
+          ...(input.dailyMenuId ? { id: input.dailyMenuId } : {}),
+        },
+      });
+
+      if (sources.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No meals on this date at the source office",
+        });
+      }
+
+      const locRows = await ctx.db.location.findMany({
+        where: { id: { in: targetIds } },
+        select: {
+          id: true,
+          name: true,
+          dinnerEnabled: true,
+          defaultCutoffTime: true,
+        },
+      });
+      const locById = new Map(locRows.map((l) => [l.id, l]));
+
+      let created = 0;
+      let skippedExisting = 0;
+      const skippedDinner: string[] = [];
+
+      for (const src of sources) {
+        for (const locId of targetIds) {
+          const office = locById.get(locId);
+          if (!office) continue;
+          if (src.slot === "DINNER" && !office.dinnerEnabled) {
+            if (!skippedDinner.includes(office.name)) {
+              skippedDinner.push(office.name);
+            }
+            continue;
+          }
+
+          const already = await ctx.db.dailyMenu.findFirst({
+            where: {
+              locationId: locId,
+              date,
+              slot: src.slot,
+              title: { equals: src.title, mode: "insensitive" },
+              skipped: false,
+            },
+            select: { id: true },
+          });
+          if (already) {
+            skippedExisting += 1;
+            continue;
+          }
+
+          await saveDailyMenu(ctx.db, {
+            locationId: locId,
+            date: input.date,
+            slot: src.slot,
+            title: src.title,
+            description: src.description,
+            price: src.price,
+            imageUrl: src.imageUrl,
+            catalogItemId: src.catalogItemId,
+            isPublished: src.isPublished,
+            cutoffTime: normalizeCutoffTime(office.defaultCutoffTime),
+            // Don't link to source weekday template — this is a dated copy
+            sourceWeekdayMenuId: null,
+          });
+          created += 1;
+        }
+      }
+
+      return {
+        created,
+        skippedExisting,
+        skippedDinner,
+        sourceCount: sources.length,
+        officeCount: targetIds.length,
+      };
+    }),
+
   orderWindow: protectedProcedure.query(async ({ ctx }) => {
     const user = await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
@@ -490,19 +813,18 @@ export const menuRouter = createTRPCRouter({
     let locationIds: string[] | "all" = [];
     let scope: "own" | "admin" | "all" = "own";
 
-    if (user.role === "SUPER_ADMIN") {
+    // Prefer the member's home office for Today so multi-office publishes
+    // don't list the same meal N times. Admins without a home office still
+    // see every office they manage.
+    if (user.locationId) {
+      locationIds = [user.locationId];
+      scope = "own";
+    } else if (user.role === "SUPER_ADMIN") {
       locationIds = "all";
       scope = "all";
     } else if (user.role === "ADMIN") {
-      const ids = new Set<string>(
-        user.adminLocations.map((a) => a.locationId),
-      );
-      if (user.locationId) ids.add(user.locationId);
-      locationIds = Array.from(ids);
+      locationIds = user.adminLocations.map((a) => a.locationId);
       scope = "admin";
-    } else if (user.locationId) {
-      locationIds = [user.locationId];
-      scope = "own";
     } else {
       return {
         menus: [],
@@ -653,6 +975,8 @@ export const menuRouter = createTRPCRouter({
       z.object({
         id: z.string().cuid().optional(),
         locationId: z.string().cuid(),
+        /** When creating (no id), also publish at these offices. */
+        locationIds: z.array(z.string().cuid()).min(1).optional(),
         date: z.string().regex(dateRegex),
         /** Inclusive end date for multi-day publish (week / month). Defaults to `date`. */
         endDate: z.string().regex(dateRegex).optional(),
@@ -717,6 +1041,7 @@ export const menuRouter = createTRPCRouter({
         });
         return {
           count: 1,
+          officeCount: 1,
           startDate: input.date,
           endDate: input.date,
           rolloverNote: `Orders close at ${cutoffTime} Asia/Dhaka each day; after that, employees order for the next day.`,
@@ -741,29 +1066,79 @@ export const menuRouter = createTRPCRouter({
         });
       }
 
-      const results = [];
-      for (const d of dates) {
-        results.push(
-          await saveDailyMenu(ctx.db, {
-            locationId: input.locationId,
-            date: d,
-            slot: input.slot,
-            title: input.title,
-            description: input.description,
-            price: input.price,
-            imageUrl: input.imageUrl,
-            catalogItemId: input.catalogItemId,
-            isPublished: input.isPublished,
-            cutoffTime,
-          }),
+      const targetIds = Array.from(
+        new Set(input.locationIds?.length ? input.locationIds : [input.locationId]),
+      );
+
+      for (const locId of targetIds) {
+        await assertLocationAccess(
+          ctx.db,
+          ctx.session.user.id,
+          ctx.session.user.role,
+          locId,
         );
       }
 
+      const locRows = await ctx.db.location.findMany({
+        where: { id: { in: targetIds } },
+        select: {
+          id: true,
+          name: true,
+          defaultCutoffTime: true,
+          dinnerEnabled: true,
+        },
+      });
+      const locById = new Map(locRows.map((l) => [l.id, l]));
+
+      const results = [];
+      const skippedDinner: string[] = [];
+      for (const locId of targetIds) {
+        const office = locById.get(locId);
+        if (!office) continue;
+        if (input.slot === "DINNER" && !office.dinnerEnabled) {
+          skippedDinner.push(office.name);
+          continue;
+        }
+        const officeCutoff = normalizeCutoffTime(
+          input.cutoffTime ?? office.defaultCutoffTime,
+        );
+        for (const d of dates) {
+          results.push(
+            await saveDailyMenu(ctx.db, {
+              locationId: locId,
+              date: d,
+              slot: input.slot,
+              title: input.title,
+              description: input.description,
+              price: input.price,
+              imageUrl: input.imageUrl,
+              catalogItemId: input.catalogItemId,
+              isPublished: input.isPublished,
+              cutoffTime: officeCutoff,
+            }),
+          );
+        }
+      }
+
+      if (results.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            input.slot === "DINNER"
+              ? "Dinner is off at the selected offices — enable Dinner first"
+              : "No meals published",
+        });
+      }
+
+      const officeCount = new Set(results.map((m) => m.locationId)).size;
+
       return {
         count: results.length,
+        officeCount,
+        skippedDinner,
         startDate: dates[0],
         endDate: dates[dates.length - 1],
-        rolloverNote: `Orders close at ${cutoffTime} Asia/Dhaka each day; after that, employees order for the next day.`,
+        rolloverNote: `Orders close at each office's cutoff Asia/Dhaka; after that, employees order for the next day.`,
         menus: results,
       };
     }),

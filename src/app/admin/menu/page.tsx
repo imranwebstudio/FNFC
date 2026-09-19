@@ -47,6 +47,97 @@ const emptyWeekForm = {
   catalogItemId: "",
 };
 
+function OfficeTargets({
+  locations,
+  selectedIds,
+  onChange,
+  requireDinner,
+  primaryId,
+}: {
+  locations: Array<{
+    id: string;
+    name: string;
+    isActive: boolean;
+    dinnerEnabled: boolean;
+  }>;
+  selectedIds: string[];
+  onChange: (ids: string[]) => void;
+  requireDinner?: boolean;
+  primaryId?: string;
+}) {
+  const options = locations.filter(
+    (l) => l.isActive && (!requireDinner || l.dinnerEnabled),
+  );
+  const allIds = options.map((l) => l.id);
+  const allSelected =
+    allIds.length > 0 && allIds.every((id) => selectedIds.includes(id));
+
+  function toggle(id: string) {
+    if (selectedIds.includes(id)) {
+      const next = selectedIds.filter((x) => x !== id);
+      // Always keep at least the primary office
+      if (next.length === 0 && primaryId) onChange([primaryId]);
+      else onChange(next);
+    } else {
+      onChange([...selectedIds, id]);
+    }
+  }
+
+  if (options.length === 0) return null;
+
+  return (
+    <div className="sm:col-span-2 rounded-2xl border border-leaf/20 bg-sand/40 p-3">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <Label>Offices for this meal</Label>
+        <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-leaf">
+          <input
+            type="checkbox"
+            className="h-4 w-4 accent-leaf"
+            checked={allSelected}
+            onChange={(e) =>
+              onChange(
+                e.target.checked
+                  ? allIds
+                  : primaryId
+                    ? [primaryId]
+                    : selectedIds.slice(0, 1),
+              )
+            }
+          />
+          All offices
+        </label>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {options.map((l) => {
+          const checked = selectedIds.includes(l.id);
+          return (
+            <label
+              key={l.id}
+              className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition ${
+                checked
+                  ? "bg-leaf/20 text-leaf-deep ring-1 ring-leaf/40"
+                  : "bg-sand/80 text-ink-muted hover:bg-sand"
+              }`}
+            >
+              <input
+                type="checkbox"
+                className="sr-only"
+                checked={checked}
+                onChange={() => toggle(l.id)}
+              />
+              {l.name}
+            </label>
+          );
+        })}
+      </div>
+      <p className="mt-2 text-[11px] text-ink-muted">
+        Defaults to all offices so today&apos;s menu is available everywhere
+        {requireDinner ? " (dinner-enabled only)" : ""}. Uncheck to limit.
+      </p>
+    </div>
+  );
+}
+
 export default function AdminMenuPage() {
   const locations = api.location.list.useQuery();
   const catalog = api.menu.catalogList.useQuery({ includeInactive: true });
@@ -67,6 +158,8 @@ export default function AdminMenuPage() {
     id?: string;
   } | null>(null);
   const [weekForm, setWeekForm] = useState(emptyWeekForm);
+  /** Offices to create/publish into (defaults to the selected office). */
+  const [targetLocationIds, setTargetLocationIds] = useState<string[]>([]);
 
   const daily = api.menu.listDaily.useQuery(
     { locationId, date },
@@ -128,6 +221,14 @@ export default function AdminMenuPage() {
     dinnerEnabled ? (["LUNCH", "DINNER"] as const) : (["LUNCH"] as const)
   );
 
+  function allActiveLocationIds(requireDinner?: boolean) {
+    return (locations.data ?? [])
+      .filter(
+        (l) => l.isActive && (!requireDinner || l.dinnerEnabled),
+      )
+      .map((l) => l.id);
+  }
+
   const savedMeals = useMemo(() => {
     const all = catalog.data ?? [];
     return all.filter((c) => (showArchived ? !c.isActive : c.isActive));
@@ -156,16 +257,20 @@ export default function AdminMenuPage() {
   });
 
   const weekdayUpsert = api.menu.weekdayUpsert.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (res) => {
       await utils.menu.weekdayList.invalidate();
       await utils.menu.listDaily.invalidate();
       await utils.menu.todayForUser.invalidate();
+      const offices = res.count ?? 1;
       showSuccess(
         weekEdit
           ? weekEdit.id
             ? `Updated ${WEEKDAY_LABELS[weekEdit.weekday]} ${weekEdit.slot.toLowerCase()}`
             : `Added ${WEEKDAY_LABELS[weekEdit.weekday]} ${weekEdit.slot.toLowerCase()} option`
           : "Weekday meal saved",
+        !weekEdit?.id && offices > 1
+          ? `Saved at ${offices} offices`
+          : undefined,
       );
       setWeekEdit(null);
       setWeekForm(emptyWeekForm);
@@ -184,6 +289,38 @@ export default function AdminMenuPage() {
     },
     onError: (e) => setMsg(e.message),
   });
+
+  const weekdayCopy = api.menu.weekdayCopyToLocations.useMutation({
+    onSuccess: async (res) => {
+      await utils.menu.weekdayList.invalidate();
+      await utils.menu.listDaily.invalidate();
+      await utils.menu.todayForUser.invalidate();
+      showSuccess(
+        "Copied to other offices",
+        `${res.created} new option${res.created === 1 ? "" : "s"} across ${res.officeCount} office${res.officeCount === 1 ? "" : "s"}${
+          res.skippedExisting
+            ? ` · ${res.skippedExisting} already existed`
+            : ""
+        }`,
+      );
+    },
+    onError: (e) => setMsg(e.message),
+  });
+
+  const dailyCopy = api.menu.dailyCopyToLocations.useMutation({
+    onSuccess: async (res) => {
+      await utils.menu.listDaily.invalidate();
+      await utils.menu.todayForUser.invalidate();
+      showSuccess(
+        "Copied day's meals",
+        `${res.created} meal${res.created === 1 ? "" : "s"} to ${res.officeCount} office${res.officeCount === 1 ? "" : "s"}`,
+      );
+    },
+    onError: (e) => setMsg(e.message),
+  });
+
+  const [showCopyWeek, setShowCopyWeek] = useState(false);
+  const [copyTargetIds, setCopyTargetIds] = useState<string[]>([]);
 
   const deleteDaily = api.menu.deleteDaily.useMutation({
     onSuccess: async () => {
@@ -211,11 +348,15 @@ export default function AdminMenuPage() {
       await utils.menu.listDaily.invalidate();
       await utils.menu.todayForUser.invalidate();
       await utils.menu.catalogList.invalidate();
+      const officeNote =
+        !editingId && (res.officeCount ?? 1) > 1
+          ? ` · ${res.officeCount} offices`
+          : "";
       showSuccess(
         editingId ? "Meal updated" : "Meals published",
         editingId
           ? undefined
-          : `${res.count} day${res.count === 1 ? "" : "s"} (${res.startDate} → ${res.endDate})`,
+          : `${res.count} meal${res.count === 1 ? "" : "s"} (${res.startDate} → ${res.endDate})${officeNote}`,
       );
       setEditingId(null);
       if (!editingId) {
@@ -231,6 +372,11 @@ export default function AdminMenuPage() {
     setEditingId(null);
     setForm(emptyForm);
     setShowDatedForm(true);
+    // Today's / dated meals default to every active office
+    const all = allActiveLocationIds();
+    setTargetLocationIds(
+      all.length > 0 ? all : locationId ? [locationId] : [],
+    );
     setMsg("");
   }
 
@@ -239,6 +385,10 @@ export default function AdminMenuPage() {
     setWeekForm(emptyWeekForm);
     setEditingId(null);
     setShowDatedForm(false);
+    const all = allActiveLocationIds(slot === "DINNER");
+    setTargetLocationIds(
+      all.length > 0 ? all : locationId ? [locationId] : [],
+    );
     setMsg("");
   }
 
@@ -257,6 +407,10 @@ export default function AdminMenuPage() {
     });
     setEditingId(null);
     setShowDatedForm(false);
+    setTargetLocationIds(locationId ? [locationId] : []);
+    setCopyTargetIds(
+      allActiveLocationIds(slot === "DINNER").filter((id) => id !== locationId),
+    );
     setMsg("");
   }
 
@@ -307,6 +461,7 @@ export default function AdminMenuPage() {
     setWeekEdit(null);
     setEditingId(m.id);
     setShowDatedForm(true);
+    setTargetLocationIds(locationId ? [locationId] : []);
     setForm({
       slot: m.slot,
       title: m.title,
@@ -348,9 +503,15 @@ export default function AdminMenuPage() {
       }
     }
 
+    const offices =
+      !editingId && targetLocationIds.length > 0
+        ? targetLocationIds
+        : [locationId];
+
     upsert.mutate({
       id: editingId ?? undefined,
       locationId,
+      locationIds: editingId ? undefined : offices,
       date,
       endDate: editingId ? date : endDate,
       slot: form.slot,
@@ -366,9 +527,14 @@ export default function AdminMenuPage() {
   function onWeekSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!locationId || !weekEdit) return;
+    const offices =
+      !weekEdit.id && targetLocationIds.length > 0
+        ? targetLocationIds
+        : [locationId];
     weekdayUpsert.mutate({
       id: weekEdit.id,
       locationId,
+      locationIds: weekEdit.id ? undefined : offices,
       weekday: weekEdit.weekday,
       slot: weekEdit.slot,
       title: weekForm.title,
@@ -488,6 +654,76 @@ export default function AdminMenuPage() {
             : ` (before ${orderWindow.cutoffTime} — today)`}
           .
         </p>
+
+        {(locations.data?.filter((l) => l.isActive).length ?? 0) > 1 &&
+        (weekdayMenus.data?.length ?? 0) > 0 ? (
+          <div className="mb-4">
+            {!showCopyWeek ? (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  const others = allActiveLocationIds().filter(
+                    (id) => id !== locationId,
+                  );
+                  setCopyTargetIds(others);
+                  setShowCopyWeek(true);
+                }}
+              >
+                Copy this office&apos;s week to other offices…
+              </Button>
+            ) : (
+              <Panel className="space-y-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <h3 className="font-display text-base font-semibold">
+                      Copy existing weekly menu
+                    </h3>
+                    <p className="text-xs text-ink-muted">
+                      Pushes every weekday option from{" "}
+                      <strong className="text-ink">
+                        {selectedLoc?.name ?? "this office"}
+                      </strong>{" "}
+                      onto the offices below (skips duplicates). Also fills in
+                      today&apos;s order day at those offices.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setShowCopyWeek(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
+                <OfficeTargets
+                  locations={(locations.data ?? []).filter(
+                    (l) => l.id !== locationId,
+                  )}
+                  selectedIds={copyTargetIds}
+                  onChange={setCopyTargetIds}
+                />
+                <Button
+                  type="button"
+                  disabled={
+                    weekdayCopy.isPending || copyTargetIds.length === 0
+                  }
+                  onClick={() => {
+                    if (!locationId || copyTargetIds.length === 0) return;
+                    weekdayCopy.mutate({
+                      sourceLocationId: locationId,
+                      locationIds: copyTargetIds,
+                    });
+                  }}
+                >
+                  {weekdayCopy.isPending
+                    ? "Copying…"
+                    : `Copy week to ${copyTargetIds.length} office${copyTargetIds.length === 1 ? "" : "s"}`}
+                </Button>
+              </Panel>
+            )}
+          </div>
+        ) : null}
 
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
           {WEEKDAYS.map((day) => {
@@ -634,13 +870,73 @@ export default function AdminMenuPage() {
                   }
                 />
               </div>
+              {!weekEdit.id ? (
+                <OfficeTargets
+                  locations={locations.data ?? []}
+                  primaryId={locationId}
+                  selectedIds={
+                    targetLocationIds.length
+                      ? targetLocationIds
+                      : locationId
+                        ? [locationId]
+                        : []
+                  }
+                  onChange={setTargetLocationIds}
+                  requireDinner={weekEdit.slot === "DINNER"}
+                />
+              ) : (
+                <>
+                  <OfficeTargets
+                    locations={(locations.data ?? []).filter(
+                      (l) => l.id !== locationId,
+                    )}
+                    selectedIds={copyTargetIds}
+                    onChange={setCopyTargetIds}
+                    requireDinner={weekEdit.slot === "DINNER"}
+                  />
+                  {(locations.data?.filter((l) => l.isActive && l.id !== locationId)
+                    .length ?? 0) > 0 ? (
+                    <div className="sm:col-span-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        disabled={
+                          weekdayCopy.isPending ||
+                          copyTargetIds.length === 0 ||
+                          !weekEdit.id
+                        }
+                        onClick={() => {
+                          if (!locationId || !weekEdit.id) return;
+                          const targets =
+                            copyTargetIds.length > 0
+                              ? copyTargetIds
+                              : allActiveLocationIds(
+                                  weekEdit.slot === "DINNER",
+                                ).filter((id) => id !== locationId);
+                          weekdayCopy.mutate({
+                            sourceLocationId: locationId,
+                            locationIds: targets,
+                            weekdayMenuId: weekEdit.id,
+                          });
+                        }}
+                      >
+                        {weekdayCopy.isPending
+                          ? "Copying…"
+                          : "Copy this option to selected offices"}
+                      </Button>
+                    </div>
+                  ) : null}
+                </>
+              )}
               <div className="flex flex-wrap gap-2 sm:col-span-2">
                 <Button type="submit" disabled={weekdayUpsert.isPending}>
                   {weekdayUpsert.isPending
                     ? "Saving…"
                     : weekEdit.id
                       ? "Update option"
-                      : "Add option"}
+                      : targetLocationIds.length > 1
+                        ? `Add to ${targetLocationIds.length} offices`
+                        : "Add option"}
                 </Button>
                 {weekEdit.id ? (
                   <Button
@@ -722,12 +1018,38 @@ export default function AdminMenuPage() {
               </span>
             ) : null}
           </h3>
-          {!showDatedForm ? (
-            <Button type="button" variant="secondary" onClick={openDatedAdd}>
-              <Plus className="h-4 w-4" />
-              Add option
-            </Button>
-          ) : null}
+          <div className="flex flex-wrap gap-2">
+            {(locations.data?.filter((l) => l.isActive).length ?? 0) > 1 &&
+            (daily.data?.length ?? 0) > 0 ? (
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={dailyCopy.isPending}
+                onClick={() => {
+                  if (!locationId) return;
+                  const targets = allActiveLocationIds().filter(
+                    (id) => id !== locationId,
+                  );
+                  if (targets.length === 0) return;
+                  dailyCopy.mutate({
+                    sourceLocationId: locationId,
+                    locationIds: targets,
+                    date,
+                  });
+                }}
+              >
+                {dailyCopy.isPending
+                  ? "Copying…"
+                  : "Copy this day to all offices"}
+              </Button>
+            ) : null}
+            {!showDatedForm ? (
+              <Button type="button" variant="secondary" onClick={openDatedAdd}>
+                <Plus className="h-4 w-4" />
+                Add option
+              </Button>
+            ) : null}
+          </div>
         </div>
 
         {showDatedForm ? (
@@ -825,6 +1147,21 @@ export default function AdminMenuPage() {
                   Also keep in saved meals
                 </label>
               ) : null}
+              {!editingId ? (
+                <OfficeTargets
+                  locations={locations.data ?? []}
+                  primaryId={locationId}
+                  selectedIds={
+                    targetLocationIds.length
+                      ? targetLocationIds
+                      : locationId
+                        ? [locationId]
+                        : []
+                  }
+                  onChange={setTargetLocationIds}
+                  requireDinner={form.slot === "DINNER"}
+                />
+              ) : null}
               <div className="flex flex-wrap gap-2">
                 <Button
                   type="submit"
@@ -834,7 +1171,9 @@ export default function AdminMenuPage() {
                     ? "Saving…"
                     : editingId
                       ? "Update"
-                      : "Publish"}
+                      : targetLocationIds.length > 1
+                        ? `Publish to ${targetLocationIds.length} offices`
+                        : "Publish"}
                 </Button>
                 <Button type="button" variant="ghost" onClick={resetForm}>
                   Cancel

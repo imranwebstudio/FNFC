@@ -60,6 +60,7 @@ export const adminRouter = createTRPCRouter({
           email: true,
           role: true,
           employeeId: true,
+          phoneNumber: true,
           deskNumber: true,
           buildingNumber: true,
           floorNumber: true,
