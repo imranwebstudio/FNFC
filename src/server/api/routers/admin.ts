@@ -223,10 +223,27 @@ export const adminRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.user.update({
+      const target = await ctx.db.user.findUnique({
         where: { id: input.userId },
-        data: { role: "ADMIN" },
+        select: { id: true, role: true, isBanned: true },
       });
+      if (!target) throw new TRPCError({ code: "NOT_FOUND" });
+      if (target.isBanned) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot assign a banned user as manager",
+        });
+      }
+
+      // Promote members to ADMIN so they can manage the office — never demote
+      // an existing SUPER_ADMIN.
+      if (target.role === "USER") {
+        await ctx.db.user.update({
+          where: { id: input.userId },
+          data: { role: "ADMIN" },
+        });
+      }
+
       return ctx.db.adminLocation.upsert({
         where: {
           userId_locationId: {
@@ -296,6 +313,38 @@ export const adminRouter = createTRPCRouter({
       }
 
       return updated;
+    }),
+
+  /** Permanently remove a member and cascaded orders / wallet / auth rows. */
+  deleteUser: superAdminProcedure
+    .input(z.object({ userId: z.string().cuid() }))
+    .mutation(async ({ ctx, input }) => {
+      if (input.userId === ctx.session.user.id) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot delete your own account",
+        });
+      }
+
+      const target = await ctx.db.user.findUnique({
+        where: { id: input.userId },
+        select: { id: true, name: true, email: true, role: true },
+      });
+      if (!target) throw new TRPCError({ code: "NOT_FOUND" });
+      if (target.role === "SUPER_ADMIN") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot delete a super admin",
+        });
+      }
+
+      await ctx.db.user.delete({ where: { id: input.userId } });
+
+      return {
+        id: target.id,
+        name: target.name,
+        email: target.email,
+      };
     }),
 
   setUserPhone: adminProcedure

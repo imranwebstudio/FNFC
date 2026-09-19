@@ -9,7 +9,10 @@ import {
   PackageCheck,
   Phone,
   Plus,
+  Replace,
+  Search,
   Wallet,
+  X,
 } from "lucide-react";
 
 import { FoodPlateLoader } from "~/components/food-plate-loader";
@@ -32,6 +35,7 @@ import {
 } from "~/lib/datetime";
 import { MAX_ORDER_QUANTITY } from "~/lib/order-quantity";
 import { api } from "~/trpc/react";
+import type { RouterOutputs } from "~/trpc/react";
 import { showSuccess } from "~/lib/swal";
 
 export default function AdminOrdersPage() {
@@ -39,6 +43,8 @@ export default function AdminOrdersPage() {
   const me = api.user.me.useQuery();
   const [locationId, setLocationId] = useState("all");
   const [date, setDate] = useState(todayDateString());
+  const [searchDraft, setSearchDraft] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const utils = api.useUtils();
 
   const [behalfLocationId, setBehalfLocationId] = useState("");
@@ -124,6 +130,19 @@ export default function AdminOrdersPage() {
 
   const isSuper = me.data?.role === "SUPER_ADMIN";
   const selectedMember = members.data?.find((u) => u.id === behalfUserId);
+
+  const applySearch = () => setSearchQuery(searchDraft.trim());
+
+  const filteredOrders =
+    orders.data?.filter((o) => {
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        (o.user.name?.toLowerCase().includes(q) ?? false) ||
+        (o.user.email?.toLowerCase().includes(q) ?? false) ||
+        (o.user.employeeId?.toLowerCase().includes(q) ?? false)
+      );
+    }) ?? [];
 
   useEffect(() => {
     setBehalfUserId("");
@@ -366,7 +385,7 @@ export default function AdminOrdersPage() {
       </Panel>
       ) : null}
 
-      <div className="mb-5 grid max-w-lg gap-3 sm:grid-cols-2">
+      <div className="mb-5 grid max-w-3xl gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_minmax(0,1.4fr)_auto]">
         <div>
           <Label>Location</Label>
           <Select
@@ -393,6 +412,39 @@ export default function AdminOrdersPage() {
             onChange={(e) => setDate(e.target.value)}
           />
         </div>
+        <div>
+          <Label htmlFor="order-search">Search member</Label>
+          <Input
+            id="order-search"
+            placeholder="Name or employee ID"
+            value={searchDraft}
+            onChange={(e) => setSearchDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                applySearch();
+              }
+            }}
+          />
+        </div>
+        <div className="flex items-end gap-2">
+          <Button type="button" variant="secondary" onClick={applySearch}>
+            <Search className="h-4 w-4" />
+            Search
+          </Button>
+          {searchQuery ? (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setSearchDraft("");
+                setSearchQuery("");
+              }}
+            >
+              Clear
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {orders.isLoading ? (
@@ -401,134 +453,378 @@ export default function AdminOrdersPage() {
 
       <ul className="space-y-2.5">
         {!orders.isLoading
-          ? orders.data?.map((o, i) => (
-          <motion.li
-            key={o.id}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.02 }}
-          >
-            <Panel className="flex flex-wrap items-center justify-between gap-3 py-3.5">
-              <div>
-                <p className="font-semibold tracking-tight">
-                  <Link
-                    href={`/admin/users/${o.user.id}`}
-                    className="text-leaf-deep transition hover:text-leaf hover:underline"
-                  >
-                    {o.user.name ?? o.user.email}
-                  </Link>{" "}
-                  <span className="text-xs font-normal text-ink-muted">
-                    {o.user.employeeId}
-                  </span>
-                </p>
-                <p className="mt-0.5 text-xs text-ink-muted">
-                  {o.location.name} · Bldg {o.user.buildingNumber} · Fl{" "}
-                  {o.user.floorNumber} · Desk {o.user.deskNumber} ·{" "}
-                  {o.dailyMenu.slot} · {o.dailyMenu.title}
-                  {o.quantity > 1 ? ` ×${o.quantity}` : ""}
-                </p>
-                {o.placedBy ? (
-                  <p className="mt-1 text-[11px] text-ink-muted">
-                    Placed by{" "}
-                    <span className="font-medium text-ink">
-                      {o.placedBy.name ?? o.placedBy.email}
-                    </span>
-                    {o.note ? ` · ${o.note}` : null}
-                  </p>
-                ) : o.note ? (
-                  <p className="mt-1 text-[11px] text-ink-muted">{o.note}</p>
-                ) : null}
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  <Badge tone={o.status === "DELIVERED" ? "good" : "warn"}>
-                    {o.status}
-                  </Badge>
-                  <Badge
-                    tone={
-                      o.paymentStatus === "DUE"
-                        ? "bad"
-                        : o.paymentStatus === "UNPAID"
-                          ? "warn"
-                          : o.paymentStatus === "PAID" ||
-                              o.paymentStatus === "WALLET_CHARGED"
-                            ? "good"
-                            : "neutral"
-                    }
-                  >
-                    {o.paymentStatus}
-                  </Badge>
-                  <Badge
-                    tone={
-                      o.user.customerType === "REGULAR" ? "good" : "neutral"
-                    }
-                  >
-                    {o.user.customerType === "REGULAR"
-                      ? "Regular"
-                      : "One-time"}
-                  </Badge>
-                  {o.placedBy ? <Badge tone="neutral">Admin order</Badge> : null}
-                  <span className="text-xs font-bold tabular-nums">
-                    {formatTaka(o.amount)}
-                  </span>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {o.status === "PLACED" ? (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    disabled={deliver.isPending}
-                    onClick={() => deliver.mutate({ orderId: o.id })}
-                  >
-                    <PackageCheck className="h-4 w-4" />
-                    Mark delivered
-                  </Button>
-                ) : null}
-                {o.user.customerType === "REGULAR" &&
-                o.status === "DELIVERED" &&
-                o.paymentStatus === "UNPAID" ? (
-                  <Button
-                    type="button"
-                    disabled={chargeWallet.isPending}
-                    onClick={() => chargeWallet.mutate({ orderId: o.id })}
-                  >
-                    <Wallet className="h-4 w-4" />
-                    Charge Wallet
-                  </Button>
-                ) : null}
-                {o.user.customerType === "ONE_TIME" &&
-                o.status === "DELIVERED" &&
-                (o.paymentStatus === "UNPAID" ||
-                  o.paymentStatus === "DUE") ? (
-                  <Button
-                    type="button"
-                    disabled={confirmPay.isPending}
-                    onClick={() => confirmPay.mutate({ orderId: o.id })}
-                  >
-                    <Banknote className="h-4 w-4" />
-                    Cash Paid
-                  </Button>
-                ) : null}
-                {o.user.customerType === "ONE_TIME" &&
-                o.status === "DELIVERED" &&
-                o.paymentStatus === "UNPAID" ? (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    disabled={markDue.isPending}
-                    onClick={() => markDue.mutate({ orderId: o.id })}
-                  >
-                    Due
-                  </Button>
-                ) : null}
-              </div>
-            </Panel>
-          </motion.li>
-        ))
+          ? filteredOrders.map((o, i) => (
+              <OrderCard
+                key={o.id}
+                order={o}
+                index={i}
+                date={date}
+                deliverPending={deliver.isPending}
+                chargeWalletPending={chargeWallet.isPending}
+                confirmPayPending={confirmPay.isPending}
+                markDuePending={markDue.isPending}
+                onDeliver={() => deliver.mutate({ orderId: o.id })}
+                onChargeWallet={() => chargeWallet.mutate({ orderId: o.id })}
+                onConfirmPay={() => confirmPay.mutate({ orderId: o.id })}
+                onMarkDue={() => markDue.mutate({ orderId: o.id })}
+              />
+            ))
           : null}
       </ul>
       {!orders.isLoading && orders.data?.length === 0 ? (
         <p className="text-sm text-ink-muted">No orders for this day.</p>
       ) : null}
+      {!orders.isLoading &&
+      (orders.data?.length ?? 0) > 0 &&
+      filteredOrders.length === 0 ? (
+        <p className="text-sm text-ink-muted">
+          No members match &ldquo;{searchQuery}&rdquo;.
+        </p>
+      ) : null}
     </div>
+  );
+}
+
+type AdminOrder = RouterOutputs["order"]["listForAdmin"][number];
+
+function OrderCard({
+  order: o,
+  index: i,
+  date,
+  deliverPending,
+  chargeWalletPending,
+  confirmPayPending,
+  markDuePending,
+  onDeliver,
+  onChargeWallet,
+  onConfirmPay,
+  onMarkDue,
+}: {
+  order: AdminOrder;
+  index: number;
+  date: string;
+  deliverPending: boolean;
+  chargeWalletPending: boolean;
+  confirmPayPending: boolean;
+  markDuePending: boolean;
+  onDeliver: () => void;
+  onChargeWallet: () => void;
+  onConfirmPay: () => void;
+  onMarkDue: () => void;
+}) {
+  const utils = api.useUtils();
+  const [swapOpen, setSwapOpen] = useState(false);
+  const canChangeMeal =
+    (o.paymentStatus === "UNPAID" || o.paymentStatus === "DUE") &&
+    date >= todayDateString();
+
+  const mealOptions = api.menu.optionsForLocation.useQuery(
+    { locationId: o.locationId, date },
+    { enabled: canChangeMeal && swapOpen },
+  );
+
+  const changeMeal = api.order.changeMeal.useMutation({
+    onSuccess: async (result) => {
+      const updated = result.order;
+      const label = `${updated.dailyMenu.slot} · ${updated.dailyMenu.title}`;
+      showSuccess(
+        result.split ? "Meal split" : "Meal updated",
+        result.split
+          ? `Moved ${result.swappedQuantity} → ${label}`
+          : label,
+      );
+      setSwapOpen(false);
+      await utils.order.listForAdmin.invalidate();
+      await utils.account.userStatement.invalidate();
+    },
+  });
+
+  const menuChoices =
+    mealOptions.data?.menus.length
+      ? mealOptions.data.menus
+      : [
+          {
+            id: o.dailyMenuId,
+            slot: o.dailyMenu.slot,
+            title: o.dailyMenu.title,
+            price: o.dailyMenu.price,
+          },
+        ];
+
+  const swapOne = (dailyMenuId: string) => {
+    if (dailyMenuId === o.dailyMenuId) return;
+    changeMeal.mutate({
+      orderId: o.id,
+      dailyMenuId,
+      quantity: 1,
+    });
+  };
+
+  const swapAll = (dailyMenuId: string) => {
+    if (dailyMenuId === o.dailyMenuId) return;
+    changeMeal.mutate({
+      orderId: o.id,
+      dailyMenuId,
+      quantity: o.quantity,
+    });
+  };
+
+  return (
+    <motion.li
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: i * 0.02 }}
+    >
+      <Panel className="flex flex-wrap items-center justify-between gap-3 py-3.5">
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold tracking-tight">
+            <Link
+              href={`/admin/users/${o.user.id}`}
+              className="text-leaf-deep transition hover:text-leaf hover:underline"
+            >
+              {o.user.name ?? o.user.email}
+            </Link>{" "}
+            <span className="text-xs font-normal text-ink-muted">
+              {o.user.employeeId}
+            </span>
+          </p>
+          <p className="mt-0.5 text-xs text-ink-muted">
+            {o.location.name} · Bldg {o.user.buildingNumber} · Fl{" "}
+            {o.user.floorNumber} · Desk {o.user.deskNumber}
+          </p>
+          <div className="mt-1 flex items-center gap-1.5">
+            <p className="min-w-0 text-sm font-bold tracking-tight text-ink">
+              {o.dailyMenu.slot} · {o.dailyMenu.title}
+              {o.quantity > 1 ? ` ×${o.quantity}` : ""}
+            </p>
+            {canChangeMeal ? (
+              <button
+                type="button"
+                title="Replace meal"
+                aria-label="Replace meal"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-line bg-sand/80 text-leaf transition hover:border-leaf/40 hover:bg-leaf/10"
+                onClick={() => setSwapOpen(true)}
+              >
+                <Replace className="h-4 w-4" strokeWidth={2.25} />
+              </button>
+            ) : null}
+          </div>
+          {o.placedBy ? (
+            <p className="mt-1 text-[11px] text-ink-muted">
+              Placed by{" "}
+              <span className="font-medium text-ink">
+                {o.placedBy.name ?? o.placedBy.email}
+              </span>
+              {o.note ? ` · ${o.note}` : null}
+            </p>
+          ) : o.note ? (
+            <p className="mt-1 text-[11px] text-ink-muted">{o.note}</p>
+          ) : null}
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <Badge tone={o.status === "DELIVERED" ? "good" : "warn"}>
+              {o.status}
+            </Badge>
+            <Badge
+              tone={
+                o.paymentStatus === "DUE"
+                  ? "bad"
+                  : o.paymentStatus === "UNPAID"
+                    ? "warn"
+                    : o.paymentStatus === "PAID" ||
+                        o.paymentStatus === "WALLET_CHARGED"
+                      ? "good"
+                      : "neutral"
+              }
+            >
+              {o.paymentStatus}
+            </Badge>
+            <Badge
+              tone={o.user.customerType === "REGULAR" ? "good" : "neutral"}
+            >
+              {o.user.customerType === "REGULAR" ? "Regular" : "One-time"}
+            </Badge>
+            {o.placedBy ? <Badge tone="neutral">Admin order</Badge> : null}
+            <span className="text-xs font-bold tabular-nums">
+              {formatTaka(o.amount)}
+            </span>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {o.status === "PLACED" ? (
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={deliverPending}
+              onClick={onDeliver}
+            >
+              <PackageCheck className="h-4 w-4" />
+              Mark delivered
+            </Button>
+          ) : null}
+          {o.user.customerType === "REGULAR" &&
+          o.status === "DELIVERED" &&
+          o.paymentStatus === "UNPAID" ? (
+            <Button
+              type="button"
+              disabled={chargeWalletPending}
+              onClick={onChargeWallet}
+            >
+              <Wallet className="h-4 w-4" />
+              Charge Wallet
+            </Button>
+          ) : null}
+          {o.user.customerType === "ONE_TIME" &&
+          o.status === "DELIVERED" &&
+          (o.paymentStatus === "UNPAID" || o.paymentStatus === "DUE") ? (
+            <Button
+              type="button"
+              disabled={confirmPayPending}
+              onClick={onConfirmPay}
+            >
+              <Banknote className="h-4 w-4" />
+              Cash Paid
+            </Button>
+          ) : null}
+          {o.user.customerType === "ONE_TIME" &&
+          o.status === "DELIVERED" &&
+          o.paymentStatus === "UNPAID" ? (
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={markDuePending}
+              onClick={onMarkDue}
+            >
+              Due
+            </Button>
+          ) : null}
+        </div>
+      </Panel>
+
+      {swapOpen ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={`swap-meal-title-${o.id}`}
+          onClick={() => !changeMeal.isPending && setSwapOpen(false)}
+        >
+          <div
+            className="surface-card flex max-h-[90vh] w-full max-w-md flex-col rounded-t-3xl p-5 sm:rounded-3xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex shrink-0 items-start justify-between gap-2 border-b border-line/50 pb-3">
+              <div className="min-w-0">
+                <h3
+                  id={`swap-meal-title-${o.id}`}
+                  className="font-display text-lg font-semibold"
+                >
+                  Replace meal
+                </h3>
+                <p className="truncate text-xs text-ink-muted">
+                  {o.user.name ?? o.user.email}
+                  {o.user.employeeId ? ` · ${o.user.employeeId}` : ""}
+                </p>
+                <p className="mt-0.5 text-xs font-medium text-ink">
+                  Current: {o.dailyMenu.slot} · {o.dailyMenu.title}
+                  {o.quantity > 1 ? ` ×${o.quantity}` : ""} ·{" "}
+                  {formatTaka(o.amount)}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                className="px-2 py-1.5"
+                disabled={changeMeal.isPending}
+                onClick={() => setSwapOpen(false)}
+              >
+                <X className="h-4 w-4" />
+                Close
+              </Button>
+            </div>
+
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pt-4">
+              {mealOptions.isLoading ? (
+                <FoodPlateLoader size="sm" label="Loading meals…" />
+              ) : null}
+
+              {o.quantity > 1 ? (
+                <>
+                  <p className="text-xs text-ink-muted">
+                    Change one plate at a time if they took different dishes,
+                    or swap all below.
+                  </p>
+                  {Array.from({ length: o.quantity }, (_, idx) => (
+                    <div key={`${o.id}-unit-${idx}`}>
+                      <Label htmlFor={`meal-${o.id}-${idx}`}>
+                        Meal {idx + 1} of {o.quantity}
+                      </Label>
+                      <Select
+                        id={`meal-${o.id}-${idx}`}
+                        className="font-bold"
+                        value={o.dailyMenuId}
+                        disabled={changeMeal.isPending || mealOptions.isLoading}
+                        onChange={(e) => swapOne(e.target.value)}
+                      >
+                        {menuChoices.map((m) => (
+                          <option key={m.id} value={m.id}>
+                            {m.slot} · {m.title} · {formatTaka(m.price)}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+                  ))}
+                  <div>
+                    <Label htmlFor={`meal-all-${o.id}`}>Change all</Label>
+                    <Select
+                      id={`meal-all-${o.id}`}
+                      value={o.dailyMenuId}
+                      disabled={changeMeal.isPending || mealOptions.isLoading}
+                      onChange={(e) => swapAll(e.target.value)}
+                    >
+                      {menuChoices.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.slot} · {m.title} ·{" "}
+                          {formatTaka(m.price * o.quantity)}
+                          {` (${formatTaka(m.price)} ×${o.quantity})`}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <Label htmlFor={`meal-${o.id}`}>New meal</Label>
+                  <Select
+                    id={`meal-${o.id}`}
+                    className="font-bold"
+                    value={o.dailyMenuId}
+                    disabled={changeMeal.isPending || mealOptions.isLoading}
+                    onChange={(e) => swapAll(e.target.value)}
+                  >
+                    {menuChoices.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.slot} · {m.title} · {formatTaka(m.price)}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              )}
+
+              {changeMeal.error ? (
+                <p className="text-xs text-red-400">
+                  {changeMeal.error.message}
+                </p>
+              ) : changeMeal.isPending ? (
+                <p className="text-xs text-ink-muted">Updating…</p>
+              ) : (
+                <p className="text-[11px] text-ink-muted">
+                  Stock-out swap — price updates automatically.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </motion.li>
   );
 }

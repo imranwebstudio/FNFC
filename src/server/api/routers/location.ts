@@ -18,14 +18,35 @@ const cutoffRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 export const locationRouter = createTRPCRouter({
   list: adminProcedure.query(async ({ ctx }) => {
+    const includeManagers = {
+      adminLocations: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              isBanned: true,
+            },
+          },
+        },
+        orderBy: { user: { name: "asc" as const } },
+      },
+    };
+
     if (ctx.session.user.role === "SUPER_ADMIN") {
-      return ctx.db.location.findMany({ orderBy: { name: "asc" } });
+      return ctx.db.location.findMany({
+        orderBy: { name: "asc" },
+        include: includeManagers,
+      });
     }
     return ctx.db.location.findMany({
       where: {
         adminLocations: { some: { userId: ctx.session.user.id } },
       },
       orderBy: { name: "asc" },
+      include: includeManagers,
     });
   }),
 

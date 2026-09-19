@@ -22,6 +22,7 @@ import {
 } from "~/server/order-payment";
 import { deleteOrderRecord } from "~/server/delete-order";
 import { orderQuantitySchema } from "~/lib/order-quantity";
+import { assertNotDayOff } from "~/server/api/routers/service";
 
 const quantityInput = z
   .number()
@@ -75,6 +76,7 @@ export const orderRouter = createTRPCRouter({
       const cutoffTime = normalizeCutoffTime(menu.location.defaultCutoffTime);
       const window = getOrderWindow(new Date(), cutoffTime);
       const menuDate = formatInTimeZone(menu.date, "UTC", "yyyy-MM-dd");
+      await assertNotDayOff(ctx.db, menuDate);
       if (menuDate !== window.orderDate) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -181,6 +183,7 @@ export const orderRouter = createTRPCRouter({
       }
 
       const menuDate = formatInTimeZone(menu.date, "UTC", "yyyy-MM-dd");
+      await assertNotDayOff(ctx.db, menuDate);
       if (menuDate < todayDateString()) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -395,6 +398,207 @@ export const orderRouter = createTRPCRouter({
           status: "DELIVERED",
           deliveredAt: new Date(),
         },
+      });
+    }),
+
+  /**
+   * Swap an unpaid order (or part of its quantity) to another published meal
+   * same office + day. Recalculates amount from the new unit price.
+   * Partial swaps split the order so each meal can differ.
+   */
+  changeMeal: adminProcedure
+    .input(
+      z.object({
+        orderId: z.string().cuid(),
+        dailyMenuId: z.string().cuid(),
+        /** How many units to move; defaults to the full order quantity */
+        quantity: z
+          .number()
+          .int()
+          .min(1)
+          .max(orderQuantitySchema.max)
+          .optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const order = await ctx.db.order.findUnique({
+        where: { id: input.orderId },
+        include: { dailyMenu: true },
+      });
+      if (!order) throw new TRPCError({ code: "NOT_FOUND" });
+
+      await assertLocationAccess(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        order.locationId,
+      );
+
+      if (order.status === "CANCELLED") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cancelled orders cannot be changed",
+        });
+      }
+
+      if (
+        order.paymentStatus === "PAID" ||
+        order.paymentStatus === "WALLET_CHARGED"
+      ) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Cannot change meal after payment — settle or adjust the account first",
+        });
+      }
+
+      const swapQty = input.quantity ?? order.quantity;
+      if (swapQty > order.quantity) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Order only has ${order.quantity} meal${order.quantity === 1 ? "" : "s"}`,
+        });
+      }
+
+      if (input.dailyMenuId === order.dailyMenuId) {
+        return {
+          order,
+          split: false as const,
+          swappedQuantity: 0,
+        };
+      }
+
+      const menu = await ctx.db.dailyMenu.findUnique({
+        where: { id: input.dailyMenuId },
+        include: { location: true },
+      });
+      if (!menu?.isPublished || menu.skipped) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Menu not found" });
+      }
+      if (menu.locationId !== order.locationId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Substitute must be at the same office",
+        });
+      }
+
+      const orderDate = formatInTimeZone(
+        order.dailyMenu.date,
+        "UTC",
+        "yyyy-MM-dd",
+      );
+      const menuDate = formatInTimeZone(menu.date, "UTC", "yyyy-MM-dd");
+      if (orderDate !== menuDate) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Substitute must be for the same meal day",
+        });
+      }
+
+      if (menu.slot === "DINNER" && !menu.location.dinnerEnabled) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Dinner is not offered at this office right now",
+        });
+      }
+
+      return ctx.db.$transaction(async (tx) => {
+        const existing = await tx.order.findFirst({
+          where: {
+            userId: order.userId,
+            dailyMenuId: menu.id,
+            status: { not: "CANCELLED" },
+            NOT: { id: order.id },
+          },
+        });
+
+        if (
+          existing &&
+          (existing.paymentStatus === "PAID" ||
+            existing.paymentStatus === "WALLET_CHARGED")
+        ) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message:
+              "Member already has a paid order for that meal — cannot merge",
+          });
+        }
+
+        const applyToTarget = async (qty: number) => {
+          if (existing) {
+            const nextQty = existing.quantity + qty;
+            return tx.order.update({
+              where: { id: existing.id },
+              data: {
+                quantity: nextQty,
+                amount: menu.price * nextQty,
+                status:
+                  order.status === "DELIVERED" || existing.status === "DELIVERED"
+                    ? "DELIVERED"
+                    : existing.status,
+                deliveredAt: existing.deliveredAt ?? order.deliveredAt,
+              },
+              include: { dailyMenu: true },
+            });
+          }
+          return tx.order.create({
+            data: {
+              userId: order.userId,
+              dailyMenuId: menu.id,
+              locationId: order.locationId,
+              quantity: qty,
+              amount: menu.price * qty,
+              note: order.note,
+              status: order.status,
+              paymentStatus: order.paymentStatus,
+              placedById: order.placedById,
+              deliveredAt: order.deliveredAt,
+            },
+            include: { dailyMenu: true },
+          });
+        };
+
+        if (swapQty === order.quantity) {
+          if (existing) {
+            const updated = await applyToTarget(swapQty);
+            await tx.order.delete({ where: { id: order.id } });
+            return {
+              order: updated,
+              split: false as const,
+              swappedQuantity: swapQty,
+            };
+          }
+
+          const updated = await tx.order.update({
+            where: { id: order.id },
+            data: {
+              dailyMenuId: menu.id,
+              amount: menu.price * order.quantity,
+            },
+            include: { dailyMenu: true },
+          });
+          return {
+            order: updated,
+            split: false as const,
+            swappedQuantity: swapQty,
+          };
+        }
+
+        const remain = order.quantity - swapQty;
+        await tx.order.update({
+          where: { id: order.id },
+          data: {
+            quantity: remain,
+            amount: order.dailyMenu.price * remain,
+          },
+        });
+
+        const updated = await applyToTarget(swapQty);
+        return {
+          order: updated,
+          split: true as const,
+          swappedQuantity: swapQty,
+        };
       });
     }),
 

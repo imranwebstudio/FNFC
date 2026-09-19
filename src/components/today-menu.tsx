@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import {
   Ban,
   Clock3,
+  Coffee,
   MapPin,
   Minus,
   Plus,
@@ -163,6 +164,60 @@ export function TodayMenu() {
   const firstName = me.data?.name?.split(" ")[0] ?? "there";
   const showAllZones =
     Boolean(me.data?.profileComplete) && !me.data?.locationId;
+  const dayOff = today.data?.dayOff;
+
+  if (!today.isLoading && dayOff?.active) {
+    return (
+      <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 pb-16 text-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.86, y: 24 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 260, damping: 20 }}
+          className="relative w-full max-w-md"
+        >
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute -inset-8 rounded-full bg-spice/10 blur-3xl"
+            animate={{ opacity: [0.35, 0.7, 0.35], scale: [0.95, 1.05, 0.95] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <Panel className="relative overflow-hidden border-spice/25 bg-gradient-to-b from-spice/10 to-transparent py-10">
+            <motion.div
+              className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-spice/15 text-spice"
+              animate={{ rotate: [0, -8, 8, 0], y: [0, -4, 0] }}
+              transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Coffee className="h-10 w-10" strokeWidth={2} />
+            </motion.div>
+            <motion.p
+              className="font-display text-2xl font-bold tracking-tight text-ink"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+            >
+              Day off
+            </motion.p>
+            <motion.p
+              className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink-muted"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.28 }}
+            >
+              {dayOff.message}
+            </motion.p>
+            <motion.p
+              className="mt-5 text-xs font-semibold uppercase tracking-wide text-spice"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ delay: 0.45, duration: 2.4, repeat: Infinity }}
+            >
+              See you tomorrow
+            </motion.p>
+          </Panel>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="pb-28 sm:pb-8">

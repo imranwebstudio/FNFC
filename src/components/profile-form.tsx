@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
 import { Combobox } from "~/components/combobox";
-import { Button } from "~/components/ui";
+import { Button, Label, Select } from "~/components/ui";
 import { showSuccess } from "~/lib/swal";
 import { api } from "~/trpc/react";
 
@@ -28,6 +28,7 @@ export function ProfileForm({
 }) {
   const { update } = useSession();
   const options = api.user.onboardingOptions.useQuery();
+  const staffLocations = api.user.listLocationsPublic.useQuery();
   const utils = api.useUtils();
   const save = api.user.completeProfile.useMutation({
     onSuccess: async () => {
@@ -97,17 +98,31 @@ export function ProfileForm({
         onChange={(phoneNumber) => setForm((f) => ({ ...f, phoneNumber }))}
       />
       <div className="grid grid-cols-2 gap-3">
-        <Combobox
-          id="building"
-          label="Building"
-          required
-          placeholder="e.g. Tower A"
-          value={form.buildingNumber}
-          options={options.data?.buildingNumbers ?? []}
-          onChange={(buildingNumber) =>
-            setForm((f) => ({ ...f, buildingNumber }))
-          }
-        />
+        <div>
+          <Label htmlFor="building">Office / Building</Label>
+          <Select
+            id="building"
+            required
+            value={form.buildingNumber}
+            disabled={staffLocations.isLoading}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, buildingNumber: e.target.value }))
+            }
+          >
+            <option value="">
+              {staffLocations.isLoading ? "Loading…" : "Select office…"}
+            </option>
+            {staffLocations.data?.map((l) => (
+              <option key={l.id} value={l.name}>
+                {l.name}
+              </option>
+            ))}
+            {form.buildingNumber &&
+            !staffLocations.data?.some((l) => l.name === form.buildingNumber) ? (
+              <option value={form.buildingNumber}>{form.buildingNumber}</option>
+            ) : null}
+          </Select>
+        </div>
         <Combobox
           id="floor"
           label="Floor"
@@ -129,7 +144,7 @@ export function ProfileForm({
       />
       <Combobox
         id="location"
-        label="Your office / address"
+        label="Address"
         required
         placeholder="Type your office or building name"
         value={form.locationName}

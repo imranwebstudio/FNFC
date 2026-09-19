@@ -659,19 +659,20 @@ export default function AdminMenuPage() {
         (weekdayMenus.data?.length ?? 0) > 0 ? (
           <div className="mb-4">
             {!showCopyWeek ? (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  const others = allActiveLocationIds().filter(
-                    (id) => id !== locationId,
-                  );
-                  setCopyTargetIds(others);
-                  setShowCopyWeek(true);
-                }}
-              >
-                Copy this office&apos;s week to other offices…
-              </Button>
+              // <Button
+              //   type="button"
+              //   variant="secondary"
+              //   onClick={() => {
+              //     const others = allActiveLocationIds().filter(
+              //       (id) => id !== locationId,
+              //     );
+              //     setCopyTargetIds(others);
+              //     setShowCopyWeek(true);
+              //   }}
+              // >
+              //   Copy this office&apos;s week to other offices…
+              // </Button>
+              <></>
             ) : (
               <Panel className="space-y-3">
                 <div className="flex flex-wrap items-start justify-between gap-2">
@@ -970,7 +971,7 @@ export default function AdminMenuPage() {
       </section>
 
       {/* Dated publish */}
-      <section>
+      {/* <section>
         <h2 className="font-display mb-1 text-lg font-bold tracking-tight">
           One-off / date range
         </h2>
@@ -1260,7 +1261,7 @@ export default function AdminMenuPage() {
                 : null}
             </ul>
         </div>
-      </section>
+      </section> */}
 
       <div className="mt-10">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">

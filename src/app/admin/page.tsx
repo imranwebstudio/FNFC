@@ -6,7 +6,9 @@ import {
   CircleDollarSign,
   ClipboardCheck,
   ClipboardList,
+  Moon,
   ShoppingBag,
+  Sun,
   Users,
   X,
 } from "lucide-react";
@@ -15,6 +17,7 @@ import { useEffect, useState } from "react";
 import { FoodPlateLoader } from "~/components/food-plate-loader";
 import { Badge, Button, Label, Panel, Select, StatCard } from "~/components/ui";
 import { formatTaka } from "~/lib/datetime";
+import { confirmAction, showSuccess } from "~/lib/swal";
 import { api } from "~/trpc/react";
 
 type PackSelection = { title: string; slot: "LUNCH" | "DINNER" };
@@ -26,6 +29,23 @@ export default function AdminOverviewPage() {
   const overview = api.analytics.overview.useQuery(
     locationId ? { locationId } : undefined,
   );
+  const dayOffTarget = api.service.adminDayOffTarget.useQuery();
+  const utils = api.useUtils();
+  const setDayOff = api.service.setDayOff.useMutation({
+    onSuccess: async (res) => {
+      showSuccess(
+        res.isOff ? "Day off enabled" : "Service resumed",
+        res.isOff
+          ? "Home will show the day-off message."
+          : "Members can order again.",
+      );
+      await Promise.all([
+        utils.service.adminDayOffTarget.invalidate(),
+        utils.service.dayOffStatus.invalidate(),
+        utils.menu.todayForUser.invalidate(),
+      ]);
+    },
+  });
   const packOrders = api.analytics.packItemOrders.useQuery(
     {
       title: selected?.title ?? "",
@@ -135,7 +155,7 @@ export default function AdminOverviewPage() {
           </p>
         </div>
         <div className="w-full sm:max-w-xs">
-          <Label>Location</Label>
+          <Label>Office / Building</Label>
           <Select
             value={locationId}
             onChange={(e) => {
@@ -157,6 +177,77 @@ export default function AdminOverviewPage() {
         <FoodPlateLoader label="Cooking up today's snapshot…" />
       ) : (
         <>
+          <Panel
+            className={`flex flex-wrap items-center justify-between gap-3 py-3.5 ${
+              dayOffTarget.data?.isOff
+                ? "border-spice/30 bg-spice/10"
+                : "border-line/60"
+            }`}
+          >
+            <div className="flex min-w-0 items-start gap-3">
+              <span
+                className={`mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                  dayOffTarget.data?.isOff
+                    ? "bg-spice/15 text-spice"
+                    : "bg-leaf/15 text-leaf"
+                }`}
+              >
+                {dayOffTarget.data?.isOff ? (
+                  <Moon className="h-5 w-5" strokeWidth={2.25} />
+                ) : (
+                  <Sun className="h-5 w-5" strokeWidth={2.25} />
+                )}
+              </span>
+              <div className="min-w-0">
+                <p className="font-semibold text-ink">
+                  {dayOffTarget.data?.isOff
+                    ? "Day off is on"
+                    : "Catering is open"}
+                </p>
+                <p className="text-xs text-ink-muted">
+                  Meal day:{" "}
+                  <span className="font-medium text-ink">
+                    {dayOffTarget.data?.dateLabel ?? "—"}
+                  </span>
+                  {dayOffTarget.data?.isOff
+                    ? " — members see a day-off message instead of menus."
+                    : " — turn on a day off when you're closed."}
+                </p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant={dayOffTarget.data?.isOff ? "secondary" : "danger"}
+              disabled={
+                setDayOff.isPending || !dayOffTarget.data?.date
+              }
+              onClick={async () => {
+                if (!dayOffTarget.data?.date) return;
+                const turningOff = !dayOffTarget.data.isOff;
+                const ok = await confirmAction({
+                  title: turningOff
+                    ? `Take ${dayOffTarget.data.dateLabel} off?`
+                    : `Resume service for ${dayOffTarget.data.dateLabel}?`,
+                  text: turningOff
+                    ? "The home page will show a day-off message. No new orders that day."
+                    : "Menus and ordering will return for members.",
+                  confirmText: turningOff ? "Take day off" : "Resume",
+                });
+                if (!ok) return;
+                setDayOff.mutate({
+                  date: dayOffTarget.data.date,
+                  off: turningOff,
+                });
+              }}
+            >
+              {setDayOff.isPending
+                ? "Saving…"
+                : dayOffTarget.data?.isOff
+                  ? "Resume service"
+                  : "Take day off"}
+            </Button>
+          </Panel>
+
           {!overview.isLoading && d ? (
             <Panel className="flex flex-wrap items-center justify-between gap-3 border-leaf/25 bg-leaf/5 py-3.5">
               <div>

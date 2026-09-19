@@ -263,6 +263,13 @@ exports.Prisma.WalletTransactionScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ServiceDayOffScalarFieldEnum = {
+  id: 'id',
+  date: 'date',
+  message: 'message',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -339,7 +346,8 @@ exports.Prisma.ModelName = {
   WeekdayMenu: 'WeekdayMenu',
   DailyMenu: 'DailyMenu',
   Order: 'Order',
-  WalletTransaction: 'WalletTransaction'
+  WalletTransaction: 'WalletTransaction',
+  ServiceDayOff: 'ServiceDayOff'
 };
 
 /**

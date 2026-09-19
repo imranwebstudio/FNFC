@@ -4,6 +4,7 @@ import { analyticsRouter } from "~/server/api/routers/analytics";
 import { locationRouter } from "~/server/api/routers/location";
 import { menuRouter } from "~/server/api/routers/menu";
 import { orderRouter } from "~/server/api/routers/order";
+import { serviceRouter } from "~/server/api/routers/service";
 import { userRouter } from "~/server/api/routers/user";
 import { walletRouter } from "~/server/api/routers/wallet";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
@@ -17,6 +18,7 @@ export const appRouter = createTRPCRouter({
   account: accountRouter,
   admin: adminRouter,
   analytics: analyticsRouter,
+  service: serviceRouter,
 });
 
 export type AppRouter = typeof appRouter;

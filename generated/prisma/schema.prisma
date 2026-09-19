@@ -6,9 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -280,4 +279,12 @@ model WalletTransaction {
   createdBy User?  @relation("WalletCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([userId, createdAt])
+}
+
+/// Calendar date when catering is closed (no ordering for that meal day)
+model ServiceDayOff {
+  id        String   @id @default(cuid())
+  date      DateTime @unique @db.Date
+  message   String?
+  createdAt DateTime @default(now())
 }

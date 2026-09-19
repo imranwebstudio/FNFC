@@ -19,6 +19,7 @@ import {
   createTRPCRouter,
   protectedProcedure,
 } from "~/server/api/trpc";
+import { isServiceDayOff } from "~/server/api/routers/service";
 import type { db as DbClient } from "~/server/db";
 
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -807,6 +808,23 @@ export const menuRouter = createTRPCRouter({
         locationId: null as string | null,
         scope: "none" as const,
         window: ownWindow,
+        dayOff: null as null | { active: true; message: string; date: string },
+      };
+    }
+
+    const dayOff = await isServiceDayOff(ctx.db, ownWindow.orderDate);
+    if (dayOff) {
+      return {
+        menus: [],
+        locationName: user.location?.name ?? null,
+        locationId: user.locationId,
+        scope: "own" as const,
+        window: ownWindow,
+        dayOff: {
+          active: true as const,
+          message: dayOff.message,
+          date: ownWindow.orderDate,
+        },
       };
     }
 
@@ -931,6 +949,7 @@ export const menuRouter = createTRPCRouter({
       locationId: user.locationId,
       scope,
       window: ownWindow,
+      dayOff: null as null | { active: true; message: string; date: string },
       menus: menusForUser.map((m) => {
         const menuDateStr = formatInTimeZone(m.date, "UTC", "yyyy-MM-dd");
         const locCutoff = normalizeCutoffTime(m.location.defaultCutoffTime);
