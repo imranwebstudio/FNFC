@@ -161,27 +161,64 @@ export default function AdminTeamPage() {
                         <p className="text-xs text-ink-muted">{l.address}</p>
                       ) : null}
                     </div>
-                    <Badge tone={l.isActive ? "good" : "bad"}>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={l.isActive}
+                      title={
+                        l.isActive
+                          ? "Click to deactivate office"
+                          : "Click to reactivate office"
+                      }
+                      disabled={setLocActive.isPending || deleteLoc.isPending}
+                      onClick={() =>
+                        setLocActive.mutate({
+                          id: l.id,
+                          isActive: !l.isActive,
+                        })
+                      }
+                      className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide transition disabled:opacity-50 ${
+                        l.isActive
+                          ? "bg-leaf/15 text-leaf ring-1 ring-leaf/25 hover:bg-leaf/25"
+                          : "bg-red-500/15 text-red-300 ring-1 ring-red-400/25 hover:bg-red-500/25"
+                      }`}
+                    >
+                      <span
+                        aria-hidden
+                        className={`relative h-4 w-7 shrink-0 rounded-full transition ${
+                          l.isActive ? "bg-leaf/40" : "bg-red-400/30"
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 h-3 w-3 rounded-full bg-current shadow transition ${
+                            l.isActive ? "left-3.5" : "left-0.5"
+                          }`}
+                        />
+                      </span>
                       {l.isActive ? "Active" : "Off"}
-                    </Badge>
+                    </button>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Input
-                      type="time"
-                      className="w-[9.5rem] py-1.5 text-xs"
-                      value={draft}
-                      onChange={(e) =>
-                        setCutoffEdits((m) => ({
-                          ...m,
-                          [l.id]: e.target.value,
-                        }))
-                      }
-                    />
+                  <div className="flex items-end gap-2">
+                    <div className="min-w-0 flex-1">
+                      <Label htmlFor={`cutoff-${l.id}`}>Lunch cutoff</Label>
+                      <Input
+                        id={`cutoff-${l.id}`}
+                        type="time"
+                        className="w-full py-2 text-sm"
+                        value={draft}
+                        onChange={(e) =>
+                          setCutoffEdits((m) => ({
+                            ...m,
+                            [l.id]: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
                     <Button
                       type="button"
                       variant="secondary"
-                      className="px-2.5 py-1.5 text-xs"
+                      className="shrink-0 px-3 py-2 text-xs"
                       disabled={!dirty || setCutoff.isPending}
                       onClick={() =>
                         setCutoff.mutate({
@@ -190,41 +227,28 @@ export default function AdminTeamPage() {
                         })
                       }
                     >
-                      Save cutoff
+                      {setCutoff.isPending ? "Saving…" : "Save cutoff"}
                     </Button>
+                  </div>
+
+                  {!l.isActive ? (
                     <Button
                       type="button"
-                      variant={l.isActive ? "danger" : "secondary"}
-                      className="px-2.5 py-1.5 text-xs"
-                      disabled={setLocActive.isPending || deleteLoc.isPending}
-                      onClick={() =>
-                        setLocActive.mutate({
-                          id: l.id,
-                          isActive: !l.isActive,
-                        })
-                      }
+                      variant="danger"
+                      className="w-full px-2.5 py-1.5 text-xs"
+                      disabled={deleteLoc.isPending}
+                      onClick={async () => {
+                        const ok = await confirmAction({
+                          title: `Delete “${l.name}”?`,
+                          text: "This permanently removes the office, its menus, and related orders. Users assigned here will lose their office link.",
+                          confirmText: "Delete forever",
+                        });
+                        if (ok) deleteLoc.mutate({ id: l.id });
+                      }}
                     >
-                      {l.isActive ? "Deactivate" : "Reactivate"}
+                      {deleteLoc.isPending ? "Deleting…" : "Delete forever"}
                     </Button>
-                    {!l.isActive ? (
-                      <Button
-                        type="button"
-                        variant="danger"
-                        className="px-2.5 py-1.5 text-xs"
-                        disabled={deleteLoc.isPending}
-                        onClick={async () => {
-                          const ok = await confirmAction({
-                            title: `Delete “${l.name}”?`,
-                            text: "This permanently removes the office, its menus, and related orders. Users assigned here will lose their office link.",
-                            confirmText: "Delete forever",
-                          });
-                          if (ok) deleteLoc.mutate({ id: l.id });
-                        }}
-                      >
-                        {deleteLoc.isPending ? "Deleting…" : "Delete forever"}
-                      </Button>
-                    ) : null}
-                  </div>
+                  ) : null}
 
                   <div className="rounded-2xl border border-line/50 bg-sand/30 p-3">
                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
