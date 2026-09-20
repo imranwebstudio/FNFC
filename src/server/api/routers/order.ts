@@ -4,7 +4,7 @@ import { formatInTimeZone } from "date-fns-tz";
 
 import {
   dhakaDateOnly,
-  getOrderWindow,
+  latestBrowseDate,
   locationCutoffForSlot,
   orderableDateForSlot,
   slotCutoffAt,
@@ -75,7 +75,7 @@ export const orderRouter = createTRPCRouter({
       }
 
       const cutoffTime = locationCutoffForSlot(menu.location, menu.slot);
-      const orderDate = orderableDateForSlot(new Date(), {
+      const earliest = orderableDateForSlot(new Date(), {
         defaultCutoffTime: menu.location.defaultCutoffTime,
         dinnerCutoffTime: menu.location.dinnerCutoffTime,
         dinnerEnabled: menu.location.dinnerEnabled,
@@ -83,13 +83,16 @@ export const orderRouter = createTRPCRouter({
       });
       const menuDate = formatInTimeZone(menu.date, "UTC", "yyyy-MM-dd");
       await assertNotDayOff(ctx.db, menuDate);
-      if (menuDate !== orderDate) {
-        const window = getOrderWindow(new Date(), cutoffTime);
+      if (menuDate < earliest) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: window.rolledOver
-            ? `Today's ${menu.slot.toLowerCase()} closed at ${cutoffTime}. You can only order for tomorrow now.`
-            : "This menu is not available for ordering right now",
+          message: `This ${menu.slot.toLowerCase()} is closed (cutoff ${cutoffTime}). Pick a later day.`,
+        });
+      }
+      if (menuDate > latestBrowseDate()) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "That date is too far ahead to order",
         });
       }
 

@@ -13,8 +13,9 @@ import {
   UtensilsCrossed,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import { DeliveryDatePicker } from "~/components/delivery-date-picker";
 import { Badge, Button, Panel } from "~/components/ui";
 import { FoodPlateLoader } from "~/components/food-plate-loader";
 import { cloudinaryDisplayUrl } from "~/lib/cloudinary-url";
@@ -77,7 +78,11 @@ function dateBadgeParts(dateStr: string | undefined) {
 export function TodayMenu() {
   const utils = api.useUtils();
   const me = api.user.me.useQuery();
-  const today = api.menu.todayForUser.useQuery();
+  const [selectedDate, setSelectedDate] = useState<string | undefined>();
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const today = api.menu.todayForUser.useQuery(
+    selectedDate ? { date: selectedDate } : undefined,
+  );
   const [cart, setCart] = useState<Cart>({});
   const [placing, setPlacing] = useState(false);
   const [placeError, setPlaceError] = useState<string | null>(null);
@@ -94,8 +99,29 @@ export function TodayMenu() {
 
   const menus = today.data?.menus ?? [];
   const window = today.data?.window;
+  const minDate = today.data?.minDate;
+  const maxDate = today.data?.maxDate;
+  const viewDate =
+    selectedDate ?? today.data?.selectedDate ?? window?.orderDate;
   const cutoffLabel = window?.cutoffTime ?? "—";
-  const badge = dateBadgeParts(window?.orderDate);
+  const badge = dateBadgeParts(viewDate);
+  const isDefaultDay = Boolean(
+    viewDate && window?.orderDate && viewDate === window.orderDate,
+  );
+
+  useEffect(() => {
+    if (!selectedDate && today.data?.selectedDate) {
+      setSelectedDate(today.data.selectedDate);
+    }
+  }, [selectedDate, today.data?.selectedDate]);
+
+  function changeDate(next: string) {
+    if (minDate && next < minDate) return;
+    if (maxDate && next > maxDate) return;
+    setCart({});
+    setPlaceError(null);
+    setSelectedDate(next);
+  }
 
   const orderedMenus = menus.filter((m) => m.myOrder);
   const availableMenus = menus.filter((m) => !m.myOrder && !m.isPastCutoff);
@@ -141,7 +167,9 @@ export function TodayMenu() {
       setCart({});
       showSuccess(
         cartLines.length === 1 ? "Order placed" : "Orders placed",
-        "Your meal has been booked.",
+        viewDate
+          ? `Delivery ${formatMenuDateLabel(viewDate)}.`
+          : "Your meal has been booked.",
       );
       await utils.menu.todayForUser.invalidate();
       await utils.order.listMine.invalidate();
@@ -154,7 +182,9 @@ export function TodayMenu() {
   }
 
   const locationLine = [
-    me.data?.location?.name ?? me.data?.locationLabel ?? today.data?.locationName,
+    me.data?.location?.name ??
+      me.data?.locationLabel ??
+      today.data?.locationName,
     me.data?.floorNumber ? `${me.data.floorNumber} Floor` : null,
     me.data?.deskNumber ? `Desk ${me.data.deskNumber}` : null,
   ]
@@ -166,62 +196,8 @@ export function TodayMenu() {
     Boolean(me.data?.profileComplete) && !me.data?.locationId;
   const dayOff = today.data?.dayOff;
 
-  if (!today.isLoading && dayOff?.active) {
-    return (
-      <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 pb-16 text-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.86, y: 24 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 260, damping: 20 }}
-          className="relative w-full max-w-md"
-        >
-          <motion.div
-            aria-hidden
-            className="pointer-events-none absolute -inset-8 rounded-full bg-spice/10 blur-3xl"
-            animate={{ opacity: [0.35, 0.7, 0.35], scale: [0.95, 1.05, 0.95] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <Panel className="relative overflow-hidden border-spice/25 bg-gradient-to-b from-spice/10 to-transparent py-10">
-            <motion.div
-              className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-spice/15 text-spice"
-              animate={{ rotate: [0, -8, 8, 0], y: [0, -4, 0] }}
-              transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <Coffee className="h-10 w-10" strokeWidth={2} />
-            </motion.div>
-            <motion.p
-              className="font-display text-2xl font-bold tracking-tight text-ink"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-            >
-              Day off
-            </motion.p>
-            <motion.p
-              className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink-muted"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.28 }}
-            >
-              {dayOff.message}
-            </motion.p>
-            <motion.p
-              className="mt-5 text-xs font-semibold uppercase tracking-wide text-spice"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0.5, 1, 0.5] }}
-              transition={{ delay: 0.45, duration: 2.4, repeat: Infinity }}
-            >
-              See you tomorrow
-            </motion.p>
-          </Panel>
-        </motion.div>
-      </div>
-    );
-  }
-
   return (
     <div className="pb-28 sm:pb-8">
-      {/* Greeting + location */}
       <Panel className="mb-4 p-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <div className="flex min-w-0 flex-1 items-start gap-3">
@@ -254,58 +230,70 @@ export function TodayMenu() {
         </div>
       </Panel>
 
-      {/* Order window */}
       {window ? (
         <Panel
-          className={`mb-6 flex items-center gap-3 py-3.5 ${
-            window.rolledOver
-              ? "border-spice/25 bg-spice/5"
-              : "border-leaf/25 bg-leaf/5"
+          className={`mb-6 py-3.5 ${
+            isDefaultDay && !window.rolledOver
+              ? "border-leaf/25 bg-leaf/5"
+              : window.rolledOver && isDefaultDay
+                ? "border-spice/25 bg-spice/5"
+                : "border-leaf/20 bg-sand/40"
           }`}
         >
-          <span
-            className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-              window.rolledOver
-                ? "bg-spice/15 text-spice"
-                : "bg-leaf/15 text-leaf"
-            }`}
-          >
-            <Clock3 className="h-5 w-5" strokeWidth={2.25} />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p
-              className={`font-semibold ${
-                window.rolledOver ? "text-spice" : "text-leaf"
-              }`}
-            >
-              {window.rolledOver ? "After cutoff" : "Order Open"}
-            </p>
-            <p className="text-xs text-ink-muted">
-              Ordering for{" "}
-              <span className="font-semibold text-ink">
-                {formatMenuDateLabel(window.orderDate)}
-              </span>
-            </p>
-            <p className="text-xs text-ink-muted">
-              {window.rolledOver
-                ? `Closed at ${cutoffLabel}. Now ordering the next day.`
-                : `Ordering open until ${cutoffLabel}.`}
-            </p>
-          </div>
-          <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl border border-line bg-rice text-center">
-            <span className="text-base font-bold leading-none tabular-nums text-ink">
-              {badge.day}
+          <div className="flex items-start gap-3">
+            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-leaf/15 text-leaf">
+              <Clock3 className="h-5 w-5" strokeWidth={2.25} />
             </span>
-            <span className="mt-0.5 text-[9px] font-bold uppercase tracking-wide text-ink-muted">
-              {badge.mon}
-            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-leaf">
+                {isDefaultDay
+                  ? window.rolledOver
+                    ? "After cutoff"
+                    : "Order open"
+                  : "Pre-order"}
+              </p>
+              <p className="text-xs text-ink-muted">
+                Delivery{" "}
+                <button
+                  type="button"
+                  onClick={() => setDatePickerOpen(true)}
+                  className="font-semibold text-ink underline decoration-leaf/40 underline-offset-2 transition hover:text-leaf"
+                >
+                  {viewDate ? formatMenuDateLabel(viewDate) : "—"}
+                </button>
+              </p>
+              <p className="text-xs text-ink-muted">
+                {isDefaultDay
+                  ? window.rolledOver
+                    ? `Default day closed at ${cutoffLabel}. Tap the date to pick another day.`
+                    : `Open until ${cutoffLabel}. Tap the date badge to pre-order ahead.`
+                  : "Meals on this date deliver that day. Cancel anytime before cutoff."}
+              </p>
+              {window.orderDate && viewDate !== window.orderDate ? (
+                <button
+                  type="button"
+                  className="mt-1.5 text-xs font-semibold text-leaf hover:underline"
+                  onClick={() => changeDate(window.orderDate)}
+                >
+                  Back to {formatMenuDateLabel(window.orderDate)}
+                </button>
+              ) : null}
+            </div>
+            <DeliveryDatePicker
+              value={viewDate}
+              min={minDate}
+              max={maxDate}
+              badgeDay={badge.day}
+              badgeMon={badge.mon}
+              open={datePickerOpen}
+              onOpenChange={setDatePickerOpen}
+              onChange={changeDate}
+            />
           </div>
         </Panel>
       ) : null}
 
-      {today.isLoading ? (
-        <FoodPlateLoader label="Checking today's menu…" />
-      ) : null}
+      {today.isLoading ? <FoodPlateLoader label="Loading menu…" /> : null}
 
       {showAllZones && !today.isLoading ? (
         <Panel className="mb-6 border-leaf/25 bg-leaf/5 py-3">
@@ -317,12 +305,32 @@ export function TodayMenu() {
         </Panel>
       ) : null}
 
-      {/* Already ordered */}
-      {orderedMenus.length > 0 ? (
+      {!today.isLoading && dayOff?.active ? (
+        <Panel className="mb-6 border-spice/25 bg-gradient-to-b from-spice/10 to-transparent py-8 text-center">
+          <Coffee
+            className="mx-auto mb-3 h-10 w-10 text-spice"
+            strokeWidth={2}
+          />
+          <p className="font-display text-xl font-bold text-ink">Day off</p>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-ink-muted">
+            {dayOff.message}
+          </p>
+          <p className="mt-3 text-xs text-ink-muted">
+            Pick another date above to order for a different day.
+          </p>
+        </Panel>
+      ) : null}
+
+      {!dayOff?.active && orderedMenus.length > 0 ? (
         <section className="mb-6">
           <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-leaf">
             <UtensilsCrossed className="h-4 w-4" />
-            Your Daily Order
+            Your order
+            {viewDate ? (
+              <span className="text-sm font-medium text-ink-muted">
+                · {formatMenuDateLabel(viewDate)}
+              </span>
+            ) : null}
           </h2>
           <ul className="space-y-2">
             {orderedMenus.map((menu) => {
@@ -398,106 +406,108 @@ export function TodayMenu() {
         </section>
       ) : null}
 
-      {/* Menu list */}
-      <section>
-        <div className="mb-3 flex items-end justify-between gap-3">
-          <div>
-            <h2 className="flex items-center gap-2 font-display text-lg font-bold text-ink">
-              <UtensilsCrossed className="h-4 w-4 text-leaf" />
-              Today&apos;s Menu
-            </h2>
-            <p className="mt-0.5 text-xs text-ink-muted">
-              Choose meals and set quantity.
-            </p>
+      {!dayOff?.active ? (
+        <section>
+          <div className="mb-3 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="flex items-center gap-2 font-display text-lg font-bold text-ink">
+                <UtensilsCrossed className="h-4 w-4 text-leaf" />
+                Menu
+              </h2>
+              <p className="mt-0.5 text-xs text-ink-muted">
+                {viewDate
+                  ? `Meals for ${formatMenuDateLabel(viewDate)}. Choose and set quantity.`
+                  : "Choose meals and set quantity."}
+              </p>
+            </div>
           </div>
-        </div>
 
-        {!today.isLoading && menus.length === 0 ? (
-          <Panel>
-            <p className="text-sm text-ink-muted">
-              No published set meal for{" "}
-              {window ? formatMenuDateLabel(window.orderDate) : "this day"}
-              {today.data?.locationName
-                ? ` at ${today.data.locationName}`
-                : ""}
-              .
-            </p>
-          </Panel>
-        ) : null}
+          {!today.isLoading && menus.length === 0 ? (
+            <Panel>
+              <p className="text-sm text-ink-muted">
+                No published set meal for{" "}
+                {viewDate ? formatMenuDateLabel(viewDate) : "this day"}
+                {today.data?.locationName
+                  ? ` at ${today.data.locationName}`
+                  : ""}
+                .
+              </p>
+            </Panel>
+          ) : null}
 
-        <ul className="space-y-2">
-          {[...availableMenus, ...closedMenus].map((menu, i) => {
-            const photo = cloudinaryDisplayUrl(menu.imageUrl, {
-              width: 160,
-              height: 160,
-            });
-            const qty = cart[menu.id] ?? 0;
-            const canOrder = !menu.isPastCutoff;
-            return (
-              <motion.li
-                key={menu.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.04 }}
-              >
-                <Panel className="p-3">
-                  <div className="flex gap-3">
-                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-line bg-sand">
-                      {photo ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={photo}
-                          alt=""
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-spice/40 to-leaf/40">
-                          <UtensilsCrossed className="h-5 w-5 text-ink" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="font-semibold text-ink">{menu.title}</p>
-                          {menu.description ? (
-                            <p className="mt-0.5 line-clamp-2 text-xs text-ink-muted">
-                              {menu.description}
-                            </p>
-                          ) : null}
-                          <p className="mt-1 text-[11px] text-ink-muted">
-                            {menu.slot}
-                            {today.data?.scope === "all" ||
-                            today.data?.scope === "admin"
-                              ? ` · ${menu.location.name}`
-                              : ""}
-                          </p>
-                        </div>
-                        <p className="shrink-0 text-sm font-bold tabular-nums text-leaf">
-                          {formatTaka(menu.price)}
-                        </p>
-                      </div>
-                      <div className="mt-2 flex items-center justify-end">
-                        {canOrder ? (
-                          <QtyStepper
-                            value={qty}
-                            onChange={(n) => setQty(menu.id, n)}
-                            disabled={placing}
+          <ul className="space-y-2">
+            {[...availableMenus, ...closedMenus].map((menu, i) => {
+              const photo = cloudinaryDisplayUrl(menu.imageUrl, {
+                width: 160,
+                height: 160,
+              });
+              const qty = cart[menu.id] ?? 0;
+              const canOrder = !menu.isPastCutoff;
+              return (
+                <motion.li
+                  key={menu.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04 }}
+                >
+                  <Panel className="p-3">
+                    <div className="flex gap-3">
+                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-line bg-sand">
+                        {photo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={photo}
+                            alt=""
+                            className="h-full w-full object-cover"
                           />
                         ) : (
-                          <Badge tone="warn">Closed</Badge>
+                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-spice/40 to-leaf/40">
+                            <UtensilsCrossed className="h-5 w-5 text-ink" />
+                          </div>
                         )}
                       </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-ink">{menu.title}</p>
+                            {menu.description ? (
+                              <p className="mt-0.5 line-clamp-2 text-xs text-ink-muted">
+                                {menu.description}
+                              </p>
+                            ) : null}
+                            <p className="mt-1 text-[11px] text-ink-muted">
+                              {menu.slot}
+                              {today.data?.scope === "all" ||
+                              today.data?.scope === "admin"
+                                ? ` · ${menu.location.name}`
+                                : ""}
+                            </p>
+                          </div>
+                          <p className="shrink-0 text-sm font-bold tabular-nums text-leaf">
+                            {formatTaka(menu.price)}
+                          </p>
+                        </div>
+                        <div className="mt-2 flex items-center justify-end">
+                          {canOrder ? (
+                            <QtyStepper
+                              value={qty}
+                              onChange={(n) => setQty(menu.id, n)}
+                              disabled={placing}
+                            />
+                          ) : (
+                            <Badge tone="warn">Closed</Badge>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </Panel>
-              </motion.li>
-            );
-          })}
-        </ul>
-      </section>
+                  </Panel>
+                </motion.li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
 
-      {/* Sticky cart bar — mobile-first */}
       {cartItemCount > 0 ? (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line/60 bg-rice/95 px-3 py-3 backdrop-blur-lg sm:static sm:mt-6 sm:rounded-3xl sm:border sm:border-line sm:bg-sand/80 sm:backdrop-blur-none">
           <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-3">
@@ -512,6 +522,7 @@ export function TodayMenu() {
                 <p className="text-xs text-ink-muted">
                   {cartItemCount} item{cartItemCount === 1 ? "" : "s"} · Qty{" "}
                   {cartQtyTotal}
+                  {viewDate ? ` · ${formatMenuDateLabel(viewDate)}` : ""}
                 </p>
                 <ul className="mt-1 hidden text-[11px] text-ink-muted sm:block">
                   {cartLines.map(({ menu, qty }) => (

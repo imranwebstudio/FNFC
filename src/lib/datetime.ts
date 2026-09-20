@@ -217,6 +217,26 @@ export function addDaysToDateString(dateStr: string, days: number): string {
   return formatInTimeZone(next, "UTC", "yyyy-MM-dd");
 }
 
+/** How far ahead employees may browse / pre-order (Asia/Dhaka calendar days) */
+export const USER_MENU_HORIZON_DAYS = 21;
+
+/**
+ * Earliest menu date a user may still order for at this location (lunch or dinner).
+ */
+export function earliestOrderableDate(
+  now: Date,
+  location: LocationCutoffs,
+): string {
+  const lunch = orderableDateForSlot(now, { ...location, slot: "LUNCH" });
+  if (!location.dinnerEnabled) return lunch;
+  const dinner = orderableDateForSlot(now, { ...location, slot: "DINNER" });
+  return lunch < dinner ? lunch : dinner;
+}
+
+export function latestBrowseDate(now = new Date()): string {
+  return addDaysToDateString(todayDateString(now), USER_MENU_HORIZON_DAYS);
+}
+
 /**
  * Date employees order for: today before location cutoff (Dhaka), tomorrow after.
  */

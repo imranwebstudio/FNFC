@@ -194,3 +194,71 @@ body {
   background: #1a2421 !important;
   color: #ff945f !important;
 }
+
+/* Themed react-day-picker (delivery date) */
+.delivery-day-picker .rdp-root {
+  --rdp-accent-color: #2dd4bf;
+  --rdp-accent-background-color: rgba(45, 212, 191, 0.18);
+  --rdp-today-color: #2dd4bf;
+  --rdp-day-height: 40px;
+  --rdp-day-width: 40px;
+  --rdp-day_button-height: 38px;
+  --rdp-day_button-width: 38px;
+  --rdp-day_button-border-radius: 12px;
+  --rdp-selected-border: 2px solid #2dd4bf;
+  --rdp-outside-opacity: 0.35;
+  --rdp-disabled-opacity: 0.28;
+  --rdp-nav-height: 2.5rem;
+  color: #eef3f0;
+  width: 100%;
+  margin: 0;
+}
+
+.delivery-day-picker .rdp-caption_label {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #eef3f0;
+}
+
+.delivery-day-picker .rdp-button_previous,
+.delivery-day-picker .rdp-button_next {
+  color: #2dd4bf;
+  border-radius: 0.6rem;
+}
+
+.delivery-day-picker .rdp-button_previous:hover,
+.delivery-day-picker .rdp-button_next:hover {
+  background: rgba(45, 212, 191, 0.15);
+}
+
+.delivery-day-picker .rdp-weekday {
+  color: #8fa39a;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 1;
+}
+
+.delivery-day-picker .rdp-day_button {
+  color: #eef3f0;
+  font-weight: 500;
+}
+
+.delivery-day-picker .rdp-day_button:hover:not(:disabled) {
+  background: rgba(45, 212, 191, 0.15);
+  color: #2dd4bf;
+}
+
+.delivery-day-picker .rdp-selected .rdp-day_button {
+  background: #2dd4bf !important;
+  color: #042f2e !important;
+  font-weight: 700;
+  border-color: #2dd4bf;
+}
+
+.delivery-day-picker .rdp-today:not(.rdp-selected) .rdp-day_button {
+  box-shadow: inset 0 0 0 1px rgba(45, 212, 191, 0.55);
+}
+
