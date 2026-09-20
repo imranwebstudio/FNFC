@@ -30,7 +30,7 @@ export const userRouter = createTRPCRouter({
     return {
       ...user,
       due: Math.max(0, -user.balance),
-      /** True once an admin has assigned a catering zone */
+      /** True once a catering zone is set (office selection or admin) */
       zoneAssigned: Boolean(user.locationId),
     };
   }),
@@ -50,7 +50,7 @@ export const userRouter = createTRPCRouter({
     });
 
     return {
-      /** Suggestions only — free-text location is never forced to a zone */
+      /** Free-text address suggestions (not the catering zone) */
       locations: uniqueSorted(users.map((u) => u.locationLabel)),
       employeeIds: uniqueSorted(users.map((u) => u.employeeId)),
       phoneNumbers: uniqueSorted(users.map((u) => u.phoneNumber)),
@@ -66,9 +66,10 @@ export const userRouter = createTRPCRouter({
         employeeId: z.string().min(1).max(64),
         phoneNumber: phoneNumberSchema,
         deskNumber: z.string().min(1).max(32),
-        buildingNumber: z.string().min(1).max(64),
+        /** Active office from Staff locations — also sets catering zone */
+        locationId: z.string().cuid(),
         floorNumber: z.string().min(1).max(32),
-        /** Free-text office / address — admin assigns the catering zone later */
+        /** Free-text street / desk address detail */
         locationName: z.string().min(1).max(120),
       }),
     )
@@ -76,16 +77,27 @@ export const userRouter = createTRPCRouter({
       const locationLabel = input.locationName.trim();
       const phoneNumber = parsePhoneForStorage(input.phoneNumber);
 
+      const office = await ctx.db.location.findFirst({
+        where: { id: input.locationId, isActive: true },
+        select: { id: true, name: true },
+      });
+      if (!office) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Select a valid office / building from the list",
+        });
+      }
+
       return ctx.db.user.update({
         where: { id: ctx.session.user.id },
         data: {
           employeeId: input.employeeId.trim(),
           phoneNumber,
           deskNumber: input.deskNumber.trim(),
-          buildingNumber: input.buildingNumber.trim(),
+          buildingNumber: office.name,
           floorNumber: input.floorNumber.trim(),
           locationLabel,
-          // Do not auto-create Location / assign zone — admin does that
+          locationId: office.id,
           profileComplete: true,
         },
       });

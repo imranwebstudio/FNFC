@@ -23,7 +23,7 @@ export default function ProfilePage() {
         <PageTitle
           icon={<UserRound className="h-5 w-5" strokeWidth={2.25} />}
           title="Your profile"
-          subtitle="Update desk, building, floor, office address, or phone. Your catering zone is assigned by an admin."
+          subtitle="Update desk, building, floor, office address, or phone. Your catering zone follows the office you select (admins can still change it)."
         />
         <Panel>
           {me.isLoading ? (
@@ -35,9 +35,10 @@ export default function ProfilePage() {
                 employeeId: me.data.employeeId ?? "",
                 phoneNumber: me.data.phoneNumber ?? "",
                 deskNumber: me.data.deskNumber ?? "",
-                buildingNumber: me.data.buildingNumber ?? "",
+                locationId: me.data.locationId ?? "",
                 floorNumber: me.data.floorNumber ?? "",
                 locationName: me.data.locationLabel ?? "",
+                buildingNumber: me.data.buildingNumber ?? "",
               }}
               submitLabel="Save changes"
               onSuccess={() => router.refresh()}
@@ -45,17 +46,6 @@ export default function ProfilePage() {
           ) : (
             <p className="text-sm text-red-700">Couldn’t load profile.</p>
           )}
-          {me.data && !me.data.locationId ? (
-            <p className="mt-4 rounded-xl bg-leaf/10 px-3 py-2 text-sm text-ink-muted">
-              No catering zone yet — you can still order from any office menu.
-              An admin will assign your zone later.
-            </p>
-          ) : me.data?.location ? (
-            <p className="mt-4 text-xs text-ink-muted">
-              Catering zone:{" "}
-              <span className="font-semibold text-ink">{me.data.location.name}</span>
-            </p>
-          ) : null}
         </Panel>
       </motion.div>
     </div>

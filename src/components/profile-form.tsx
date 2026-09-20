@@ -12,9 +12,12 @@ export type ProfileFormValues = {
   employeeId: string;
   phoneNumber: string;
   deskNumber: string;
-  buildingNumber: string;
+  /** Active Staff location id — also becomes catering zone */
+  locationId: string;
   floorNumber: string;
   locationName: string;
+  /** Legacy building label — used only to pre-select office if locationId is empty */
+  buildingNumber?: string;
 };
 
 export function ProfileForm({
@@ -46,7 +49,7 @@ export function ProfileForm({
     employeeId: initial?.employeeId ?? "",
     phoneNumber: initial?.phoneNumber ?? "",
     deskNumber: initial?.deskNumber ?? "",
-    buildingNumber: initial?.buildingNumber ?? "",
+    locationId: initial?.locationId ?? "",
     floorNumber: initial?.floorNumber ?? "",
     locationName: initial?.locationName ?? "",
   });
@@ -57,7 +60,7 @@ export function ProfileForm({
       employeeId: initial.employeeId ?? "",
       phoneNumber: initial.phoneNumber ?? "",
       deskNumber: initial.deskNumber ?? "",
-      buildingNumber: initial.buildingNumber ?? "",
+      locationId: initial.locationId ?? "",
       floorNumber: initial.floorNumber ?? "",
       locationName: initial.locationName ?? "",
     });
@@ -65,10 +68,27 @@ export function ProfileForm({
     initial?.employeeId,
     initial?.phoneNumber,
     initial?.deskNumber,
-    initial?.buildingNumber,
+    initial?.locationId,
     initial?.floorNumber,
     initial?.locationName,
   ]);
+
+  // Pre-select office when zone was never set but building name matches a Staff location.
+  useEffect(() => {
+    if (form.locationId || !staffLocations.data?.length) return;
+    const hint = initial?.buildingNumber?.trim();
+    if (!hint) return;
+    const match = staffLocations.data.find(
+      (l) => l.name.toLowerCase() === hint.toLowerCase(),
+    );
+    if (match) {
+      setForm((f) => (f.locationId ? f : { ...f, locationId: match.id }));
+    }
+  }, [form.locationId, staffLocations.data, initial?.buildingNumber]);
+
+  const selectedOffice = staffLocations.data?.find(
+    (l) => l.id === form.locationId,
+  );
 
   return (
     <form
@@ -103,25 +123,24 @@ export function ProfileForm({
           <Select
             id="building"
             required
-            value={form.buildingNumber}
+            value={form.locationId}
             disabled={staffLocations.isLoading}
             onChange={(e) =>
-              setForm((f) => ({ ...f, buildingNumber: e.target.value }))
+              setForm((f) => ({ ...f, locationId: e.target.value }))
             }
           >
             <option value="">
               {staffLocations.isLoading ? "Loading…" : "Select office…"}
             </option>
             {staffLocations.data?.map((l) => (
-              <option key={l.id} value={l.name}>
+              <option key={l.id} value={l.id}>
                 {l.name}
               </option>
             ))}
-            {form.buildingNumber &&
-            !staffLocations.data?.some((l) => l.name === form.buildingNumber) ? (
-              <option value={form.buildingNumber}>{form.buildingNumber}</option>
-            ) : null}
           </Select>
+          <p className="mt-1 text-[11px] text-ink-muted">
+            This also sets your catering zone for menus and orders.
+          </p>
         </div>
         <Combobox
           id="floor"
@@ -146,10 +165,10 @@ export function ProfileForm({
         id="location"
         label="Address"
         required
-        placeholder="Type your office or building name"
+        placeholder="e.g. Ambon Complex, Dhaka 1212"
         value={form.locationName}
         options={options.data?.locations ?? []}
-        allowCustomHint="Type any address — you can order now; an admin assigns your zone later."
+        allowCustomHint="Full address or landmark for delivery."
         onChange={(locationName) => setForm((f) => ({ ...f, locationName }))}
       />
       {save.error ? (
@@ -158,6 +177,12 @@ export function ProfileForm({
       <Button type="submit" disabled={save.isPending} className="w-full">
         {save.isPending ? "Saving…" : submitLabel}
       </Button>
+      {selectedOffice ? (
+        <p className="text-xs text-ink-muted">
+          Catering zone:{" "}
+          <span className="font-semibold text-ink">{selectedOffice.name}</span>
+        </p>
+      ) : null}
     </form>
   );
 }

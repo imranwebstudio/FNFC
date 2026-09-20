@@ -310,8 +310,8 @@ export function TodayMenu() {
       {showAllZones && !today.isLoading ? (
         <Panel className="mb-6 border-leaf/25 bg-leaf/5 py-3">
           <p className="text-sm text-ink-muted">
-            No catering zone yet — showing menus from all offices. After an
-            admin assigns your zone, you&apos;ll only see that office&apos;s
+            No catering zone yet — showing menus from all offices. Pick your
+            office on Profile to set your zone and see only that office&apos;s
             meals.
           </p>
         </Panel>
