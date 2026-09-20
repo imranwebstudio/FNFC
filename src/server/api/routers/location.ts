@@ -7,6 +7,7 @@ import {
   dhakaDateOnly,
   normalizeCutoffTime,
   normalizeDinnerCutoffTime,
+  slotCutoffAt,
   todayDateString,
 } from "~/lib/datetime";
 import {
@@ -116,7 +117,7 @@ export const locationRouter = createTRPCRouter({
 
       const existing = await ctx.db.location.findUnique({
         where: { id: input.locationId },
-        select: { dinnerCutoffTime: true },
+        select: { dinnerCutoffTime: true, dinnerEnabled: true },
       });
       if (!existing) throw new TRPCError({ code: "NOT_FOUND" });
 
@@ -150,6 +151,12 @@ export const locationRouter = createTRPCRouter({
         map.set(dateStr, list);
       }
 
+      const locCutoffs = {
+        defaultCutoffTime: lunchCutoff,
+        dinnerCutoffTime: dinnerCutoff,
+        dinnerEnabled: existing.dinnerEnabled,
+      };
+
       await Promise.all([
         ...[...lunchByDate.entries()].map(([dateStr, ids]) =>
           ctx.db.dailyMenu.updateMany({
@@ -160,7 +167,9 @@ export const locationRouter = createTRPCRouter({
         ...[...dinnerByDate.entries()].map(([dateStr, ids]) =>
           ctx.db.dailyMenu.updateMany({
             where: { id: { in: ids } },
-            data: { cutoffAt: dayArchiveAt(dateStr, dinnerCutoff) },
+            data: {
+              cutoffAt: slotCutoffAt(dateStr, "DINNER", locCutoffs),
+            },
           }),
         ),
       ]);

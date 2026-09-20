@@ -18,7 +18,7 @@ import {
 import {
   formatCutoffHm,
   formatTaka,
-  getOrderWindow,
+  getServiceOrderWindow,
   todayDateString,
   WEEKDAY_LABELS,
   WEEKDAYS,
@@ -342,9 +342,17 @@ export default function AdminMenuPage() {
   });
 
   const orderWindow = useMemo(() => {
-    const cutoff = selectedLoc?.defaultCutoffTime ?? "14:00";
-    return getOrderWindow(new Date(), cutoff);
-  }, [selectedLoc?.defaultCutoffTime]);
+    return getServiceOrderWindow(new Date(), {
+      defaultCutoffTime: selectedLoc?.defaultCutoffTime ?? "14:00",
+      dinnerCutoffTime: selectedLoc?.dinnerCutoffTime,
+      dinnerEnabled: selectedLoc?.dinnerEnabled ?? dinnerEnabled,
+    });
+  }, [
+    selectedLoc?.defaultCutoffTime,
+    selectedLoc?.dinnerCutoffTime,
+    selectedLoc?.dinnerEnabled,
+    dinnerEnabled,
+  ]);
 
   const activeOrderWeekday = useMemo(
     () => weekdayFromDateString(orderWindow.orderDate),
@@ -685,9 +693,13 @@ export default function AdminMenuPage() {
           <strong className="text-ink">{selectedLoc?.name ?? "this office"}</strong>
           . They repeat every matching day. Everyone picks one option. Highlighted
           day is what employees order for now
-          {orderWindow.rolledOver
-            ? ` (after ${orderWindow.cutoffTime} — tomorrow)`
-            : ` (before ${orderWindow.cutoffTime} — today)`}
+          {selectedLoc?.dinnerEnabled || dinnerEnabled
+            ? orderWindow.rolledOver
+              ? ` (after dinner cutoff ${orderWindow.cutoffTime} — next day)`
+              : ` (dinner open until ${orderWindow.cutoffTime}; lunch still closes at lunch cutoff)`
+            : orderWindow.rolledOver
+              ? ` (after ${orderWindow.cutoffTime} — tomorrow)`
+              : ` (before ${orderWindow.cutoffTime} — today)`}
           .
         </p>
 

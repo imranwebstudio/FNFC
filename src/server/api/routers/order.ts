@@ -3,11 +3,11 @@ import { z } from "zod";
 import { formatInTimeZone } from "date-fns-tz";
 
 import {
-  dayArchiveAt,
   dhakaDateOnly,
   getOrderWindow,
   locationCutoffForSlot,
-  normalizeCutoffTime,
+  orderableDateForSlot,
+  slotCutoffAt,
   todayDateString,
 } from "~/lib/datetime";
 import {
@@ -75,10 +75,16 @@ export const orderRouter = createTRPCRouter({
       }
 
       const cutoffTime = locationCutoffForSlot(menu.location, menu.slot);
-      const window = getOrderWindow(new Date(), cutoffTime);
+      const orderDate = orderableDateForSlot(new Date(), {
+        defaultCutoffTime: menu.location.defaultCutoffTime,
+        dinnerCutoffTime: menu.location.dinnerCutoffTime,
+        dinnerEnabled: menu.location.dinnerEnabled,
+        slot: menu.slot,
+      });
       const menuDate = formatInTimeZone(menu.date, "UTC", "yyyy-MM-dd");
       await assertNotDayOff(ctx.db, menuDate);
-      if (menuDate !== window.orderDate) {
+      if (menuDate !== orderDate) {
+        const window = getOrderWindow(new Date(), cutoffTime);
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: window.rolledOver
@@ -87,8 +93,7 @@ export const orderRouter = createTRPCRouter({
         });
       }
 
-      const cutoff =
-        menu.cutoffAt ?? dayArchiveAt(menuDate, cutoffTime);
+      const cutoff = slotCutoffAt(menuDate, menu.slot, menu.location);
       if (new Date() > cutoff) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -243,12 +248,11 @@ export const orderRouter = createTRPCRouter({
       }
 
       const menuDate = formatInTimeZone(order.dailyMenu.date, "UTC", "yyyy-MM-dd");
-      const cutoffTime = locationCutoffForSlot(
-        order.dailyMenu.location,
+      const cutoff = slotCutoffAt(
+        menuDate,
         order.dailyMenu.slot,
+        order.dailyMenu.location,
       );
-      const cutoff =
-        order.dailyMenu.cutoffAt ?? dayArchiveAt(menuDate, cutoffTime);
       if (new Date() > cutoff) {
         throw new TRPCError({
           code: "BAD_REQUEST",

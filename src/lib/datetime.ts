@@ -45,6 +45,122 @@ function cutoffHourMinute(hhmm: string): { hour: number; minute: number } {
   return { hour: h ?? ORDER_ROLLOVER_HOUR, minute: m ?? 0 };
 }
 
+function toMinutes(hhmm: string): number {
+  const { hour, minute } = cutoffHourMinute(hhmm);
+  return hour * 60 + minute;
+}
+
+/**
+ * Dinner closes next calendar morning when its HH:mm is earlier than lunch
+ * (e.g. lunch 11:59, dinner 06:00 → Sunday dinner stays open until Monday 06:00).
+ */
+export function isOvernightDinnerCutoff(
+  lunchHm: string,
+  dinnerHm: string,
+): boolean {
+  return (
+    toMinutes(normalizeDinnerCutoffTime(dinnerHm)) <
+    toMinutes(normalizeCutoffTime(lunchHm))
+  );
+}
+
+export type LocationCutoffs = {
+  defaultCutoffTime: string;
+  dinnerCutoffTime?: string | null;
+  dinnerEnabled?: boolean | null;
+};
+
+/**
+ * Menu calendar date employees may order for a given slot right now.
+ * Lunch rolls at lunch cutoff; dinner rolls at dinner cutoff (overnight-aware).
+ */
+export function orderableDateForSlot(
+  now: Date,
+  opts: LocationCutoffs & { slot: "LUNCH" | "DINNER" },
+): string {
+  const lunchHm = normalizeCutoffTime(opts.defaultCutoffTime);
+  if (opts.slot === "LUNCH" || !opts.dinnerEnabled) {
+    return orderableDateString(now, lunchHm);
+  }
+
+  const dinnerHm = normalizeDinnerCutoffTime(opts.dinnerCutoffTime);
+  const today = todayDateString(now);
+
+  if (isOvernightDinnerCutoff(lunchHm, dinnerHm)) {
+    const nowM =
+      Number(formatInTimeZone(now, APP_TIMEZONE, "H")) * 60 +
+      Number(formatInTimeZone(now, APP_TIMEZONE, "m"));
+    // Early morning before overnight close → still previous service day's dinner
+    if (nowM < toMinutes(dinnerHm)) {
+      return addDaysToDateString(today, -1);
+    }
+    return today;
+  }
+
+  return orderableDateString(now, dinnerHm);
+}
+
+/**
+ * Absolute order-close instant for a menu on its service date.
+ * Overnight dinner on date D closes at dinnerCutoff on D+1.
+ */
+export function slotCutoffAt(
+  menuDateStr: string,
+  slot: "LUNCH" | "DINNER",
+  location: LocationCutoffs,
+): Date {
+  const lunchHm = normalizeCutoffTime(location.defaultCutoffTime);
+  if (slot === "LUNCH") {
+    return cutoffFromTime(menuDateStr, lunchHm);
+  }
+  const dinnerHm = normalizeDinnerCutoffTime(
+    location.dinnerCutoffTime ?? location.defaultCutoffTime,
+  );
+  if (isOvernightDinnerCutoff(lunchHm, dinnerHm)) {
+    return cutoffFromTime(addDaysToDateString(menuDateStr, 1), dinnerHm);
+  }
+  return cutoffFromTime(menuDateStr, dinnerHm);
+}
+
+/**
+ * Service day for "Ordering now" / employee banner.
+ * With dinner enabled, the day does not jump until dinner cutoff (not lunch).
+ */
+export function getServiceOrderWindow(
+  now: Date,
+  location: LocationCutoffs,
+) {
+  const lunchHm = normalizeCutoffTime(location.defaultCutoffTime);
+  if (!location.dinnerEnabled) {
+    return getOrderWindow(now, lunchHm);
+  }
+
+  const dinnerHm = normalizeDinnerCutoffTime(location.dinnerCutoffTime);
+  const calendarToday = todayDateString(now);
+  const orderDate = orderableDateForSlot(now, {
+    ...location,
+    defaultCutoffTime: lunchHm,
+    dinnerCutoffTime: dinnerHm,
+    dinnerEnabled: true,
+    slot: "DINNER",
+  });
+  const rolledOver = orderDate !== calendarToday;
+  const cutoffAt = slotCutoffAt(orderDate, "DINNER", {
+    defaultCutoffTime: lunchHm,
+    dinnerCutoffTime: dinnerHm,
+    dinnerEnabled: true,
+  });
+  const { hour } = cutoffHourMinute(dinnerHm);
+  return {
+    calendarToday,
+    orderDate,
+    rolledOver,
+    cutoffAt,
+    cutoffTime: dinnerHm,
+    rolloverHour: hour,
+  };
+}
+
 /** BD week order for admin UI */
 export const WEEKDAYS = [
   "SAT",

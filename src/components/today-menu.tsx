@@ -288,8 +288,8 @@ export function TodayMenu() {
             </p>
             <p className="text-xs text-ink-muted">
               {window.rolledOver
-                ? `Today closed at ${cutoffLabel}. Ordering tomorrow.`
-                : `Orders close at ${cutoffLabel} today.`}
+                ? `Closed at ${cutoffLabel}. Now ordering the next day.`
+                : `Ordering open until ${cutoffLabel}.`}
             </p>
           </div>
           <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl border border-line bg-rice text-center">
