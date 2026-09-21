@@ -13,7 +13,7 @@ import {
   UtensilsCrossed,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { DeliveryDatePicker } from "~/components/delivery-date-picker";
 import { Badge, Button, Panel } from "~/components/ui";
@@ -78,10 +78,11 @@ function dateBadgeParts(dateStr: string | undefined) {
 export function TodayMenu() {
   const utils = api.useUtils();
   const me = api.user.me.useQuery();
-  const [selectedDate, setSelectedDate] = useState<string | undefined>();
+  /** undefined = live ordering (lunch/dinner may be different dates) */
+  const [browseDate, setBrowseDate] = useState<string | undefined>();
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const today = api.menu.todayForUser.useQuery(
-    selectedDate ? { date: selectedDate } : undefined,
+    browseDate ? { date: browseDate } : undefined,
   );
   const [cart, setCart] = useState<Cart>({});
   const [placing, setPlacing] = useState(false);
@@ -101,31 +102,46 @@ export function TodayMenu() {
   const window = today.data?.window;
   const minDate = today.data?.minDate;
   const maxDate = today.data?.maxDate;
+  const mode = today.data?.mode ?? "live";
+  const lunchDate = today.data?.lunchDate;
+  const dinnerDate = today.data?.dinnerDate;
   const viewDate =
-    selectedDate ?? today.data?.selectedDate ?? window?.orderDate;
+    browseDate ?? today.data?.selectedDate ?? window?.orderDate;
   const cutoffLabel = window?.cutoffTime ?? "—";
   const badge = dateBadgeParts(viewDate);
-  const isDefaultDay = Boolean(
-    viewDate && window?.orderDate && viewDate === window.orderDate,
-  );
-
-  useEffect(() => {
-    if (!selectedDate && today.data?.selectedDate) {
-      setSelectedDate(today.data.selectedDate);
-    }
-  }, [selectedDate, today.data?.selectedDate]);
+  const isLive = mode === "live" && !browseDate;
 
   function changeDate(next: string) {
     if (minDate && next < minDate) return;
     if (maxDate && next > maxDate) return;
     setCart({});
     setPlaceError(null);
-    setSelectedDate(next);
+    // Picking the live service day returns to live (split lunch/dinner dates)
+    if (window?.orderDate && next === window.orderDate) {
+      setBrowseDate(undefined);
+      return;
+    }
+    setBrowseDate(next);
+  }
+
+  function backToLive() {
+    setCart({});
+    setPlaceError(null);
+    setBrowseDate(undefined);
   }
 
   const orderedMenus = menus.filter((m) => m.myOrder);
   const availableMenus = menus.filter((m) => !m.myOrder && !m.isPastCutoff);
   const closedMenus = menus.filter((m) => !m.myOrder && m.isPastCutoff);
+
+  const orderedLunch = orderedMenus.filter((m) => m.slot === "LUNCH");
+  const orderedDinner = orderedMenus.filter((m) => m.slot === "DINNER");
+  const menuLunch = [...availableMenus, ...closedMenus].filter(
+    (m) => m.slot === "LUNCH",
+  );
+  const menuDinner = [...availableMenus, ...closedMenus].filter(
+    (m) => m.slot === "DINNER",
+  );
 
   const cartLines = useMemo(() => {
     return Object.entries(cart)
@@ -165,11 +181,14 @@ export function TodayMenu() {
         });
       }
       setCart({});
+      const dates = [
+        ...new Set(cartLines.map((l) => l.menu.menuDate).filter(Boolean)),
+      ] as string[];
       showSuccess(
         cartLines.length === 1 ? "Order placed" : "Orders placed",
-        viewDate
-          ? `Delivery ${formatMenuDateLabel(viewDate)}.`
-          : "Your meal has been booked.",
+        dates.length === 1
+          ? `Delivery ${formatMenuDateLabel(dates[0]!)}.`
+          : "Your meals have been booked.",
       );
       await utils.menu.todayForUser.invalidate();
       await utils.order.listMine.invalidate();
@@ -195,6 +214,165 @@ export function TodayMenu() {
   const showAllZones =
     Boolean(me.data?.profileComplete) && !me.data?.locationId;
   const dayOff = today.data?.dayOff;
+
+  type MenuRow = (typeof menus)[number];
+
+  function renderOrderCard(menu: MenuRow) {
+    const photo = cloudinaryDisplayUrl(menu.imageUrl, {
+      width: 160,
+      height: 160,
+    });
+    return (
+      <Panel key={menu.id} className="p-3">
+        <div className="flex gap-3">
+          <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-line bg-sand">
+            {photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={photo}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-spice/40 to-leaf/40">
+                <UtensilsCrossed className="h-5 w-5 text-ink" />
+              </div>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="font-semibold text-ink">{menu.title}</p>
+                {menu.description ? (
+                  <p className="mt-0.5 line-clamp-2 text-xs text-ink-muted">
+                    {menu.description}
+                  </p>
+                ) : null}
+                <p className="mt-1 text-[11px] text-ink-muted">
+                  {formatMenuDateLabel(menu.menuDate)}
+                </p>
+              </div>
+              <p className="shrink-0 text-sm font-bold tabular-nums text-leaf">
+                {formatTaka(menu.myOrder!.amount)}
+              </p>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Badge tone="good">Qty {menu.myOrder!.quantity}</Badge>
+              <Badge tone="neutral">{menu.myOrder!.status}</Badge>
+              {menu.myOrder!.status === "PLACED" && !menu.isPastCutoff ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="px-2 py-1.5 text-xs text-spice"
+                  disabled={cancel.isPending}
+                  onClick={async () => {
+                    const ok = await confirmAction({
+                      title: "Cancel this order? 😢",
+                      text: "Are you sure you want to cancel your meal order?",
+                      confirmText: "Yes, cancel order",
+                      cancelText: "Keep order",
+                    });
+                    if (!ok) return;
+                    cancel.mutate({ orderId: menu.myOrder!.id });
+                  }}
+                >
+                  <Ban className="h-3.5 w-3.5" />
+                  Skip / Cancel
+                </Button>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </Panel>
+    );
+  }
+
+  function renderMenuCard(menu: MenuRow, i: number) {
+    const photo = cloudinaryDisplayUrl(menu.imageUrl, {
+      width: 160,
+      height: 160,
+    });
+    const qty = cart[menu.id] ?? 0;
+    const canOrder = !menu.isPastCutoff;
+    return (
+      <motion.li
+        key={menu.id}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: i * 0.04 }}
+      >
+        <Panel className="p-3">
+          <div className="flex gap-3">
+            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-line bg-sand">
+              {photo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={photo}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-spice/40 to-leaf/40">
+                  <UtensilsCrossed className="h-5 w-5 text-ink" />
+                </div>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-semibold text-ink">{menu.title}</p>
+                  {menu.description ? (
+                    <p className="mt-0.5 line-clamp-2 text-xs text-ink-muted">
+                      {menu.description}
+                    </p>
+                  ) : null}
+                  <p className="mt-1 text-[11px] text-ink-muted">
+                    {formatMenuDateLabel(menu.menuDate)}
+                    {today.data?.scope === "all" ||
+                    today.data?.scope === "admin"
+                      ? ` · ${menu.location.name}`
+                      : ""}
+                  </p>
+                </div>
+                <p className="shrink-0 text-sm font-bold tabular-nums text-leaf">
+                  {formatTaka(menu.price)}
+                </p>
+              </div>
+              <div className="mt-2 flex items-center justify-end">
+                {canOrder ? (
+                  <QtyStepper
+                    value={qty}
+                    onChange={(n) => setQty(menu.id, n)}
+                    disabled={placing}
+                  />
+                ) : (
+                  <Badge tone="warn">Closed</Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        </Panel>
+      </motion.li>
+    );
+  }
+
+  function slotHeading(
+    slot: "LUNCH" | "DINNER",
+    dateStr: string | undefined,
+  ) {
+    return (
+      <h3 className="mb-2 flex items-center gap-2 text-sm font-bold tracking-tight text-ink">
+        <span className="rounded-lg bg-leaf/15 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-leaf">
+          {slot === "LUNCH" ? "Lunch" : "Dinner"}
+        </span>
+        {dateStr ? (
+          <span className="text-xs font-medium text-ink-muted">
+            {formatMenuDateLabel(dateStr)}
+          </span>
+        ) : null}
+      </h3>
+    );
+  }
 
   return (
     <div className="pb-28 sm:pb-8">
@@ -233,9 +411,9 @@ export function TodayMenu() {
       {window ? (
         <Panel
           className={`mb-6 py-3.5 ${
-            isDefaultDay && !window.rolledOver
+            isLive && !window.rolledOver
               ? "border-leaf/25 bg-leaf/5"
-              : window.rolledOver && isDefaultDay
+              : isLive && window.rolledOver
                 ? "border-spice/25 bg-spice/5"
                 : "border-leaf/20 bg-sand/40"
           }`}
@@ -246,36 +424,63 @@ export function TodayMenu() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-leaf">
-                {isDefaultDay
+                {isLive
                   ? window.rolledOver
                     ? "After cutoff"
                     : "Order open"
-                  : "Pre-order"}
+                  : "Browse day"}
               </p>
               <p className="text-xs text-ink-muted">
-                Delivery{" "}
-                <button
-                  type="button"
-                  onClick={() => setDatePickerOpen(true)}
-                  className="font-semibold text-ink underline decoration-leaf/40 underline-offset-2 transition hover:text-leaf"
-                >
-                  {viewDate ? formatMenuDateLabel(viewDate) : "—"}
-                </button>
+                {isLive ? (
+                  <>
+                    {lunchDate ? (
+                      <>
+                        Lunch{" "}
+                        <span className="font-semibold text-ink">
+                          {formatMenuDateLabel(lunchDate)}
+                        </span>
+                      </>
+                    ) : null}
+                    {lunchDate && dinnerDate ? " · " : null}
+                    {dinnerDate &&
+                    me.data?.location?.dinnerEnabled !== false ? (
+                      <>
+                        Dinner{" "}
+                        <button
+                          type="button"
+                          onClick={() => setDatePickerOpen(true)}
+                          className="font-semibold text-ink underline decoration-leaf/40 underline-offset-2 transition hover:text-leaf"
+                        >
+                          {formatMenuDateLabel(dinnerDate)}
+                        </button>
+                      </>
+                    ) : null}
+                  </>
+                ) : (
+                  <>
+                    Delivery{" "}
+                    <button
+                      type="button"
+                      onClick={() => setDatePickerOpen(true)}
+                      className="font-semibold text-ink underline decoration-leaf/40 underline-offset-2 transition hover:text-leaf"
+                    >
+                      {viewDate ? formatMenuDateLabel(viewDate) : "—"}
+                    </button>
+                  </>
+                )}
               </p>
               <p className="text-xs text-ink-muted">
-                {isDefaultDay
-                  ? window.rolledOver
-                    ? `Default day closed at ${cutoffLabel}. Tap the date to pick another day.`
-                    : `Open until ${cutoffLabel}. Tap the date badge to pre-order ahead.`
-                  : "Meals on this date deliver that day. Cancel anytime before cutoff."}
+                {isLive
+                  ? `After lunch cutoff, tomorrow’s lunch appears while today’s dinner stays open until ${cutoffLabel}. Tap the date badge to browse another day.`
+                  : "Showing both lunch and dinner for this day. Closed slots can’t be ordered."}
               </p>
-              {window.orderDate && viewDate !== window.orderDate ? (
+              {!isLive ? (
                 <button
                   type="button"
                   className="mt-1.5 text-xs font-semibold text-leaf hover:underline"
-                  onClick={() => changeDate(window.orderDate)}
+                  onClick={backToLive}
                 >
-                  Back to {formatMenuDateLabel(window.orderDate)}
+                  Back to live ordering
                 </button>
               ) : null}
             </div>
@@ -326,107 +531,45 @@ export function TodayMenu() {
           <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-leaf">
             <UtensilsCrossed className="h-4 w-4" />
             Your order
-            {viewDate ? (
-              <span className="text-sm font-medium text-ink-muted">
-                · {formatMenuDateLabel(viewDate)}
-              </span>
-            ) : null}
           </h2>
-          <ul className="space-y-2">
-            {orderedMenus.map((menu) => {
-              const photo = cloudinaryDisplayUrl(menu.imageUrl, {
-                width: 160,
-                height: 160,
-              });
-              return (
-                <Panel key={menu.id} className="p-3">
-                  <div className="flex gap-3">
-                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-line bg-sand">
-                      {photo ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={photo}
-                          alt=""
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-spice/40 to-leaf/40">
-                          <UtensilsCrossed className="h-5 w-5 text-ink" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="font-semibold text-ink">{menu.title}</p>
-                          {menu.description ? (
-                            <p className="mt-0.5 line-clamp-2 text-xs text-ink-muted">
-                              {menu.description}
-                            </p>
-                          ) : null}
-                        </div>
-                        <p className="shrink-0 text-sm font-bold tabular-nums text-leaf">
-                          {formatTaka(menu.myOrder!.amount)}
-                        </p>
-                      </div>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <Badge tone="good">
-                          Qty {menu.myOrder!.quantity}
-                        </Badge>
-                        <Badge tone="neutral">{menu.myOrder!.status}</Badge>
-                        {menu.myOrder!.status === "PLACED" &&
-                        !menu.isPastCutoff ? (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            className="px-2 py-1.5 text-xs text-spice"
-                            disabled={cancel.isPending}
-                            onClick={async () => {
-                              const ok = await confirmAction({
-                                title: "Cancel this order? 😢",
-                                text: "Are you sure you want to cancel your meal order?",
-                                confirmText: "Yes, cancel order",
-                                cancelText: "Keep order",
-                              });
-                              if (!ok) return;
-                              cancel.mutate({ orderId: menu.myOrder!.id });
-                            }}
-                          >
-                            <Ban className="h-3.5 w-3.5" />
-                            Skip / Cancel
-                          </Button>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-                </Panel>
-              );
-            })}
-          </ul>
+          {orderedLunch.length > 0 ? (
+            <div className="mb-4">
+              {slotHeading("LUNCH", lunchDate ?? orderedLunch[0]?.menuDate)}
+              <ul className="space-y-2">
+                {orderedLunch.map(renderOrderCard)}
+              </ul>
+            </div>
+          ) : null}
+          {orderedDinner.length > 0 ? (
+            <div>
+              {slotHeading(
+                "DINNER",
+                dinnerDate ?? orderedDinner[0]?.menuDate,
+              )}
+              <ul className="space-y-2">
+                {orderedDinner.map(renderOrderCard)}
+              </ul>
+            </div>
+          ) : null}
         </section>
       ) : null}
 
       {!dayOff?.active ? (
         <section>
-          <div className="mb-3 flex items-end justify-between gap-3">
-            <div>
-              <h2 className="flex items-center gap-2 font-display text-lg font-bold text-ink">
-                <UtensilsCrossed className="h-4 w-4 text-leaf" />
-                Menu
-              </h2>
-              <p className="mt-0.5 text-xs text-ink-muted">
-                {viewDate
-                  ? `Meals for ${formatMenuDateLabel(viewDate)}. Choose and set quantity.`
-                  : "Choose meals and set quantity."}
-              </p>
-            </div>
+          <div className="mb-3">
+            <h2 className="flex items-center gap-2 font-display text-lg font-bold text-ink">
+              <UtensilsCrossed className="h-4 w-4 text-leaf" />
+              Menu
+            </h2>
+            <p className="mt-0.5 text-xs text-ink-muted">
+              Lunch and dinner are listed separately. Choose and set quantity.
+            </p>
           </div>
 
           {!today.isLoading && menus.length === 0 ? (
             <Panel>
               <p className="text-sm text-ink-muted">
-                No published set meal for{" "}
-                {viewDate ? formatMenuDateLabel(viewDate) : "this day"}
+                No published meals right now
                 {today.data?.locationName
                   ? ` at ${today.data.locationName}`
                   : ""}
@@ -435,76 +578,23 @@ export function TodayMenu() {
             </Panel>
           ) : null}
 
-          <ul className="space-y-2">
-            {[...availableMenus, ...closedMenus].map((menu, i) => {
-              const photo = cloudinaryDisplayUrl(menu.imageUrl, {
-                width: 160,
-                height: 160,
-              });
-              const qty = cart[menu.id] ?? 0;
-              const canOrder = !menu.isPastCutoff;
-              return (
-                <motion.li
-                  key={menu.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.04 }}
-                >
-                  <Panel className="p-3">
-                    <div className="flex gap-3">
-                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-line bg-sand">
-                        {photo ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={photo}
-                            alt=""
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-spice/40 to-leaf/40">
-                            <UtensilsCrossed className="h-5 w-5 text-ink" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="font-semibold text-ink">{menu.title}</p>
-                            {menu.description ? (
-                              <p className="mt-0.5 line-clamp-2 text-xs text-ink-muted">
-                                {menu.description}
-                              </p>
-                            ) : null}
-                            <p className="mt-1 text-[11px] text-ink-muted">
-                              {menu.slot}
-                              {today.data?.scope === "all" ||
-                              today.data?.scope === "admin"
-                                ? ` · ${menu.location.name}`
-                                : ""}
-                            </p>
-                          </div>
-                          <p className="shrink-0 text-sm font-bold tabular-nums text-leaf">
-                            {formatTaka(menu.price)}
-                          </p>
-                        </div>
-                        <div className="mt-2 flex items-center justify-end">
-                          {canOrder ? (
-                            <QtyStepper
-                              value={qty}
-                              onChange={(n) => setQty(menu.id, n)}
-                              disabled={placing}
-                            />
-                          ) : (
-                            <Badge tone="warn">Closed</Badge>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </Panel>
-                </motion.li>
-              );
-            })}
-          </ul>
+          {menuLunch.length > 0 ? (
+            <div className="mb-5">
+              {slotHeading("LUNCH", lunchDate ?? menuLunch[0]?.menuDate)}
+              <ul className="space-y-2">
+                {menuLunch.map((m, i) => renderMenuCard(m, i))}
+              </ul>
+            </div>
+          ) : null}
+
+          {menuDinner.length > 0 ? (
+            <div>
+              {slotHeading("DINNER", dinnerDate ?? menuDinner[0]?.menuDate)}
+              <ul className="space-y-2">
+                {menuDinner.map((m, i) => renderMenuCard(m, i))}
+              </ul>
+            </div>
+          ) : null}
         </section>
       ) : null}
 
@@ -522,11 +612,11 @@ export function TodayMenu() {
                 <p className="text-xs text-ink-muted">
                   {cartItemCount} item{cartItemCount === 1 ? "" : "s"} · Qty{" "}
                   {cartQtyTotal}
-                  {viewDate ? ` · ${formatMenuDateLabel(viewDate)}` : ""}
                 </p>
                 <ul className="mt-1 hidden text-[11px] text-ink-muted sm:block">
                   {cartLines.map(({ menu, qty }) => (
                     <li key={menu.id}>
+                      {menu.slot === "LUNCH" ? "Lunch" : "Dinner"} ·{" "}
                       {menu.title} × {qty}: {formatTaka(menu.price * qty)}
                     </li>
                   ))}

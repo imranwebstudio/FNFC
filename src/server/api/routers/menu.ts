@@ -880,7 +880,10 @@ export const menuRouter = createTRPCRouter({
     .input(
       z
         .object({
-          /** Browse / order menus for this Asia/Dhaka calendar day */
+          /**
+           * Browse a single calendar day (both slots).
+           * Omit for live ordering: lunch/dinner each use their own orderable date.
+           */
           date: z.string().regex(dateRegex).optional(),
         })
         .optional(),
@@ -902,6 +905,7 @@ export const menuRouter = createTRPCRouter({
       },
     });
 
+    const now = new Date();
     const ownCutoff = normalizeCutoffTime(user?.location?.defaultCutoffTime);
     const ownDinnerCutoff = locationCutoffForSlot(
       {
@@ -916,21 +920,29 @@ export const menuRouter = createTRPCRouter({
       dinnerCutoffTime: ownDinnerCutoff,
       dinnerEnabled: ownDinnerEnabled,
     };
-    const ownWindow = getServiceOrderWindow(new Date(), ownLocCutoffs);
+    const ownWindow = getServiceOrderWindow(now, ownLocCutoffs);
+    const liveLunchDate = orderableDateForSlot(now, {
+      ...ownLocCutoffs,
+      slot: "LUNCH",
+    });
+    const liveDinnerDate = orderableDateForSlot(now, {
+      ...ownLocCutoffs,
+      slot: "DINNER",
+    });
     const ownDinnerWindow = {
-      ...getOrderWindow(new Date(), ownDinnerCutoff),
-      orderDate: orderableDateForSlot(new Date(), {
-        ...ownLocCutoffs,
-        slot: "DINNER",
-      }),
+      ...getOrderWindow(now, ownDinnerCutoff),
+      orderDate: liveDinnerDate,
     };
-    const minDate = earliestOrderableDate(new Date(), ownLocCutoffs);
-    const maxDate = latestBrowseDate();
+    const minDate = earliestOrderableDate(now, ownLocCutoffs);
+    const maxDate = latestBrowseDate(now);
+
     const requested = input?.date;
-    const selectedDate =
-      requested && requested >= minDate && requested <= maxDate
-        ? requested
-        : ownWindow.orderDate;
+    const browsing =
+      Boolean(requested) &&
+      requested! >= minDate &&
+      requested! <= maxDate;
+    const selectedDate = browsing ? requested! : ownWindow.orderDate;
+    const mode = browsing ? ("date" as const) : ("live" as const);
 
     const empty = {
       menus: [] as never[],
@@ -940,6 +952,9 @@ export const menuRouter = createTRPCRouter({
       window: ownWindow,
       dinnerWindow: ownDinnerWindow,
       selectedDate,
+      lunchDate: browsing ? selectedDate : liveLunchDate,
+      dinnerDate: browsing ? selectedDate : liveDinnerDate,
+      mode,
       minDate,
       maxDate,
       dayOff: null as null | { active: true; message: string; date: string },
@@ -949,7 +964,9 @@ export const menuRouter = createTRPCRouter({
       return empty;
     }
 
-    const dayOff = await isServiceDayOff(ctx.db, selectedDate);
+    // Day-off only blocks browse of that day, or live when the service day is off.
+    const dayOffCheckDate = browsing ? selectedDate : ownWindow.orderDate;
+    const dayOff = await isServiceDayOff(ctx.db, dayOffCheckDate);
     if (dayOff) {
       return {
         ...empty,
@@ -959,7 +976,7 @@ export const menuRouter = createTRPCRouter({
         dayOff: {
           active: true as const,
           message: dayOff.message,
-          date: selectedDate,
+          date: dayOffCheckDate,
         },
       };
     }
@@ -999,24 +1016,71 @@ export const menuRouter = createTRPCRouter({
             },
           });
 
-    await ensureMenusForDate(
-      ctx.db,
-      locations.map((l) => l.id),
-      selectedDate,
+    const datesToEnsure = new Set<string>();
+    if (browsing) {
+      datesToEnsure.add(selectedDate);
+    } else {
+      for (const loc of locations) {
+        datesToEnsure.add(
+          orderableDateForSlot(now, { ...loc, slot: "LUNCH" }),
+        );
+        if (loc.dinnerEnabled) {
+          datesToEnsure.add(
+            orderableDateForSlot(now, { ...loc, slot: "DINNER" }),
+          );
+        }
+      }
+    }
+
+    await Promise.all(
+      [...datesToEnsure].map((d) =>
+        ensureMenusForDate(
+          ctx.db,
+          locations.map((l) => l.id),
+          d,
+        ),
+      ),
     );
 
     const menusByLoc = (
       await Promise.all(
         locations.map(async (loc) => {
-          const menus = await ctx.db.dailyMenu.findMany({
+          if (browsing) {
+            return ctx.db.dailyMenu.findMany({
+              where: {
+                locationId: loc.id,
+                date: dhakaDateOnly(selectedDate),
+                isPublished: true,
+                skipped: false,
+                ...(loc.dinnerEnabled
+                  ? {}
+                  : { slot: { not: "DINNER" as const } }),
+              },
+              include: {
+                location: true,
+                orders: {
+                  where: {
+                    userId: user.id,
+                    status: { not: "CANCELLED" },
+                  },
+                  take: 1,
+                },
+              },
+              orderBy: [{ slot: "asc" }, { createdAt: "asc" }],
+            });
+          }
+
+          const lunchDate = orderableDateForSlot(now, {
+            ...loc,
+            slot: "LUNCH",
+          });
+          const lunchMenus = await ctx.db.dailyMenu.findMany({
             where: {
               locationId: loc.id,
-              date: dhakaDateOnly(selectedDate),
+              date: dhakaDateOnly(lunchDate),
+              slot: "LUNCH",
               isPublished: true,
               skipped: false,
-              ...(loc.dinnerEnabled
-                ? {}
-                : { slot: { not: "DINNER" as const } }),
             },
             include: {
               location: true,
@@ -1028,17 +1092,47 @@ export const menuRouter = createTRPCRouter({
                 take: 1,
               },
             },
-            orderBy: [{ slot: "asc" }, { createdAt: "asc" }],
+            orderBy: { createdAt: "asc" },
           });
-          return menus;
+
+          if (!loc.dinnerEnabled) return lunchMenus;
+
+          const dinnerDate = orderableDateForSlot(now, {
+            ...loc,
+            slot: "DINNER",
+          });
+          const dinnerMenus = await ctx.db.dailyMenu.findMany({
+            where: {
+              locationId: loc.id,
+              date: dhakaDateOnly(dinnerDate),
+              slot: "DINNER",
+              isPublished: true,
+              skipped: false,
+            },
+            include: {
+              location: true,
+              orders: {
+                where: {
+                  userId: user.id,
+                  status: { not: "CANCELLED" },
+                },
+                take: 1,
+              },
+            },
+            orderBy: { createdAt: "asc" },
+          });
+
+          return [...lunchMenus, ...dinnerMenus];
         }),
       )
     ).flat();
 
     menusByLoc.sort((a, b) => {
+      const slotOrder = a.slot.localeCompare(b.slot);
+      if (slotOrder !== 0) return slotOrder;
       const byName = a.location.name.localeCompare(b.location.name);
       if (byName !== 0) return byName;
-      return a.slot.localeCompare(b.slot);
+      return a.title.localeCompare(b.title);
     });
 
     let menusForUser = menusByLoc;
@@ -1058,8 +1152,6 @@ export const menuRouter = createTRPCRouter({
       menusForUser.sort((a, b) => a.slot.localeCompare(b.slot));
     }
 
-    const now = new Date();
-
     return {
       locationName: user.location?.name ?? null,
       locationId: user.locationId,
@@ -1067,6 +1159,9 @@ export const menuRouter = createTRPCRouter({
       window: ownWindow,
       dinnerWindow: ownDinnerWindow,
       selectedDate,
+      lunchDate: browsing ? selectedDate : liveLunchDate,
+      dinnerDate: browsing ? selectedDate : liveDinnerDate,
+      mode,
       minDate,
       maxDate,
       dayOff: null as null | { active: true; message: string; date: string },
