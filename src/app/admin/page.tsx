@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { FloorFilter } from "~/components/floor-filter";
 import { FoodPlateLoader } from "~/components/food-plate-loader";
 import { Badge, Button, Label, Panel, Select, StatCard } from "~/components/ui";
 import { formatTaka } from "~/lib/datetime";
@@ -25,10 +26,15 @@ type PackSelection = { title: string; slot: "LUNCH" | "DINNER" };
 export default function AdminOverviewPage() {
   const locations = api.location.list.useQuery();
   const [locationId, setLocationId] = useState<string>("");
+  const [floorNumber, setFloorNumber] = useState("");
   const [selected, setSelected] = useState<PackSelection | null>(null);
-  const overview = api.analytics.overview.useQuery(
-    locationId ? { locationId } : undefined,
-  );
+  const floors = api.admin.listFloors.useQuery({
+    locationId: locationId || undefined,
+  });
+  const overview = api.analytics.overview.useQuery({
+    locationId: locationId || undefined,
+    floorNumber: floorNumber || undefined,
+  });
   const dayOffTarget = api.service.adminDayOffTarget.useQuery();
   const utils = api.useUtils();
   const setDayOff = api.service.setDayOff.useMutation({
@@ -51,9 +57,21 @@ export default function AdminOverviewPage() {
       title: selected?.title ?? "",
       slot: selected?.slot ?? "LUNCH",
       locationId: locationId || undefined,
+      floorNumber: floorNumber || undefined,
     },
     { enabled: Boolean(selected) },
   );
+
+  useEffect(() => {
+    setFloorNumber("");
+    setSelected(null);
+  }, [locationId]);
+
+  useEffect(() => {
+    if (floorNumber && floors.data && !floors.data.includes(floorNumber)) {
+      setFloorNumber("");
+    }
+  }, [floorNumber, floors.data]);
 
   useEffect(() => {
     if (!selected) return;
@@ -154,22 +172,31 @@ export default function AdminOverviewPage() {
             Today&apos;s snapshot across your offices.
           </p>
         </div>
-        <div className="w-full sm:max-w-xs">
-          <Label>Office / Building</Label>
-          <Select
-            value={locationId}
-            onChange={(e) => {
-              setLocationId(e.target.value);
-              setSelected(null);
-            }}
-          >
-            <option value="">All my locations</option>
-            {locations.data?.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.name}
-              </option>
-            ))}
-          </Select>
+        <div className="flex w-full flex-col gap-3 sm:max-w-lg sm:flex-row">
+          <div className="min-w-0 flex-1">
+            <Label>Office / Building</Label>
+            <Select
+              value={locationId}
+              onChange={(e) => setLocationId(e.target.value)}
+            >
+              <option value="">All my locations</option>
+              {locations.data?.map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="min-w-0 flex-1">
+            <FloorFilter
+              value={floorNumber}
+              floors={floors.data ?? []}
+              onChange={(next) => {
+                setFloorNumber(next);
+                setSelected(null);
+              }}
+            />
+          </div>
         </div>
       </div>
 

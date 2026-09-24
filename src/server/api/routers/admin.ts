@@ -9,7 +9,76 @@ import {
   superAdminProcedure,
 } from "~/server/api/trpc";
 
+function sortFloorNumbers(values: Array<string | null | undefined>) {
+  return Array.from(
+    new Set(
+      values
+        .map((v) => v?.trim())
+        .filter((v): v is string => Boolean(v)),
+    ),
+  ).sort((a, b) =>
+    a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }),
+  );
+}
+
+async function adminLocationFilter(
+  db: Parameters<typeof assertLocationAccess>[0],
+  userId: string,
+  role: Parameters<typeof assertLocationAccess>[2],
+  input?: { locationId?: string; unassignedOnly?: boolean },
+): Promise<
+  | { locationId: string }
+  | { locationId: null }
+  | { locationId: { in: string[] } }
+  | Record<string, never>
+  | null
+> {
+  if (input?.unassignedOnly) return { locationId: null };
+  if (input?.locationId) {
+    await assertLocationAccess(db, userId, role, input.locationId);
+    return { locationId: input.locationId };
+  }
+  if (role === "SUPER_ADMIN") return {};
+  const links = await db.adminLocation.findMany({
+    where: { userId },
+    select: { locationId: true },
+  });
+  const ids = links.map((l) => l.locationId);
+  if (ids.length === 0) return null;
+  return { locationId: { in: ids } };
+}
+
 export const adminRouter = createTRPCRouter({
+  /** Distinct floor numbers members have entered for a zone (or all accessible zones). */
+  listFloors: adminProcedure
+    .input(
+      z
+        .object({
+          locationId: z.string().cuid().optional(),
+          unassignedOnly: z.boolean().optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const locationFilter = await adminLocationFilter(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        input,
+      );
+      if (locationFilter === null) return [] as string[];
+
+      const rows = await ctx.db.user.findMany({
+        where: {
+          ...locationFilter,
+          floorNumber: { not: null },
+        },
+        select: { floorNumber: true },
+        distinct: ["floorNumber"],
+      });
+      return sortFloorNumbers(rows.map((r) => r.floorNumber));
+    }),
+
   listUsers: adminProcedure
     .input(
       z
@@ -17,47 +86,26 @@ export const adminRouter = createTRPCRouter({
           locationId: z.string().cuid().optional(),
           /** Members not yet assigned to a catering zone */
           unassignedOnly: z.boolean().optional(),
+          floorNumber: z.string().min(1).max(32).optional(),
           search: z.string().max(80).optional(),
         })
         .optional(),
     )
     .query(async ({ ctx, input }) => {
-      const locationId = input?.locationId;
-      const unassignedOnly = input?.unassignedOnly === true;
-
-      let locationFilter:
-        | { locationId: string }
-        | { locationId: null }
-        | { locationId: { in: string[] } }
-        | Record<string, never> = {};
-
-      if (unassignedOnly) {
-        locationFilter = { locationId: null };
-      } else if (locationId) {
-        await assertLocationAccess(
-          ctx.db,
-          ctx.session.user.id,
-          ctx.session.user.role,
-          locationId,
-        );
-        locationFilter = { locationId };
-      } else if (ctx.session.user.role === "SUPER_ADMIN") {
-        locationFilter = {};
-      } else {
-        const links = await ctx.db.adminLocation.findMany({
-          where: { userId: ctx.session.user.id },
-          select: { locationId: true },
-        });
-        const ids = links.map((l) => l.locationId);
-        if (ids.length === 0) {
-          return [];
-        }
-        locationFilter = { locationId: { in: ids } };
-      }
+      const locationFilter = await adminLocationFilter(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        input,
+      );
+      if (locationFilter === null) return [];
 
       return ctx.db.user.findMany({
         where: {
           ...locationFilter,
+          ...(input?.floorNumber
+            ? { floorNumber: input.floorNumber }
+            : {}),
           ...(input?.search
             ? {
                 OR: [

@@ -109,40 +109,42 @@ export function slotCutoffAt(
 }
 
 /**
- * Service day for "Ordering now" / employee banner.
- * With dinner enabled, the day does not jump until dinner cutoff (not lunch).
+ * Live service day is always the Asia/Dhaka calendar date.
+ * After a slot cutoff the day does not jump — tomorrow appears at midnight
+ * (or when the user picks a date to pre-order).
  */
 export function getServiceOrderWindow(
   now: Date,
   location: LocationCutoffs,
 ) {
   const lunchHm = normalizeCutoffTime(location.defaultCutoffTime);
-  if (!location.dinnerEnabled) {
-    return getOrderWindow(now, lunchHm);
-  }
-
   const dinnerHm = normalizeDinnerCutoffTime(location.dinnerCutoffTime);
   const calendarToday = todayDateString(now);
-  const orderDate = orderableDateForSlot(now, {
+  const lunchCutoffAt = slotCutoffAt(calendarToday, "LUNCH", {
+    ...location,
+    defaultCutoffTime: lunchHm,
+  });
+  const dinnerCutoffAt = slotCutoffAt(calendarToday, "DINNER", {
     ...location,
     defaultCutoffTime: lunchHm,
     dinnerCutoffTime: dinnerHm,
     dinnerEnabled: true,
-    slot: "DINNER",
   });
-  const rolledOver = orderDate !== calendarToday;
-  const cutoffAt = slotCutoffAt(orderDate, "DINNER", {
-    defaultCutoffTime: lunchHm,
-    dinnerCutoffTime: dinnerHm,
-    dinnerEnabled: true,
-  });
-  const { hour } = cutoffHourMinute(dinnerHm);
+  const lunchClosed = now > lunchCutoffAt;
+  const dinnerClosed = Boolean(location.dinnerEnabled) && now > dinnerCutoffAt;
+  const cutoffAt = location.dinnerEnabled ? dinnerCutoffAt : lunchCutoffAt;
+  const cutoffTime = location.dinnerEnabled ? dinnerHm : lunchHm;
+  const { hour } = cutoffHourMinute(cutoffTime);
   return {
     calendarToday,
-    orderDate,
-    rolledOver,
+    orderDate: calendarToday,
+    rolledOver: lunchClosed,
+    lunchClosed,
+    dinnerClosed,
     cutoffAt,
-    cutoffTime: dinnerHm,
+    cutoffTime,
+    lunchCutoffTime: lunchHm,
+    dinnerCutoffTime: dinnerHm,
     rolloverHour: hour,
   };
 }

@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 
+import { FloorFilter } from "~/components/floor-filter";
 import { FoodPlateLoader } from "~/components/food-plate-loader";
 import { SearchSelect } from "~/components/combobox";
 import {
@@ -41,6 +42,7 @@ export default function AdminOrdersPage() {
   const locations = api.location.list.useQuery();
   const me = api.user.me.useQuery();
   const [locationId, setLocationId] = useState("all");
+  const [floorNumber, setFloorNumber] = useState("");
   const [date, setDate] = useState(todayDateString());
   const [searchQuery, setSearchQuery] = useState("");
   const utils = api.useUtils();
@@ -64,10 +66,25 @@ export default function AdminOrdersPage() {
     }
   }, [locations.data, behalfLocationId]);
 
+  const floors = api.admin.listFloors.useQuery({
+    locationId: locationId === "all" ? undefined : locationId,
+  });
+
   const orders = api.order.listForAdmin.useQuery({
     locationId: locationId === "all" ? undefined : locationId,
+    floorNumber: floorNumber || undefined,
     date,
   });
+
+  useEffect(() => {
+    setFloorNumber("");
+  }, [locationId]);
+
+  useEffect(() => {
+    if (floorNumber && floors.data && !floors.data.includes(floorNumber)) {
+      setFloorNumber("");
+    }
+  }, [floorNumber, floors.data]);
 
   const members = api.admin.listUsers.useQuery(
     { locationId: behalfLocationId },
@@ -382,7 +399,7 @@ export default function AdminOrdersPage() {
       </Panel>
       ) : null}
 
-      <div className="mb-5 grid max-w-3xl gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mb-5 grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <Label>Location</Label>
           <Select
@@ -400,6 +417,11 @@ export default function AdminOrdersPage() {
             ))}
           </Select>
         </div>
+        <FloorFilter
+          value={floorNumber}
+          floors={floors.data ?? []}
+          onChange={setFloorNumber}
+        />
         <div>
           <Label>Date</Label>
           <input

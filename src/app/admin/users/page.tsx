@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Ban,
   HandCoins,
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 
+import { FloorFilter } from "~/components/floor-filter";
 import { FoodPlateLoader } from "~/components/food-plate-loader";
 import {
   Badge,
@@ -32,6 +33,7 @@ export default function AdminUsersPage() {
   const me = api.user.me.useQuery();
   const locations = api.location.list.useQuery();
   const [locationId, setLocationId] = useState("all");
+  const [floorNumber, setFloorNumber] = useState("");
   const [search, setSearch] = useState("");
   const [depositUserId, setDepositUserId] = useState<string | null>(null);
   const [amount, setAmount] = useState(1000);
@@ -48,8 +50,27 @@ export default function AdminUsersPage() {
         ? undefined
         : locationId,
     unassignedOnly: locationId === "unassigned" ? true : undefined,
+    floorNumber: floorNumber || undefined,
     search: search || undefined,
   };
+
+  const floors = api.admin.listFloors.useQuery({
+    locationId:
+      locationId === "all" || locationId === "unassigned"
+        ? undefined
+        : locationId,
+    unassignedOnly: locationId === "unassigned" ? true : undefined,
+  });
+
+  useEffect(() => {
+    setFloorNumber("");
+  }, [locationId]);
+
+  useEffect(() => {
+    if (floorNumber && floors.data && !floors.data.includes(floorNumber)) {
+      setFloorNumber("");
+    }
+  }, [floorNumber, floors.data]);
 
   const users = api.admin.listUsers.useQuery(listInput);
   const deposit = api.wallet.deposit.useMutation({
@@ -182,7 +203,7 @@ export default function AdminUsersPage() {
         </p>
       ) : null}
 
-      <div className="mb-4 grid gap-3 sm:grid-cols-2">
+      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div>
           <Label>Zone</Label>
           <Select
@@ -198,6 +219,11 @@ export default function AdminUsersPage() {
             ))}
           </Select>
         </div>
+        <FloorFilter
+          value={floorNumber}
+          floors={floors.data ?? []}
+          onChange={setFloorNumber}
+        />
         <div>
           <Label>Search</Label>
           <Input

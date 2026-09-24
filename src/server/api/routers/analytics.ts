@@ -13,6 +13,7 @@ export const analyticsRouter = createTRPCRouter({
       z
         .object({
           locationId: z.string().cuid().optional(),
+          floorNumber: z.string().min(1).max(32).optional(),
         })
         .optional(),
     )
@@ -39,6 +40,12 @@ export const analyticsRouter = createTRPCRouter({
       const locationFilter = locationIds
         ? { locationId: { in: locationIds } }
         : {};
+      const floorFilter = input?.floorNumber
+        ? { user: { floorNumber: input.floorNumber } }
+        : {};
+      const userFloorFilter = input?.floorNumber
+        ? { floorNumber: input.floorNumber }
+        : {};
 
       const today = dhakaDateOnly(todayDateString());
 
@@ -55,6 +62,7 @@ export const analyticsRouter = createTRPCRouter({
         ctx.db.order.count({
           where: {
             ...locationFilter,
+            ...floorFilter,
             status: { not: "CANCELLED" },
             dailyMenu: { date: today },
           },
@@ -62,6 +70,7 @@ export const analyticsRouter = createTRPCRouter({
         ctx.db.order.count({
           where: {
             ...locationFilter,
+            ...floorFilter,
             status: "DELIVERED",
             dailyMenu: { date: today },
           },
@@ -69,6 +78,7 @@ export const analyticsRouter = createTRPCRouter({
         ctx.db.order.aggregate({
           where: {
             ...locationFilter,
+            ...floorFilter,
             paymentStatus: "PAID",
             paidAt: { gte: today },
           },
@@ -78,6 +88,7 @@ export const analyticsRouter = createTRPCRouter({
         ctx.db.order.aggregate({
           where: {
             ...locationFilter,
+            ...floorFilter,
             paymentStatus: "WALLET_CHARGED",
             status: { not: "CANCELLED" },
             dailyMenu: { date: today },
@@ -88,12 +99,14 @@ export const analyticsRouter = createTRPCRouter({
         ctx.db.user.count({
           where: {
             profileComplete: true,
+            ...userFloorFilter,
             ...(locationIds ? { locationId: { in: locationIds } } : {}),
           },
         }),
         ctx.db.user.findMany({
           where: {
             balance: { lt: 0 },
+            ...userFloorFilter,
             ...(locationIds ? { locationId: { in: locationIds } } : {}),
           },
           select: { balance: true },
@@ -101,6 +114,7 @@ export const analyticsRouter = createTRPCRouter({
         ctx.db.order.findMany({
           where: {
             ...locationFilter,
+            ...floorFilter,
             status: { not: "CANCELLED" },
             dailyMenu: { date: today },
           },
@@ -235,6 +249,7 @@ export const analyticsRouter = createTRPCRouter({
         title: z.string().min(1).max(160),
         slot: z.enum(["LUNCH", "DINNER"]),
         locationId: z.string().cuid().optional(),
+        floorNumber: z.string().min(1).max(32).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -263,6 +278,9 @@ export const analyticsRouter = createTRPCRouter({
       const orders = await ctx.db.order.findMany({
         where: {
           ...(locationIds ? { locationId: { in: locationIds } } : {}),
+          ...(input.floorNumber
+            ? { user: { floorNumber: input.floorNumber } }
+            : {}),
           status: { not: "CANCELLED" },
           dailyMenu: {
             date: today,

@@ -311,6 +311,7 @@ export const orderRouter = createTRPCRouter({
     .input(
       z.object({
         locationId: z.string().cuid().optional(),
+        floorNumber: z.string().min(1).max(32).optional(),
         dailyMenuId: z.string().cuid().optional(),
         date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
       }),
@@ -340,6 +341,9 @@ export const orderRouter = createTRPCRouter({
         where: {
           ...locationFilter,
           status: { not: "CANCELLED" },
+          ...(input.floorNumber
+            ? { user: { floorNumber: input.floorNumber } }
+            : {}),
           ...(input.dailyMenuId
             ? { dailyMenuId: input.dailyMenuId }
             : input.date

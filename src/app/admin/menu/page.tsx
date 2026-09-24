@@ -732,14 +732,11 @@ export default function AdminMenuPage() {
           Add several lunch (or dinner) options per weekday for{" "}
           <strong className="text-ink">{selectedLoc?.name ?? "this office"}</strong>
           . They repeat every matching day. Everyone picks one option. Highlighted
-          day is what employees order for now
+          day is today (Asia/Dhaka). After a slot cutoff that meal closes until
+          midnight — tomorrow does not appear automatically
           {selectedLoc?.dinnerEnabled || dinnerEnabled
-            ? orderWindow.rolledOver
-              ? ` (after dinner cutoff ${orderWindow.cutoffTime} — next day)`
-              : ` (dinner open until ${orderWindow.cutoffTime}; lunch still closes at lunch cutoff)`
-            : orderWindow.rolledOver
-              ? ` (after ${orderWindow.cutoffTime} — tomorrow)`
-              : ` (before ${orderWindow.cutoffTime} — today)`}
+            ? ` (lunch ${selectedLoc?.defaultCutoffTime ?? "—"}; dinner ${orderWindow.cutoffTime})`
+            : ` (cutoff ${orderWindow.cutoffTime})`}
           .
         </p>
 
@@ -835,9 +832,7 @@ export default function AdminMenuPage() {
                     {WEEKDAY_LABELS[day].slice(0, 3)}
                   </p>
                   {isActiveOrderDay ? (
-                    <Badge tone="good">
-                      {orderWindow.rolledOver ? "Ordering now" : "Today"}
-                    </Badge>
+                    <Badge tone="good">Today</Badge>
                   ) : null}
                 </div>
                 <div className="space-y-2">

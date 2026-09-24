@@ -106,18 +106,24 @@ export function TodayMenu() {
   const lunchDate = today.data?.lunchDate;
   const dinnerDate = today.data?.dinnerDate;
   const viewDate =
-    browseDate ?? today.data?.selectedDate ?? window?.orderDate;
+    browseDate ?? today.data?.selectedDate ?? window?.calendarToday ?? window?.orderDate;
   const cutoffLabel = window?.cutoffTime ?? "—";
+  const lunchCutoffLabel = window?.lunchCutoffTime ?? cutoffLabel;
+  const dinnerCutoffLabel = window?.dinnerCutoffTime ?? cutoffLabel;
   const badge = dateBadgeParts(viewDate);
   const isLive = mode === "live" && !browseDate;
+  const dinnerOffered = me.data?.location?.dinnerEnabled !== false;
+  const lunchClosed = isLive && Boolean(today.data?.lunchClosed);
+  const dinnerClosed =
+    isLive && dinnerOffered && Boolean(today.data?.dinnerClosed);
 
   function changeDate(next: string) {
     if (minDate && next < minDate) return;
     if (maxDate && next > maxDate) return;
     setCart({});
     setPlaceError(null);
-    // Picking the live service day returns to live (split lunch/dinner dates)
-    if (window?.orderDate && next === window.orderDate) {
+    const liveDay = window?.calendarToday ?? window?.orderDate;
+    if (liveDay && next === liveDay) {
       setBrowseDate(undefined);
       return;
     }
@@ -150,12 +156,18 @@ export function TodayMenu() {
 
   const lunchOrdersByDate = groupOrdersByDate(orderedLunch);
   const dinnerOrdersByDate = groupOrdersByDate(orderedDinner);
-  const menuLunch = [...availableMenus, ...closedMenus].filter(
-    (m) => m.slot === "LUNCH",
-  );
-  const menuDinner = [...availableMenus, ...closedMenus].filter(
-    (m) => m.slot === "DINNER",
-  );
+  const menuLunch = (lunchClosed
+    ? []
+    : isLive
+      ? availableMenus
+      : [...availableMenus, ...closedMenus]
+  ).filter((m) => m.slot === "LUNCH");
+  const menuDinner = (dinnerClosed
+    ? []
+    : isLive
+      ? availableMenus
+      : [...availableMenus, ...closedMenus]
+  ).filter((m) => m.slot === "DINNER");
 
   const cartLines = useMemo(() => {
     return Object.entries(cart)
@@ -425,9 +437,9 @@ export function TodayMenu() {
       {window ? (
         <Panel
           className={`mb-6 py-3.5 ${
-            isLive && !window.rolledOver
+            isLive && !lunchClosed && !dinnerClosed
               ? "border-leaf/25 bg-leaf/5"
-              : isLive && window.rolledOver
+              : isLive && (lunchClosed || dinnerClosed)
                 ? "border-spice/25 bg-spice/5"
                 : "border-leaf/20 bg-sand/40"
           }`}
@@ -439,9 +451,13 @@ export function TodayMenu() {
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-leaf">
                 {isLive
-                  ? window.rolledOver
-                    ? "After cutoff"
-                    : "Order open"
+                  ? lunchClosed && (dinnerClosed || !dinnerOffered)
+                    ? "Closed for today"
+                    : lunchClosed
+                      ? "Lunch closed"
+                      : dinnerClosed
+                        ? "Dinner closed"
+                        : "Order open"
                   : "Browse day"}
               </p>
               <p className="text-xs text-ink-muted">
@@ -453,11 +469,11 @@ export function TodayMenu() {
                         <span className="font-semibold text-ink">
                           {formatMenuDateLabel(lunchDate)}
                         </span>
+                        {lunchClosed ? " (closed)" : ""}
                       </>
                     ) : null}
-                    {lunchDate && dinnerDate ? " · " : null}
-                    {dinnerDate &&
-                    me.data?.location?.dinnerEnabled !== false ? (
+                    {lunchDate && dinnerDate && dinnerOffered ? " · " : null}
+                    {dinnerDate && dinnerOffered ? (
                       <>
                         Dinner{" "}
                         <button
@@ -467,6 +483,7 @@ export function TodayMenu() {
                         >
                           {formatMenuDateLabel(dinnerDate)}
                         </button>
+                        {dinnerClosed ? " (closed)" : ""}
                       </>
                     ) : null}
                   </>
@@ -485,12 +502,17 @@ export function TodayMenu() {
               </p>
               <p className="text-xs text-ink-muted">
                 {isLive
-                  ? lunchDate &&
-                    dinnerDate &&
-                    lunchDate !== dinnerDate &&
-                    me.data?.location?.dinnerEnabled !== false
-                    ? `After lunch cutoff, tomorrow’s lunch appears while dinner stays open until ${cutoffLabel}. Tap the date badge to browse another day.`
-                    : `Live ordering for ${formatMenuDateLabel(lunchDate ?? viewDate ?? "")}. Dinner closes at ${cutoffLabel}. Tap the date badge to browse another day.`
+                  ? lunchClosed && dinnerClosed
+                    ? "Lunch and dinner for today are closed. See you tomorrow. Tap the date badge to pre-order another day."
+                    : lunchClosed && dinnerOffered
+                      ? `Lunch for today is closed, see you tomorrow. Dinner stays open until ${dinnerCutoffLabel}. Tap the date badge to pre-order.`
+                      : lunchClosed
+                        ? `Lunch for today is closed, see you tomorrow. Tap the date badge to pre-order another day.`
+                        : dinnerClosed
+                          ? `Dinner for today is closed, see you tomorrow. Tap the date badge to pre-order another day.`
+                          : dinnerOffered
+                            ? `Lunch closes at ${lunchCutoffLabel}, dinner at ${dinnerCutoffLabel}. Tap the date badge to pre-order another day.`
+                            : `Ordering open until ${lunchCutoffLabel}. Tap the date badge to pre-order another day.`
                   : "Showing both lunch and dinner for this day. Closed slots can’t be ordered."}
               </p>
               {!isLive ? (
@@ -590,7 +612,10 @@ export function TodayMenu() {
             </p>
           </div>
 
-          {!today.isLoading && menus.length === 0 ? (
+          {!today.isLoading &&
+          menus.length === 0 &&
+          !lunchClosed &&
+          !dinnerClosed ? (
             <Panel>
               <p className="text-sm text-ink-muted">
                 No published meals right now
@@ -602,7 +627,17 @@ export function TodayMenu() {
             </Panel>
           ) : null}
 
-          {menuLunch.length > 0 ? (
+          {lunchClosed ? (
+            <Panel className="mb-5 border-spice/25 bg-spice/5 py-5 text-center">
+              {slotHeading("LUNCH", lunchDate)}
+              <p className="font-display text-base font-bold text-ink">
+                Lunch for today is closed
+              </p>
+              <p className="mt-1 text-sm text-ink-muted">
+                See you tomorrow. Tap the date badge to pre-order another day.
+              </p>
+            </Panel>
+          ) : menuLunch.length > 0 ? (
             <div className="mb-5">
               {slotHeading("LUNCH", lunchDate ?? menuLunch[0]?.menuDate)}
               <ul className="space-y-2">
@@ -611,7 +646,17 @@ export function TodayMenu() {
             </div>
           ) : null}
 
-          {menuDinner.length > 0 ? (
+          {dinnerClosed ? (
+            <Panel className="border-spice/25 bg-spice/5 py-5 text-center">
+              {slotHeading("DINNER", dinnerDate)}
+              <p className="font-display text-base font-bold text-ink">
+                Dinner for today is closed
+              </p>
+              <p className="mt-1 text-sm text-ink-muted">
+                See you tomorrow. Tap the date badge to pre-order another day.
+              </p>
+            </Panel>
+          ) : menuDinner.length > 0 ? (
             <div>
               {slotHeading("DINNER", dinnerDate ?? menuDinner[0]?.menuDate)}
               <ul className="space-y-2">
