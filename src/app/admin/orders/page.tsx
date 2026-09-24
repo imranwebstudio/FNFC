@@ -10,7 +10,6 @@ import {
   Phone,
   Plus,
   Repeat,
-  Search,
   Wallet,
   X,
 } from "lucide-react";
@@ -43,7 +42,6 @@ export default function AdminOrdersPage() {
   const me = api.user.me.useQuery();
   const [locationId, setLocationId] = useState("all");
   const [date, setDate] = useState(todayDateString());
-  const [searchDraft, setSearchDraft] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const utils = api.useUtils();
 
@@ -86,6 +84,7 @@ export default function AdminOrdersPage() {
       showSuccess("Marked delivered");
       await utils.order.listForAdmin.invalidate();
       await utils.account.userStatement.invalidate();
+      await utils.menu.todayForUser.invalidate();
     },
   });
   const confirmPay = api.order.confirmCashPayment.useMutation({
@@ -131,12 +130,10 @@ export default function AdminOrdersPage() {
   const isSuper = me.data?.role === "SUPER_ADMIN";
   const selectedMember = members.data?.find((u) => u.id === behalfUserId);
 
-  const applySearch = () => setSearchQuery(searchDraft.trim());
-
   const filteredOrders =
     orders.data?.filter((o) => {
-      if (!searchQuery) return true;
-      const q = searchQuery.toLowerCase();
+      const q = searchQuery.trim().toLowerCase();
+      if (!q) return true;
       return (
         (o.user.name?.toLowerCase().includes(q) ?? false) ||
         (o.user.email?.toLowerCase().includes(q) ?? false) ||
@@ -385,7 +382,7 @@ export default function AdminOrdersPage() {
       </Panel>
       ) : null}
 
-      <div className="mb-5 grid max-w-3xl gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_minmax(0,1.4fr)_auto]">
+      <div className="mb-5 grid max-w-3xl gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div>
           <Label>Location</Label>
           <Select
@@ -417,33 +414,9 @@ export default function AdminOrdersPage() {
           <Input
             id="order-search"
             placeholder="Name or employee ID"
-            value={searchDraft}
-            onChange={(e) => setSearchDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                applySearch();
-              }
-            }}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
-        </div>
-        <div className="flex items-end gap-2">
-          <Button type="button" variant="secondary" onClick={applySearch}>
-            <Search className="h-4 w-4" />
-            Search
-          </Button>
-          {searchQuery ? (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                setSearchDraft("");
-                setSearchQuery("");
-              }}
-            >
-              Clear
-            </Button>
-          ) : null}
         </div>
       </div>
 

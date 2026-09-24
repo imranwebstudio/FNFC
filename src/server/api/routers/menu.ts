@@ -53,7 +53,7 @@ async function resolveCutoff(
     dinnerEnabled: loc?.dinnerEnabled ?? false,
   };
   if (cutoffTime) {
-    // Explicit override still uses same calendar day unless dinner is overnight
+    // Explicit override: same calendar day close (Asia/Dhaka)
     if (slot === "DINNER") {
       return slotCutoffAt(dateStr, "DINNER", {
         ...location,
@@ -1152,6 +1152,32 @@ export const menuRouter = createTRPCRouter({
       menusForUser.sort((a, b) => a.slot.localeCompare(b.slot));
     }
 
+    // Live view rolls to the next orderable day after cutoff. Keep any
+    // undelivered (PLACED) meals visible until admin marks them delivered.
+    if (!browsing) {
+      const includedIds = new Set(menusForUser.map((m) => m.id));
+      const pending = await ctx.db.order.findMany({
+        where: {
+          userId: user.id,
+          status: "PLACED",
+          ...(includedIds.size > 0
+            ? { dailyMenuId: { notIn: [...includedIds] } }
+            : {}),
+        },
+        include: {
+          dailyMenu: { include: { location: true } },
+        },
+        orderBy: [{ createdAt: "asc" }],
+      });
+      for (const order of pending) {
+        const { dailyMenu, ...myOrder } = order;
+        menusForUser.push({
+          ...dailyMenu,
+          orders: [myOrder],
+        });
+      }
+    }
+
     return {
       locationName: user.location?.name ?? null,
       locationId: user.locationId,
@@ -1441,6 +1467,106 @@ export const menuRouter = createTRPCRouter({
         await ctx.db.dailyMenu.delete({ where: { id: input.id } });
       }
       return { ok: true as const };
+    }),
+
+  /**
+   * One-click stock-out for a single day's meal option.
+   * Marks the DailyMenu as skipped/unpublished for that date only
+   * (weekday template stays so it returns next week). Works even when
+   * orders already exist — use order swap to move those customers.
+   */
+  stockOut: adminProcedure
+    .input(
+      z
+        .object({
+          locationId: z.string().cuid(),
+          date: z.string().regex(dateRegex).optional(),
+          dailyMenuId: z.string().cuid().optional(),
+          weekdayMenuId: z.string().cuid().optional(),
+        })
+        .refine((v) => Boolean(v.dailyMenuId || v.weekdayMenuId), {
+          message: "dailyMenuId or weekdayMenuId is required",
+        }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertLocationAccess(
+        ctx.db,
+        ctx.session.user.id,
+        ctx.session.user.role,
+        input.locationId,
+      );
+
+      const loc = await ctx.db.location.findUnique({
+        where: { id: input.locationId },
+        select: {
+          defaultCutoffTime: true,
+          dinnerCutoffTime: true,
+          dinnerEnabled: true,
+        },
+      });
+      if (!loc) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const dateStr =
+        input.date ?? getServiceOrderWindow(new Date(), loc).orderDate;
+
+      await ensureMenusForDate(ctx.db, [input.locationId], dateStr);
+
+      let daily =
+        input.dailyMenuId != null
+          ? await ctx.db.dailyMenu.findUnique({
+              where: { id: input.dailyMenuId },
+            })
+          : await ctx.db.dailyMenu.findFirst({
+              where: {
+                locationId: input.locationId,
+                date: dhakaDateOnly(dateStr),
+                sourceWeekdayMenuId: input.weekdayMenuId!,
+                skipped: false,
+              },
+            });
+
+      // Already stocked-out placeholder for this weekday+date
+      if (
+        !daily &&
+        input.weekdayMenuId &&
+        !input.dailyMenuId
+      ) {
+        daily = await ctx.db.dailyMenu.findFirst({
+          where: {
+            locationId: input.locationId,
+            date: dhakaDateOnly(dateStr),
+            sourceWeekdayMenuId: input.weekdayMenuId,
+          },
+        });
+      }
+
+      if (!daily || daily.locationId !== input.locationId) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Meal not found for this day",
+        });
+      }
+
+      if (daily.skipped) {
+        return {
+          ok: true as const,
+          alreadyStockedOut: true as const,
+          title: daily.title,
+          date: dateStr,
+        };
+      }
+
+      await ctx.db.dailyMenu.update({
+        where: { id: daily.id },
+        data: { skipped: true, isPublished: false },
+      });
+
+      return {
+        ok: true as const,
+        alreadyStockedOut: false as const,
+        title: daily.title,
+        date: dateStr,
+      };
     }),
 
   /** Published meals for an office on a date (defaults to that office's orderable day). */

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BookOpen, Plus } from "lucide-react";
+import { BookOpen, PackageX, Plus } from "lucide-react";
 
 import { CloudinaryUpload } from "~/components/cloudinary-upload";
 import { FoodPlateLoader } from "~/components/food-plate-loader";
@@ -17,6 +17,7 @@ import {
 } from "~/components/ui";
 import {
   formatCutoffHm,
+  formatMenuDateLabel,
   formatTaka,
   getServiceOrderWindow,
   todayDateString,
@@ -25,7 +26,7 @@ import {
   weekdayFromDateString,
   type WeekdayCode,
 } from "~/lib/datetime";
-import { showSuccess } from "~/lib/swal";
+import { confirmAction, showSuccess } from "~/lib/swal";
 import { api } from "~/trpc/react";
 
 const emptyForm = {
@@ -162,10 +163,6 @@ export default function AdminMenuPage() {
   /** Offices to create/publish into (defaults to the selected office). */
   const [targetLocationIds, setTargetLocationIds] = useState<string[]>([]);
 
-  const daily = api.menu.listDaily.useQuery(
-    { locationId, date },
-    { enabled: Boolean(locationId) },
-  );
   const weekdayMenus = api.menu.weekdayList.useQuery(
     { locationId },
     { enabled: Boolean(locationId) },
@@ -192,6 +189,28 @@ export default function AdminMenuPage() {
     selectedLoc?.defaultCutoffTime,
     selectedLoc?.dinnerCutoffTime,
   ]);
+
+  const dinnerEnabled = selectedLoc?.dinnerEnabled ?? false;
+  const mealSlots = (
+    dinnerEnabled ? (["LUNCH", "DINNER"] as const) : (["LUNCH"] as const)
+  );
+
+  const orderWindow = useMemo(() => {
+    return getServiceOrderWindow(new Date(), {
+      defaultCutoffTime: selectedLoc?.defaultCutoffTime ?? "14:00",
+      dinnerCutoffTime: selectedLoc?.dinnerCutoffTime,
+      dinnerEnabled,
+    });
+  }, [
+    selectedLoc?.defaultCutoffTime,
+    selectedLoc?.dinnerCutoffTime,
+    dinnerEnabled,
+  ]);
+
+  const daily = api.menu.listDaily.useQuery(
+    { locationId, date: orderWindow.orderDate },
+    { enabled: Boolean(locationId) },
+  );
 
   const setCutoff = api.location.setCutoff.useMutation({
     onSuccess: async () => {
@@ -223,11 +242,6 @@ export default function AdminMenuPage() {
       }
     },
   });
-
-  const dinnerEnabled = selectedLoc?.dinnerEnabled ?? false;
-  const mealSlots = (
-    dinnerEnabled ? (["LUNCH", "DINNER"] as const) : (["LUNCH"] as const)
-  );
 
   function allActiveLocationIds(requireDinner?: boolean) {
     return (locations.data ?? [])
@@ -341,18 +355,26 @@ export default function AdminMenuPage() {
     onSettled: () => setDeletingDailyId(null),
   });
 
-  const orderWindow = useMemo(() => {
-    return getServiceOrderWindow(new Date(), {
-      defaultCutoffTime: selectedLoc?.defaultCutoffTime ?? "14:00",
-      dinnerCutoffTime: selectedLoc?.dinnerCutoffTime,
-      dinnerEnabled: selectedLoc?.dinnerEnabled ?? dinnerEnabled,
-    });
-  }, [
-    selectedLoc?.defaultCutoffTime,
-    selectedLoc?.dinnerCutoffTime,
-    selectedLoc?.dinnerEnabled,
-    dinnerEnabled,
-  ]);
+  const stockOut = api.menu.stockOut.useMutation({
+    onSuccess: async (res) => {
+      await utils.menu.listDaily.invalidate();
+      await utils.menu.todayForUser.invalidate();
+      await utils.menu.optionsForLocation.invalidate();
+      showSuccess(
+        res.alreadyStockedOut ? "Already stocked out" : "Stocked out",
+        `${res.title} · ${formatMenuDateLabel(res.date)}`,
+      );
+    },
+    onError: (e) => setMsg(e.message),
+  });
+
+  const liveWeekdayIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const m of daily.data ?? []) {
+      if (m.sourceWeekdayMenuId) ids.add(m.sourceWeekdayMenuId);
+    }
+    return ids;
+  }, [daily.data]);
 
   const activeOrderWeekday = useMemo(
     () => weekdayFromDateString(orderWindow.orderDate),
@@ -633,7 +655,7 @@ export default function AdminMenuPage() {
                 </div>
                 {dinnerEnabled ? (
                   <div className="min-w-0 flex-1 sm:flex-none">
-                    <Label>Dinner cutoff (Asia/Dhaka)</Label>
+                    <Label>Dinner cutoff (Asia/Dhaka, 24h)</Label>
                     <Input
                       type="time"
                       required
@@ -658,6 +680,24 @@ export default function AdminMenuPage() {
                   {setCutoff.isPending ? "Saving…" : "Save cutoffs"}
                 </Button>
               </div>
+              {dinnerEnabled &&
+              /^([01]\d|2[0-3]):([0-5]\d)$/.test(lunchCutoffDraft) &&
+              /^([01]\d|2[0-3]):([0-5]\d)$/.test(dinnerCutoffDraft) &&
+              dinnerCutoffDraft < lunchCutoffDraft ? (
+                <p className="text-xs text-spice">
+                  Dinner {dinnerCutoffDraft} is earlier than lunch — that usually
+                  means a 12h mistake. Evening 6 PM is{" "}
+                  <strong className="text-ink">18:00</strong>, not 06:00. After
+                  midnight the calendar day always flips; yesterday never stays
+                  open.
+                </p>
+              ) : dinnerEnabled ? (
+                <p className="text-xs text-ink-muted">
+                  24-hour time (evening 6 PM ={" "}
+                  <strong className="text-ink">18:00</strong>). After midnight
+                  Dhaka time, yesterday&apos;s meals are gone.
+                </p>
+              ) : null}
             </form>
             <label className="flex cursor-pointer items-center gap-2.5 rounded-2xl bg-sand/60 px-3.5 py-2.5 text-sm">
               <input
@@ -823,26 +863,78 @@ export default function AdminMenuPage() {
                           ) : null}
                         </p>
                         <ul className="mt-1 space-y-1">
-                          {meals.map((meal) => (
-                            <li key={meal.id}>
-                              <button
-                                type="button"
-                                onClick={() => openWeekEdit(day, slot, meal)}
-                                className={`w-full rounded-lg px-1.5 py-1 text-left transition hover:bg-sand ${
-                                  weekEdit?.id === meal.id
-                                    ? "bg-leaf/25"
-                                    : ""
-                                }`}
+                          {meals.map((meal) => {
+                            const stockedOut =
+                              isActiveOrderDay &&
+                              daily.isSuccess &&
+                              !liveWeekdayIds.has(meal.id);
+                            return (
+                              <li
+                                key={meal.id}
+                                className="flex items-start gap-0.5"
                               >
-                                <p className="line-clamp-2 text-xs font-semibold text-ink">
-                                  {meal.title}
-                                </p>
-                                <p className="text-[10px] text-ink-muted">
-                                  {formatTaka(meal.price)}
-                                </p>
-                              </button>
-                            </li>
-                          ))}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    openWeekEdit(day, slot, meal)
+                                  }
+                                  className={`min-w-0 flex-1 rounded-lg px-1.5 py-1 text-left transition hover:bg-sand ${
+                                    weekEdit?.id === meal.id
+                                      ? "bg-leaf/25"
+                                      : ""
+                                  } ${stockedOut ? "opacity-55" : ""}`}
+                                >
+                                  <p className="line-clamp-2 text-xs font-semibold text-ink">
+                                    {meal.title}
+                                  </p>
+                                  <p className="text-[10px] text-ink-muted">
+                                    {stockedOut
+                                      ? "Stocked out"
+                                      : formatTaka(meal.price)}
+                                  </p>
+                                </button>
+                                {isActiveOrderDay ? (
+                                  <button
+                                    type="button"
+                                    title={
+                                      stockedOut
+                                        ? "Already stocked out for today"
+                                        : "Stock out for today"
+                                    }
+                                    aria-label={
+                                      stockedOut
+                                        ? `${meal.title} already stocked out`
+                                        : `Stock out ${meal.title}`
+                                    }
+                                    disabled={
+                                      stockedOut || stockOut.isPending
+                                    }
+                                    className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-red-500/30 bg-red-600/15 text-red-300 transition hover:bg-red-600/25 disabled:cursor-not-allowed disabled:opacity-40"
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      if (!locationId || stockedOut) return;
+                                      const ok = await confirmAction({
+                                        title: `Stock out “${meal.title}”?`,
+                                        text: `This hides the option for ${formatMenuDateLabel(orderWindow.orderDate)} only. Existing orders stay — use Stock-out swap on Orders to move them. The weekly template is unchanged.`,
+                                        confirmText: "Yes, stock out",
+                                      });
+                                      if (!ok) return;
+                                      stockOut.mutate({
+                                        locationId,
+                                        weekdayMenuId: meal.id,
+                                        date: orderWindow.orderDate,
+                                      });
+                                    }}
+                                  >
+                                    <PackageX
+                                      className="h-3.5 w-3.5"
+                                      strokeWidth={2.25}
+                                    />
+                                  </button>
+                                ) : null}
+                              </li>
+                            );
+                          })}
                         </ul>
                         <button
                           type="button"
@@ -859,6 +951,76 @@ export default function AdminMenuPage() {
               </Panel>
             );
           })}
+        </div>
+
+        <div className="mt-4">
+          <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+            <h3 className="font-display text-base font-semibold">
+              Live · {formatMenuDateLabel(orderWindow.orderDate)}
+            </h3>
+            <p className="text-[11px] text-ink-muted">
+              Stock-out hides an option for this day only
+            </p>
+          </div>
+          {daily.isLoading ? (
+            <FoodPlateLoader size="inline" label="Loading live meals…" />
+          ) : null}
+          {!daily.isLoading &&
+          (daily.data?.filter((m) => dinnerEnabled || m.slot !== "DINNER")
+            .length ?? 0) === 0 ? (
+            <Panel className="py-3">
+              <p className="text-sm text-ink-muted">
+                No live options for this day yet.
+              </p>
+            </Panel>
+          ) : (
+            <ul className="space-y-2">
+              {daily.data
+                ?.filter((m) => dinnerEnabled || m.slot !== "DINNER")
+                .map((m) => (
+                  <Panel
+                    key={m.id}
+                    className="flex items-center justify-between gap-3 py-2.5"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-ink">
+                        {m.slot}: {m.title}
+                      </p>
+                      <p className="text-xs text-ink-muted">
+                        {formatTaka(m.price)}
+                        {m.isPublished ? " · Live" : " · Draft"}
+                        {m._count.orders > 0
+                          ? ` · ${m._count.orders} order${m._count.orders === 1 ? "" : "s"}`
+                          : ""}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      title="Stock out for today"
+                      aria-label={`Stock out ${m.title}`}
+                      disabled={stockOut.isPending}
+                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-red-500/30 bg-red-600/15 text-red-300 transition hover:bg-red-600/25 disabled:opacity-50"
+                      onClick={async () => {
+                        if (!locationId) return;
+                        const ok = await confirmAction({
+                          title: `Stock out “${m.title}”?`,
+                          text: `This hides the option for ${formatMenuDateLabel(orderWindow.orderDate)} only. Existing orders stay — use Stock-out swap on Orders to move them.`,
+                          confirmText: "Yes, stock out",
+                        });
+                        if (!ok) return;
+                        stockOut.mutate({
+                          locationId,
+                          dailyMenuId: m.id,
+                          date: orderWindow.orderDate,
+                        });
+                      }}
+                    >
+                      <PackageX className="h-4 w-4" strokeWidth={2.25} />
+                    </button>
+                  </Panel>
+                ))}
+            </ul>
+          )}
         </div>
 
         {weekEdit ? (

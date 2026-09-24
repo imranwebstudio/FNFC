@@ -51,8 +51,9 @@ function toMinutes(hhmm: string): number {
 }
 
 /**
- * Dinner closes next calendar morning when its HH:mm is earlier than lunch
- * (e.g. lunch 11:59, dinner 06:00 → Sunday dinner stays open until Monday 06:00).
+ * True when dinner HH:mm is earlier than lunch (usually a 12h/24h mistake,
+ * e.g. 06:00 typed for evening 6 PM). Ordering never carries yesterday past
+ * midnight — both slots are same-calendar-day cutoffs in Asia/Dhaka.
  */
 export function isOvernightDinnerCutoff(
   lunchHm: string,
@@ -72,7 +73,8 @@ export type LocationCutoffs = {
 
 /**
  * Menu calendar date employees may order for a given slot right now.
- * Lunch rolls at lunch cutoff; dinner rolls at dinner cutoff (overnight-aware).
+ * After Dhaka midnight the calendar day has changed — yesterday is never
+ * returned. Within today, lunch/dinner each roll forward at their cutoff.
  */
 export function orderableDateForSlot(
   now: Date,
@@ -84,25 +86,12 @@ export function orderableDateForSlot(
   }
 
   const dinnerHm = normalizeDinnerCutoffTime(opts.dinnerCutoffTime);
-  const today = todayDateString(now);
-
-  if (isOvernightDinnerCutoff(lunchHm, dinnerHm)) {
-    const nowM =
-      Number(formatInTimeZone(now, APP_TIMEZONE, "H")) * 60 +
-      Number(formatInTimeZone(now, APP_TIMEZONE, "m"));
-    // Early morning before overnight close → still previous service day's dinner
-    if (nowM < toMinutes(dinnerHm)) {
-      return addDaysToDateString(today, -1);
-    }
-    return today;
-  }
-
   return orderableDateString(now, dinnerHm);
 }
 
 /**
- * Absolute order-close instant for a menu on its service date.
- * Overnight dinner on date D closes at dinnerCutoff on D+1.
+ * Absolute order-close instant for a menu on its service date (same calendar
+ * day in Asia/Dhaka — never next-morning overnight).
  */
 export function slotCutoffAt(
   menuDateStr: string,
@@ -116,9 +105,6 @@ export function slotCutoffAt(
   const dinnerHm = normalizeDinnerCutoffTime(
     location.dinnerCutoffTime ?? location.defaultCutoffTime,
   );
-  if (isOvernightDinnerCutoff(lunchHm, dinnerHm)) {
-    return cutoffFromTime(addDaysToDateString(menuDateStr, 1), dinnerHm);
-  }
   return cutoffFromTime(menuDateStr, dinnerHm);
 }
 

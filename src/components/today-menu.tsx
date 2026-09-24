@@ -136,6 +136,20 @@ export function TodayMenu() {
 
   const orderedLunch = orderedMenus.filter((m) => m.slot === "LUNCH");
   const orderedDinner = orderedMenus.filter((m) => m.slot === "DINNER");
+
+  function groupOrdersByDate(rows: typeof orderedMenus) {
+    const groups = new Map<string, typeof orderedMenus>();
+    for (const row of rows) {
+      const key = row.menuDate;
+      const list = groups.get(key) ?? [];
+      list.push(row);
+      groups.set(key, list);
+    }
+    return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b));
+  }
+
+  const lunchOrdersByDate = groupOrdersByDate(orderedLunch);
+  const dinnerOrdersByDate = groupOrdersByDate(orderedDinner);
   const menuLunch = [...availableMenus, ...closedMenus].filter(
     (m) => m.slot === "LUNCH",
   );
@@ -471,7 +485,12 @@ export function TodayMenu() {
               </p>
               <p className="text-xs text-ink-muted">
                 {isLive
-                  ? `After lunch cutoff, tomorrow’s lunch appears while today’s dinner stays open until ${cutoffLabel}. Tap the date badge to browse another day.`
+                  ? lunchDate &&
+                    dinnerDate &&
+                    lunchDate !== dinnerDate &&
+                    me.data?.location?.dinnerEnabled !== false
+                    ? `After lunch cutoff, tomorrow’s lunch appears while dinner stays open until ${cutoffLabel}. Tap the date badge to browse another day.`
+                    : `Live ordering for ${formatMenuDateLabel(lunchDate ?? viewDate ?? "")}. Dinner closes at ${cutoffLabel}. Tap the date badge to browse another day.`
                   : "Showing both lunch and dinner for this day. Closed slots can’t be ordered."}
               </p>
               {!isLive ? (
@@ -526,31 +545,36 @@ export function TodayMenu() {
         </Panel>
       ) : null}
 
-      {!dayOff?.active && orderedMenus.length > 0 ? (
+      {orderedMenus.length > 0 ? (
         <section className="mb-6">
           <h2 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-leaf">
             <UtensilsCrossed className="h-4 w-4" />
             Your order
           </h2>
-          {orderedLunch.length > 0 ? (
-            <div className="mb-4">
-              {slotHeading("LUNCH", lunchDate ?? orderedLunch[0]?.menuDate)}
-              <ul className="space-y-2">
-                {orderedLunch.map(renderOrderCard)}
-              </ul>
+          {lunchOrdersByDate.map(([dateStr, rows], i) => (
+            <div
+              key={`lunch-${dateStr}`}
+              className={
+                i < lunchOrdersByDate.length - 1 || dinnerOrdersByDate.length > 0
+                  ? "mb-4"
+                  : undefined
+              }
+            >
+              {slotHeading("LUNCH", dateStr)}
+              <ul className="space-y-2">{rows.map(renderOrderCard)}</ul>
             </div>
-          ) : null}
-          {orderedDinner.length > 0 ? (
-            <div>
-              {slotHeading(
-                "DINNER",
-                dinnerDate ?? orderedDinner[0]?.menuDate,
-              )}
-              <ul className="space-y-2">
-                {orderedDinner.map(renderOrderCard)}
-              </ul>
+          ))}
+          {dinnerOrdersByDate.map(([dateStr, rows], i) => (
+            <div
+              key={`dinner-${dateStr}`}
+              className={
+                i < dinnerOrdersByDate.length - 1 ? "mb-4" : undefined
+              }
+            >
+              {slotHeading("DINNER", dateStr)}
+              <ul className="space-y-2">{rows.map(renderOrderCard)}</ul>
             </div>
-          ) : null}
+          ))}
         </section>
       ) : null}
 
