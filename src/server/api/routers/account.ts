@@ -32,13 +32,13 @@ async function fetchStatementForUser(db: typeof DbClient, userId: string) {
       where: { userId },
       include: orderInclude,
       orderBy: { createdAt: "desc" },
-      take: 200,
+      take: 500,
     }),
     db.walletTransaction.findMany({
       where: { userId },
       include: walletInclude,
       orderBy: { createdAt: "desc" },
-      take: 200,
+      take: 500,
     }),
   ]);
 

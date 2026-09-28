@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  History,
   LayoutDashboard,
   UserRound,
   UtensilsCrossed,
@@ -39,12 +40,14 @@ export function AppNav({
   const navLinks: NavLink[] = isAdmin
     ? [
         { href: "/app", label: "Today", Icon: UtensilsCrossed },
+        { href: "/app/orders", label: "History", Icon: History },
         { href: "/app/profile", label: "Profile", Icon: UserRound },
         { href: "/admin", label: "Admin", Icon: LayoutDashboard },
       ]
     : [
         { href: "/app", label: "Today", Icon: UtensilsCrossed },
         { href: "/app/account", label: "Account", Icon: Wallet },
+        { href: "/app/orders", label: "History", Icon: History },
         { href: "/app/profile", label: "Profile", Icon: UserRound },
       ];
 

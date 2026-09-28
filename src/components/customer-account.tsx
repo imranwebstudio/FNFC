@@ -310,6 +310,12 @@ function RegularWalletBlock({
           <h2 className="font-display text-base font-semibold">
             Recent Transactions
           </h2>
+          <Link
+            href="/app/orders"
+            className="text-xs font-semibold text-leaf hover:underline"
+          >
+            View all
+          </Link>
         </div>
         {recent.length === 0 ? (
           <Panel className="py-4">
@@ -364,6 +370,8 @@ function RegularWalletBlock({
           </ul>
         )}
       </section>
+
+      <RecentOrdersList entries={entries} />
     </>
   );
 }
@@ -379,9 +387,6 @@ function OneTimePaymentBlock({
     .filter((e) => e.kind === "order" && e.paymentStatus === "PAID")
     .reduce((s, e) => s + (e.kind === "order" ? e.amount : 0), 0);
   const dueAmount = summary.unpaidCashTotal;
-  const recentOrders = entries
-    .filter((e) => e.kind === "order" && e.status !== "CANCELLED")
-    .slice(0, 8);
 
   return (
     <>
@@ -418,58 +423,87 @@ function OneTimePaymentBlock({
         </p>
       </Panel>
 
-      <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-base font-semibold">
-            Recent Orders
-          </h2>
-          <Link
-            href="/app/orders"
-            className="text-xs font-semibold text-leaf hover:underline"
-          >
-            View All
-          </Link>
-        </div>
-        {recentOrders.length === 0 ? (
-          <Panel className="py-4">
-            <p className="text-sm text-ink-muted">No orders yet.</p>
-          </Panel>
-        ) : (
-          <ul className="space-y-2">
-            {recentOrders.map((e) => {
-              if (e.kind !== "order") return null;
-              const due =
-                e.paymentStatus === "UNPAID" || e.paymentStatus === "DUE";
-              return (
-                <Panel
-                  key={e.id}
-                  className="flex items-center justify-between gap-3 py-3"
-                >
-                  <div className="flex min-w-0 items-start gap-3">
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-spice/15 text-spice">
-                      <Receipt className="h-4 w-4" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-ink">
-                        {e.mealTitle}
-                        {e.quantity > 1 ? ` ×${e.quantity}` : ""}
-                      </p>
-                      <p className="text-[11px] text-ink-muted">
-                        {formatMenuDateLabel(e.mealDate)} · {formatWhen(e.at)}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge tone={due ? "bad" : "good"}>
-                    {due
-                      ? `Due ${formatTaka(e.amount)}`
-                      : `Paid ${formatTaka(e.amount)}`}
-                  </Badge>
-                </Panel>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+      <RecentOrdersList entries={entries} />
     </>
+  );
+}
+
+function RecentOrdersList({ entries }: { entries: StatementEntry[] }) {
+  const recentOrders = entries
+    .filter((e) => e.kind === "order")
+    .slice(0, 8);
+
+  return (
+    <section>
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="font-display text-base font-semibold">Recent Orders</h2>
+        <Link
+          href="/app/orders"
+          className="text-xs font-semibold text-leaf hover:underline"
+        >
+          View all
+        </Link>
+      </div>
+      {recentOrders.length === 0 ? (
+        <Panel className="py-4">
+          <p className="text-sm text-ink-muted">No orders yet.</p>
+        </Panel>
+      ) : (
+        <ul className="space-y-2">
+          {recentOrders.map((e) => {
+            if (e.kind !== "order") return null;
+            const due =
+              e.paymentStatus === "UNPAID" || e.paymentStatus === "DUE";
+            const cancelled = e.status === "CANCELLED";
+            return (
+              <Panel
+                key={e.id}
+                className="flex items-center justify-between gap-3 py-3"
+              >
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-spice/15 text-spice">
+                    <Receipt className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-ink">
+                      {e.mealTitle}
+                      {e.quantity > 1 ? ` ×${e.quantity}` : ""}
+                    </p>
+                    <p className="text-[11px] text-ink-muted">
+                      {e.mealSlot} · {formatMenuDateLabel(e.mealDate)} ·{" "}
+                      {formatWhen(e.at)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  <p
+                    className={`text-sm font-bold tabular-nums ${
+                      cancelled ? "text-ink-muted line-through" : "text-ink"
+                    }`}
+                  >
+                    {formatTaka(e.amount)}
+                  </p>
+                  <Badge
+                    tone={
+                      cancelled ? "neutral" : due ? "bad" : "good"
+                    }
+                  >
+                    {cancelled
+                      ? "Cancelled"
+                      : due
+                        ? `Due ${formatTaka(e.amount)}`
+                        : e.status === "DELIVERED"
+                          ? "Delivered"
+                          : e.paymentStatus === "WALLET_CHARGED"
+                            ? "Charged"
+                            : "Paid"}
+                  </Badge>
+                </div>
+              </Panel>
+            );
+          })}
+        </ul>
+      )}
+    </section>
   );
 }
