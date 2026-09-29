@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { BrandLogo } from "~/components/brand-logo";
 import { SignOutButton } from "~/components/sign-out-button";
 import { formatBalanceLabel } from "~/lib/datetime";
 
@@ -86,11 +87,14 @@ export function AdminShell({
   const sidebar = (
     <div className="flex h-full flex-col">
       <div className="border-b border-line/60 px-4 py-5">
-        <Link
-          href="/admin"
-          className="font-display text-lg font-bold tracking-tight text-leaf"
-        >
-          {appName}
+        <Link href="/admin" className="inline-flex" aria-label={appName}>
+          <BrandLogo
+            size="sm"
+            withName
+            name={appName}
+            nameClassName="text-leaf text-base"
+            priority
+          />
         </Link>
         <p className="mt-1 text-xs text-ink-muted">Admin dashboard</p>
       </div>

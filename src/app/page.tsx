@@ -1,4 +1,5 @@
 import { LogIn } from "lucide-react";
+import Image from "next/image";
 
 import { redirect } from "next/navigation";
 
@@ -32,6 +33,16 @@ export default async function HomePage({
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,107,44,0.22),transparent_40%)]" />
 
       <div className="relative mx-auto flex min-h-screen max-w-5xl flex-col justify-end px-6 pb-16 pt-24 text-white md:pb-24">
+        <div className="mb-6">
+          <Image
+            src="/logo.png"
+            alt={appName}
+            width={128}
+            height={128}
+            priority
+            className="h-28 w-28 rounded-full object-contain shadow-[0_12px_40px_rgba(0,0,0,0.35)] md:h-32 md:w-32"
+          />
+        </div>
         <p className="font-display text-5xl font-extrabold tracking-tight md:text-7xl">
           {appName}
         </p>

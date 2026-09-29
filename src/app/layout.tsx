@@ -10,7 +10,13 @@ import { TRPCReactProvider } from "~/trpc/react";
 export const metadata: Metadata = {
   title: getAppName(),
   description: "Office lunch catering — one-click daily meals",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/logo.png", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
 };
 
 const display = Syne({

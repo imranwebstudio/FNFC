@@ -10,6 +10,7 @@ import {
   Wallet,
 } from "lucide-react";
 
+import { BrandLogo } from "~/components/brand-logo";
 import { SignOutButton } from "~/components/sign-out-button";
 import { formatBalanceLabel } from "~/lib/datetime";
 
@@ -64,9 +65,10 @@ export function AppNav({
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
         <Link
           href="/app"
-          className="font-display text-lg font-bold tracking-tight text-leaf-deep sm:text-xl"
+          className="inline-flex min-w-0 items-center"
+          aria-label={appName}
         >
-          {appName}
+          <BrandLogo size="sm" withName name={appName} priority />
         </Link>
         <nav className="hidden items-center gap-1 sm:flex">
           {navLinks.map(({ href, label, Icon }) => {
